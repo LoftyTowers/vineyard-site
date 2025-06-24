@@ -1,10 +1,22 @@
-<nav class="navbar">
-  <div class="logo">
+<nav class="flex items-center justify-between flex-wrap py-4">
+  <div class="text-xl font-bold">
     <a routerLink="/">Vineyard</a>
   </div>
-  <div class="links">
-    <a routerLink="/">Home</a>
-    <a routerLink="/about">About</a>
-    <a routerLink="/gallery">Gallery</a>
+
+  <button
+    aria-label="Toggle navigation"
+    (click)="toggleMenu()"
+    class="sm:hidden text-2xl focus:outline-none"
+  >
+    &#9776;
+  </button>
+
+  <div
+    class="w-full sm:w-auto"
+    [ngClass]="{ 'hidden': !isMenuOpen, 'block': isMenuOpen, 'sm:flex': true, 'sm:items-center': true, 'sm:space-x-4': true }"
+  >
+    <a routerLink="/" class="block py-2 sm:py-0">Home</a>
+    <a routerLink="/about" class="block py-2 sm:py-0">About</a>
+    <a routerLink="/gallery" class="block py-2 sm:py-0">Gallery</a>
   </div>
 </nav>
