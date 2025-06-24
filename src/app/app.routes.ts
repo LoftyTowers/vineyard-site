@@ -1,3 +1,4 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
+import routes from './app-routing.module';
 
-export const routes: Routes = [];
+export { routes };
