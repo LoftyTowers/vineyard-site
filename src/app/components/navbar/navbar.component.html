@@ -1,22 +1,24 @@
-<nav class="flex items-center justify-between flex-wrap py-4">
-  <div class="text-xl font-bold">
-    <a routerLink="/">Vineyard</a>
+<nav class="bg-white text-gray-800 shadow">
+  <div class="max-w-screen-xl mx-auto px-4 flex items-center justify-between py-2">
+    <a routerLink="/" class="text-xl font-bold">Vineyard</a>
+    <button
+      aria-label="Toggle navigation"
+      (click)="toggleMenu()"
+      class="sm:hidden text-2xl focus:outline-none"
+    >
+      &#9776;
+    </button>
+    <div class="hidden sm:flex space-x-4">
+      <a routerLink="/" class="hover:text-purple-600 focus:text-purple-600">Home</a>
+      <a routerLink="/about" class="hover:text-purple-600 focus:text-purple-600">About</a>
+      <a routerLink="/gallery" class="hover:text-purple-600 focus:text-purple-600">Gallery</a>
+    </div>
   </div>
-
-  <button
-    aria-label="Toggle navigation"
-    (click)="toggleMenu()"
-    class="sm:hidden text-2xl focus:outline-none"
-  >
-    &#9776;
-  </button>
-
-  <div
-    class="w-full sm:w-auto"
-    [ngClass]="{ 'hidden': !isMenuOpen, 'block': isMenuOpen, 'sm:flex': true, 'sm:items-center': true, 'sm:space-x-4': true }"
-  >
-    <a routerLink="/" class="block py-2 sm:py-0">Home</a>
-    <a routerLink="/about" class="block py-2 sm:py-0">About</a>
-    <a routerLink="/gallery" class="block py-2 sm:py-0">Gallery</a>
+  <div class="sm:hidden" [ngClass]="{ 'block': isMenuOpen, 'hidden': !isMenuOpen }">
+    <div class="px-4 pb-4 space-y-2">
+      <a routerLink="/" class="block py-2 hover:text-purple-600 focus:text-purple-600">Home</a>
+      <a routerLink="/about" class="block py-2 hover:text-purple-600 focus:text-purple-600">About</a>
+      <a routerLink="/gallery" class="block py-2 hover:text-purple-600 focus:text-purple-600">Gallery</a>
+    </div>
   </div>
 </nav>
