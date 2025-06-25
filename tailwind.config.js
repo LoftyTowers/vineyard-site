@@ -10,6 +10,8 @@ module.exports = {
         secondary: '#A97449',
         accent: '#D5B57A',
         background: '#F9F6F1',
+        navbar: '#EFE9DC',
+        'navbar-border': '#DDD3C2',
         contrast: '#2E2E2E'
       },
       fontFamily: {
