@@ -1,15 +1,28 @@
 <div class="max-w-screen-lg mx-auto px-4 py-12">
-  <h1 class="text-3xl md:text-4xl font-heading font-normal mb-6">Our Story</h1>
+  <ng-container *ngFor="let block of aboutContentBlocks; let i = index">
+    <h1
+      *ngIf="i === 0 && block.type === 'h1'"
+      class="text-3xl md:text-4xl font-heading font-normal mb-6"
+    >
+      {{ block.content }}
+    </h1>
+  </ng-container>
   <div class="flex flex-col md:flex-row items-center gap-8">
     <img src="assets/temp-images/ReadyForHarvest.jpg" alt="Ready for Harvest" class="w-full md:w-[400px] max-h-[400px] object-cover rounded shadow"/>
     <div class="md:w-1/2 space-y-4 font-body text-contrast">
-      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod ligula non magna fringilla, sit amet laoreet neque fermentum.</p>
-      <p>Quisque vitae turpis auctor, posuere libero sed, porttitor magna. Nullam vel odio sit amet tortor bibendum pulvinar.</p>
-      <p>Morbi at nisi at urna consectetur feugiat. Aliquam erat volutpat.</p>
+      <ng-container *ngFor="let block of aboutContentBlocks; let i = index">
+        <p *ngIf="i > 0 && i < 4 && block.type === 'p'">{{ block.content }}</p>
+      </ng-container>
     </div>
   </div>
   <div class="py-8 border-t border-gray-200 mt-8">
-    <h2 class="text-2xl font-heading font-normal mb-4">Our Values</h2>
-    <p class="font-body text-contrast">Integrity, sustainability, and a passion for crafting exceptional wines guide everything we do.</p>
+    <ng-container *ngFor="let block of aboutContentBlocks; let i = index">
+      <h2 *ngIf="i === 4 && block.type === 'h2'" class="text-2xl font-heading font-normal mb-4">
+        {{ block.content }}
+      </h2>
+      <p *ngIf="i === 5 && block.type === 'p'" class="font-body text-contrast">
+        {{ block.content }}
+      </p>
+    </ng-container>
   </div>
 </div>
