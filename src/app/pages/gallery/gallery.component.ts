@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { NgFor } from '@angular/common';
+import { SHARED_IMPORTS } from '../../shared/shared-imports';
 
 @Component({
   selector: 'app-gallery',
-  imports: [NgFor],
+  imports: [...SHARED_IMPORTS],
   templateUrl: './gallery.component.html',
   styleUrl: './gallery.component.scss'
 })
