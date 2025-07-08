@@ -9,10 +9,11 @@ import { NgFor } from '@angular/common';
 })
 export class HomeComponent {
   homeContentBlocks = [
-    { type: 'p', content: 'Welcome to our vineyard. Lorem ipsum dolor sit amet...' },
-    { type: 'p', content: 'We are a small family-owned vineyard based in...' },
-    { type: 'h2', content: 'Our Story' },
-    { type: 'p', content: 'It all started with a love for wine and the land...' },
-    // Add more as needed
+    { type: 'h3', content: '⚠️ AI-generated placeholder text final copy coming soon.' },
+    { type: 'h2', content: 'Welcome to Hollywood Farm Vineyard' },
+    { type: 'p', content: 'Tucked away in the quiet countryside of North Essex, Hollywood Farm Vineyard is a small family project rooted in passion, tradition, and legacy.' },
+    { type: 'p', content: 'Our family has farmed this land for over a century. Through five generations, it has been passed down, worked on, and cared for each adding something new to the story. When Charles retired, he decided it was time for a different kind of planting: a vineyard.' },
+    { type: 'p', content: 'That one decision brought the whole family together. Aunts, uncles, cousins, and kids all got involved. Today, three generations pitch in with planting, pruning, and picking.' },
+    { type: 'p', content: 'We have had one hand-picked harvest so far and while we are just getting started, the roots run deep.' },
   ];
 }

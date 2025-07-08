@@ -10,22 +10,22 @@ import { NgFor } from '@angular/common';
 export class AboutComponent {
   aboutContentBlocks = [
     { type: 'h1', content: 'Our Story' },
+    { type: 'h3', content: '⚠️ AI-generated placeholder text final copy coming soon.' },
+    { type: 'h2', content: 'The People Behind the Vines' },
     {
       type: 'p',
       content:
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed euismod ligula non magna fringilla, sit amet laoreet neque fermentum.'
+        'After decades running the farm, Charles planted the first vines the year he retired. He is the reason any of this exists — and he still walks the rows most mornings, making sure everything is looking right.'
+    },
+    {
+      type: 'h3',
+      content:
+        'More to follow...'
     },
     {
       type: 'p',
       content:
-        'Quisque vitae turpis auctor, posuere libero sed, porttitor magna. Nullam vel odio sit amet tortor bibendum pulvinar.'
-    },
-    { type: 'p', content: 'Morbi at nisi at urna consectetur feugiat. Aliquam erat volutpat.' },
-    { type: 'h2', content: 'Our Values' },
-    {
-      type: 'p',
-      content:
-        'Integrity, sustainability, and a passion for crafting exceptional wines guide everything we do.'
+        'Together, we are building something small, meaningful, and completely our own.'
     }
   ];
 }

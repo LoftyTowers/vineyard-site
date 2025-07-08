@@ -10,6 +10,8 @@ import { NgFor } from '@angular/common';
 export class GalleryComponent {
   galleryContentBlocks = [
     { type: 'h1', content: 'Gallery' },
+    { type: 'h2', content: 'A few moments from our journey so far.' },
+    { type: 'p', content: 'Here are a few snapshots of the family, the vineyard, and the land we’re growing into.' },
     { type: 'img', content: 'assets/temp-images/ASunriseAtTheVineyard.jpg' },
     { type: 'img', content: 'assets/temp-images/HarvestComplete.jpg' },
     { type: 'img', content: 'assets/temp-images/HelloWoof.jpg' },
