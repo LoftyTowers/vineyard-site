@@ -6,14 +6,13 @@
   </div>
 </div>
 
-<div class="flex flex-col md:flex-row items-center gap-6 py-12 border-t border-gray-200">
-  <img src="assets/temp-images/ReadyForHarvest.jpg" alt="Ready for Harvest" class="w-full md:w-[400px] max-h-[400px] object-cover rounded shadow"/>
-  <div class="md:w-1/2 space-y-4 font-body">
+<div class="flex flex-col items-start gap-6 py-12 border-t border-gray-200">
+  <div class="w-full space-y-4 font-body">
     <ng-container *ngFor="let block of homeContentBlocks">
       <p *ngIf="block.type === 'p'" class="text-contrast">{{ block.content }}</p>
       <h2 *ngIf="block.type === 'h2'" class="text-contrast">{{ block.content }}</h2>
       <h3 *ngIf="block.type === 'h3'" class="text-contrast">{{ block.content }}</h3>
-      <!-- Add more tag types as needed -->
     </ng-container>
   </div>
 </div>
+
