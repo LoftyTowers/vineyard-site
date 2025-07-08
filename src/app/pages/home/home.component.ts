@@ -1,9 +1,9 @@
 import { Component } from '@angular/core';
-import { NgFor } from '@angular/common';
+import { SHARED_IMPORTS } from '../../shared/shared-imports';
 
 @Component({
   selector: 'app-home',
-  imports: [NgFor],
+  imports: [...SHARED_IMPORTS],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
