@@ -1,28 +1,38 @@
-<div class="max-w-screen-lg mx-auto px-4 py-12">
-  <ng-container *ngFor="let block of aboutContentBlocks; let i = index">
-    <h1
-      *ngIf="i === 0 && block.type === 'h1'"
-      class="text-3xl md:text-4xl font-heading font-normal mb-6"
-    >
-      {{ block.content }}
-    </h1>
-  </ng-container>
-  <div class="flex flex-col md:flex-row items-center gap-8">
-    <img src="assets/temp-images/ReadyForHarvest.jpg" alt="Ready for Harvest" class="w-full md:w-[400px] max-h-[400px] object-cover rounded shadow"/>
-    <div class="md:w-1/2 space-y-4 font-body text-contrast">
-      <ng-container *ngFor="let block of aboutContentBlocks; let i = index">
-        <p *ngIf="i > 0 && i < 4 && block.type === 'p'">{{ block.content }}</p>
-      </ng-container>
-    </div>
-  </div>
-  <div class="py-8 border-t border-gray-200 mt-8">
-    <ng-container *ngFor="let block of aboutContentBlocks; let i = index">
-      <h2 *ngIf="i === 4 && block.type === 'h2'" class="text-2xl font-heading font-normal mb-4">
-        {{ block.content }}
-      </h2>
-      <p *ngIf="i === 5 && block.type === 'p'" class="font-body text-contrast">
-        {{ block.content }}
-      </p>
+<ng-container *ngFor="let block of aboutContentBlocks">
+
+  <h1 *ngIf="block.type === 'h1'" class="text-4xl md:text-5xl font-heading font-normal text-brown-900 mb-6">
+    {{ block.content }}
+  </h1>
+
+  <h2 *ngIf="block.type === 'h2'" class="text-3xl font-heading font-normal text-brown-800 pt-8 mb-4">
+    {{ block.content }}
+  </h2>
+
+  <!-- People block -->
+  <ng-container *ngIf="block.type === 'people'">
+    <ng-container *ngIf="block.content as peopleList">
+      <div class="space-y-10 pt-4">
+        <div *ngFor="let person of peopleList" class="space-y-3">
+          <!-- Name -->
+          <h3 class="text-lg md:text-xl text-brown-900 font-medium">{{ person.name }}</h3>
+
+          <!-- Image and Text Side-by-Side -->
+          <div class="flex items-start gap-6">
+            <img
+              [src]="person.imageUrl"
+              [alt]="person.name"
+              class="w-[140px] h-[170px] md:w-[160px] md:h-[190px] object-cover rounded shadow shrink-0"
+            />
+            <p class="font-body text-contrast leading-relaxed">{{ person.text }}</p>
+          </div>
+        </div>
+      </div>
+      <hr class="mt-10 border-t border-brown-200" />
     </ng-container>
-  </div>
-</div>
+  </ng-container>
+
+  <p *ngIf="block.type === 'p'" class="font-body text-contrast leading-relaxed mt-6">
+    {{ block.content }}
+  </p>
+
+</ng-container>

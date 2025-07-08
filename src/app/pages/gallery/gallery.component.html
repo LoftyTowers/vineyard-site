@@ -1,17 +1,31 @@
-<div class="max-w-screen-lg mx-auto px-4 py-12 border-t border-gray-200">
+<div class="max-w-screen-lg mx-auto px-4  space-y-8">
   <ng-container *ngFor="let block of galleryContentBlocks">
-    <h1 *ngIf="block.type === 'h1'" class="text-3xl md:text-4xl font-heading font-normal mb-8">
+
+    <h1 *ngIf="block.type === 'h1'" class="text-4xl md:text-5xl font-heading font-normal text-brown-900">
       {{ block.content }}
     </h1>
+
+    <h2 *ngIf="block.type === 'h2'" class="text-2xl md:text-3xl font-heading font-normal text-brown-800">
+      {{ block.content }}
+    </h2>
+
+    <p *ngIf="block.type === 'p'" class="font-body text-contrast leading-relaxed">
+      {{ block.content }}
+    </p>
   </ng-container>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
     <ng-container *ngFor="let block of galleryContentBlocks">
-      <img
-        *ngIf="block.type === 'img'"
-        [src]="block.content"
-        alt="Gallery image"
-        class="w-full h-auto rounded shadow object-cover"
-      />
+      <div *ngIf="block.type === 'image'" class="space-y-2">
+        <img
+          [src]="block.content.src"
+          [alt]="block.content.alt"
+          class="w-full h-auto rounded shadow object-cover"
+        />
+        <p *ngIf="block.content.caption" class="text-sm text-gray-600 italic text-center">
+          {{ block.content.caption }}
+        </p>
+      </div>
     </ng-container>
   </div>
 </div>
