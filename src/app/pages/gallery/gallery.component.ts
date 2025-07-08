@@ -8,9 +8,15 @@ import { NgFor } from '@angular/common';
   styleUrl: './gallery.component.scss'
 })
 export class GalleryComponent {
-  images = [
-    'https://via.placeholder.com/400x300?text=Vineyard+1',
-    'https://via.placeholder.com/400x300?text=Vineyard+2',
-    'https://via.placeholder.com/400x300?text=Vineyard+3',
+  galleryContentBlocks = [
+    { type: 'h1', content: 'Gallery' },
+    { type: 'img', content: 'assets/temp-images/ASunriseAtTheVineyard.jpg' },
+    { type: 'img', content: 'assets/temp-images/HarvestComplete.jpg' },
+    { type: 'img', content: 'assets/temp-images/HelloWoof.jpg' },
+    { type: 'img', content: 'assets/temp-images/JustPlanted.jpg' },
+    { type: 'img', content: 'assets/temp-images/PickedGrapesInSunset.jpg' },
+    { type: 'img', content: 'assets/temp-images/ReadyForHarvest.jpg' },
+    { type: 'img', content: 'assets/temp-images/TheMistyVineyard.jpg' },
+    { type: 'img', content: 'assets/temp-images/TheMoonlitMist.jpg' }
   ];
 }
