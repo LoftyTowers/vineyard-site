@@ -45,6 +45,23 @@ namespace VineyardApi.Data
             modelBuilder.Entity<AuditHistory>()
                 .Property(a => a.NewValue)
                 .HasColumnType("jsonb");
+
+            SeedThemeDefaults(modelBuilder);
+        }
+
+        private static void SeedThemeDefaults(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ThemeDefault>().HasData(
+                new ThemeDefault { Id = 1, Key = "primary", Value = "#3B5F3B" },
+                new ThemeDefault { Id = 2, Key = "secondary", Value = "#A97449" },
+                new ThemeDefault { Id = 3, Key = "accent", Value = "#D5B57A" },
+                new ThemeDefault { Id = 4, Key = "background", Value = "#F9F6F1" },
+                new ThemeDefault { Id = 5, Key = "navbar", Value = "#EFE9DC" },
+                new ThemeDefault { Id = 6, Key = "navbar-border", Value = "#DDD3C2" },
+                new ThemeDefault { Id = 7, Key = "contrast", Value = "#2E2E2E" },
+                new ThemeDefault { Id = 8, Key = "heading font", Value = "\"Playfair Display\", serif" },
+                new ThemeDefault { Id = 9, Key = "body font", Value = "Lora, serif" }
+            );
         }
 
         public override int SaveChanges()
