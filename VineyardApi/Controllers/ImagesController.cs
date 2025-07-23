@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using VineyardApi.Data;
 using VineyardApi.Models;
+using VineyardApi.Services;
 
 namespace VineyardApi.Controllers
 {
@@ -10,21 +9,18 @@ namespace VineyardApi.Controllers
     [Route("images")]
     public class ImagesController : ControllerBase
     {
-        private readonly VineyardDbContext _context;
-        public ImagesController(VineyardDbContext context)
+        private readonly IImageService _service;
+        public ImagesController(IImageService service)
         {
-            _context = context;
+            _service = service;
         }
 
         [Authorize]
         [HttpPost]
         public async Task<IActionResult> SaveImage([FromBody] Image img)
         {
-            img.Id = Guid.NewGuid();
-            img.CreatedAt = DateTime.UtcNow;
-            _context.Images.Add(img);
-            await _context.SaveChangesAsync();
-            return Ok(img);
+            var saved = await _service.SaveImageAsync(img);
+            return Ok(saved);
         }
     }
 }
