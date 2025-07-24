@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VineyardApi.Data;
+using VineyardApi.Repositories;
+using VineyardApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +12,15 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<VineyardDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IPageRepository, PageRepository>();
+builder.Services.AddScoped<IThemeRepository, ThemeRepository>();
+builder.Services.AddScoped<IImageRepository, ImageRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPageService, PageService>();
+builder.Services.AddScoped<IThemeService, ThemeService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
