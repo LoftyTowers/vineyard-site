@@ -1,0 +1,5 @@
+<div class="space-y-2">
+  <img *ngIf="src" [src]="src" [alt]="alt" class="max-w-full" />
+  <input type="text" [(ngModel)]="src" (ngModelChange)="srcChange.emit($event)" placeholder="Image URL" />
+  <input type="file" (change)="onFileSelected($event)" />
+</div>
