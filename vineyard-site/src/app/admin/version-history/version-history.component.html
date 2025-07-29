@@ -1,0 +1,16 @@
+<table>
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Author</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let o of overrides">
+      <td>{{ o.timestamp | date: 'short' }}</td>
+      <td>{{ o.changedBy?.username }}</td>
+      <td>{{ o.note }}</td>
+    </tr>
+  </tbody>
+</table>
