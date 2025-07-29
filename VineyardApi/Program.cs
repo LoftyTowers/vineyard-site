@@ -8,6 +8,17 @@ using VineyardApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Allow overriding connection string and JWT key via environment variables
+var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? string.Empty;
+var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
+    ?? builder.Configuration["Jwt:Key"]
+    ?? string.Empty;
+
+builder.Configuration["ConnectionStrings:DefaultConnection"] = defaultConnection;
+builder.Configuration["Jwt:Key"] = jwtKey;
+
 builder.Services.AddControllers();
 
 builder.Services.AddDbContext<VineyardDbContext>(options =>
