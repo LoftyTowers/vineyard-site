@@ -20,4 +20,8 @@ describe('HomeComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('homeContentBlocks should not be empty', () => {
+    expect(component.homeContentBlocks.length).toBeGreaterThan(0);
+  });
 });
