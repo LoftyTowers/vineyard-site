@@ -6,17 +6,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#3B5F3B',
-        secondary: '#A97449',
-        accent: '#D5B57A',
-        background: '#F9F6F1',
-        navbar: '#EFE9DC',
-        'navbar-border': '#DDD3C2',
-        contrast: '#2E2E2E'
+        primary: 'var(--primary-color)',
+        secondary: 'var(--secondary-color)',
+        accent: 'var(--accent-color)',
+        background: 'var(--background-color)',
+        navbar: 'var(--navbar-color)',
+        'navbar-border': 'var(--navbar-border-color)',
+        contrast: 'var(--contrast-color)'
       },
       fontFamily: {
-        heading: ['"Playfair Display"', 'serif'],
-        body: ['Lora', 'serif']
+        heading: ['var(--heading-font)'],
+        body: ['var(--body-font)']
       }
     },
   },

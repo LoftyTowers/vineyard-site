@@ -3,6 +3,17 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary-color: #3B5F3B;
+  --secondary-color: #A97449;
+  --accent-color: #D5B57A;
+  --background-color: #F9F6F1;
+  --navbar-color: #EFE9DC;
+  --navbar-border-color: #DDD3C2;
+  --contrast-color: #2E2E2E;
+  --heading-font: '"Playfair Display"', serif;
+  --body-font: 'Lora', serif;
+}
 * {
   margin: 0;
   padding: 0;
@@ -16,7 +27,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   margin-bottom: 0.5em;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--heading-font);
   font-weight: 400;
 }
 
