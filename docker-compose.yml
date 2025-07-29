@@ -1,0 +1,29 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: vineyarddb
+      POSTGRES_USER: vineyard
+      POSTGRES_PASSWORD: vineyard123
+    volumes:
+      - db_data:/var/lib/postgresql/data
+  api:
+    build:
+      context: ./VineyardApi
+    environment:
+      ASPNETCORE_URLS: http://+:5212
+      ConnectionStrings__DefaultConnection: Host=db;Database=vineyarddb;Username=vineyard;Password=vineyard123
+    depends_on:
+      - db
+    ports:
+      - "5212:5212"
+  frontend:
+    build:
+      context: ./vineyard-site
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+volumes:
+  db_data:
