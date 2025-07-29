@@ -20,6 +20,9 @@ export class ThemeEditorComponent implements OnInit {
     'Georgia, serif'
   ];
 
+  statusOptions = ['draft', 'published'];
+  status = this.statusOptions[0];
+
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
@@ -29,6 +32,28 @@ export class ThemeEditorComponent implements OnInit {
   }
 
   save(): void {
-    this.http.post('/api/branding-overrides', this.theme).subscribe();
+    const note = window.prompt('Add a note describing these changes:');
+    if (note === null) {
+      return;
+    }
+    const payload = { theme: this.theme, status: this.status, note };
+    this.http.post('/api/branding-overrides', payload).subscribe({
+      next: () => window.alert('Overrides saved successfully'),
+      error: () => window.alert('Failed to save overrides')
+    });
+  }
+
+  publish(): void {
+    this.http.post('/api/branding-overrides/publish', {}).subscribe({
+      next: () => window.alert('Published successfully'),
+      error: () => window.alert('Publish failed')
+    });
+  }
+
+  revert(): void {
+    this.http.post('/api/branding-overrides/revert', {}).subscribe({
+      next: () => window.alert('Reverted successfully'),
+      error: () => window.alert('Revert failed')
+    });
   }
 }
