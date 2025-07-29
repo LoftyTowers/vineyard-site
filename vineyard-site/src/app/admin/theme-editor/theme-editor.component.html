@@ -1,4 +1,5 @@
 <div class="theme-editor">
+  <mat-progress-spinner *ngIf="loading" mode="indeterminate"></mat-progress-spinner>
   <div *ngFor="let key of colorKeys" class="color-input">
     <label [for]="key">{{ key }}</label>
     <input

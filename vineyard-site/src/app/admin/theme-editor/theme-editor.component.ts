@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-theme-editor',
@@ -24,12 +25,21 @@ export class ThemeEditorComponent implements OnInit {
   statusOptions = ['draft', 'published'];
   status = this.statusOptions[0];
   isAdmin = false;
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  loading = false;
+  constructor(private http: HttpClient, private auth: AuthService, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
     this.isAdmin = this.auth.hasRole('Admin');
-    this.http.get<Record<string, string>>('/api/branding-overrides').subscribe((data) => {
-      this.theme = { ...data };
+    this.loading = true;
+    this.http.get<Record<string, string>>('/api/branding-overrides').subscribe({
+      next: (data) => {
+        this.theme = { ...data };
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+        this.snackBar.open('Failed to load overrides', 'Close', { duration: 3000 });
+      }
     });
   }
 
@@ -39,23 +49,44 @@ export class ThemeEditorComponent implements OnInit {
       return;
     }
     const payload = { theme: this.theme, status: this.status, note };
+    this.loading = true;
     this.http.post('/api/branding-overrides', payload).subscribe({
-      next: () => window.alert('Overrides saved successfully'),
-      error: () => window.alert('Failed to save overrides')
+      next: () => {
+        this.loading = false;
+        this.snackBar.open('Overrides saved successfully', 'Close', { duration: 3000 });
+      },
+      error: () => {
+        this.loading = false;
+        this.snackBar.open('Failed to save overrides', 'Close', { duration: 3000 });
+      }
     });
   }
 
   publish(): void {
+    this.loading = true;
     this.http.post('/api/branding-overrides/publish', {}).subscribe({
-      next: () => window.alert('Published successfully'),
-      error: () => window.alert('Publish failed')
+      next: () => {
+        this.loading = false;
+        this.snackBar.open('Published successfully', 'Close', { duration: 3000 });
+      },
+      error: () => {
+        this.loading = false;
+        this.snackBar.open('Publish failed', 'Close', { duration: 3000 });
+      }
     });
   }
 
   revert(): void {
+    this.loading = true;
     this.http.post('/api/branding-overrides/revert', {}).subscribe({
-      next: () => window.alert('Reverted successfully'),
-      error: () => window.alert('Revert failed')
+      next: () => {
+        this.loading = false;
+        this.snackBar.open('Reverted successfully', 'Close', { duration: 3000 });
+      },
+      error: () => {
+        this.loading = false;
+        this.snackBar.open('Revert failed', 'Close', { duration: 3000 });
+      }
     });
   }
 }
