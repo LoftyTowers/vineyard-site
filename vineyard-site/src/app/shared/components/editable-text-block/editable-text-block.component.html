@@ -1,1 +1,2 @@
-<quill-editor [(ngModel)]="content" (ngModelChange)="contentChange.emit($event)"></quill-editor>
+<div *ngIf="!editable" [innerHTML]="content"></div>
+<quill-editor *ngIf="editable" [(ngModel)]="content" (ngModelChange)="contentChange.emit($event)"></quill-editor>

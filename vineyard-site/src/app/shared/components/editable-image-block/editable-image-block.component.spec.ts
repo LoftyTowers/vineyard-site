@@ -14,6 +14,7 @@ describe('EditableImageBlockComponent', () => {
 
     fixture = TestBed.createComponent(EditableImageBlockComponent);
     component = fixture.componentInstance;
+    component.editable = true;
     fixture.detectChanges();
   });
 
