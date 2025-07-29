@@ -26,4 +26,17 @@ describe('ThemeEditorComponent', () => {
     httpMock.expectOne('/api/branding-overrides').flush({});
     expect(component).toBeTruthy();
   });
+
+  it('should POST updated theme on save', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/branding-overrides').flush({ primary: '#fff' });
+
+    component.theme['primary'] = '#000';
+    component.save();
+
+    const req = httpMock.expectOne('/api/branding-overrides');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(component.theme);
+    req.flush({});
+  });
 });
