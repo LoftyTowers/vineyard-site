@@ -23,6 +23,8 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IContentOverrideRepository, ContentOverrideRepository>();
 builder.Services.AddScoped<IContentOverrideService, ContentOverrideService>();
+builder.Services.AddScoped<IAuditRepository, AuditRepository>();
+builder.Services.AddScoped<IAuditService, AuditService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -4,6 +4,8 @@ import { HomeComponent } from './pages/home/home.component';
 import { AboutComponent } from './pages/about/about.component';
 import { GalleryComponent } from './pages/gallery/gallery.component';
 import { ThemeEditorComponent } from './admin/theme-editor/theme-editor.component';
+import { VersionHistoryComponent } from './admin/version-history/version-history.component';
+import { ActivityLogComponent } from './admin/activity-log/activity-log.component';
 import { authGuard } from './services/auth.guard';
 
 const routes: Routes = [
@@ -13,6 +15,18 @@ const routes: Routes = [
   {
     path: 'admin/theme-editor',
     component: ThemeEditorComponent,
+    canActivate: [authGuard],
+    data: { roles: ['Admin'] }
+  },
+  {
+    path: 'admin/versions',
+    component: VersionHistoryComponent,
+    canActivate: [authGuard],
+    data: { roles: ['Admin'] }
+  },
+  {
+    path: 'admin/activity',
+    component: ActivityLogComponent,
     canActivate: [authGuard],
     data: { roles: ['Admin'] }
   },

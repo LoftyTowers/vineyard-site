@@ -37,6 +37,7 @@ namespace VineyardApi.Repositories
         {
             return await _context.ContentOverrides
                 .Include(o => o.Page)
+                .Include(o => o.ChangedBy)
                 .Where(o => o.Page!.Route == route && o.BlockKey == blockKey)
                 .OrderByDescending(o => o.Timestamp)
                 .ToListAsync();
