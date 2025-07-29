@@ -32,11 +32,34 @@ describe('ThemeEditorComponent', () => {
     httpMock.expectOne('/api/branding-overrides').flush({ primary: '#fff' });
 
     component.theme['primary'] = '#000';
+    spyOn(window, 'prompt').and.returnValue('note');
     component.save();
 
     const req = httpMock.expectOne('/api/branding-overrides');
     expect(req.request.method).toBe('POST');
-    expect(req.request.body).toEqual(component.theme);
+    expect(req.request.body).toEqual({ theme: component.theme, status: component.status, note: 'note' });
+    req.flush({});
+  });
+
+  it('should call publish endpoint', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/branding-overrides').flush({});
+
+    component.publish();
+
+    const req = httpMock.expectOne('/api/branding-overrides/publish');
+    expect(req.request.method).toBe('POST');
+    req.flush({});
+  });
+
+  it('should call revert endpoint', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/branding-overrides').flush({});
+
+    component.revert();
+
+    const req = httpMock.expectOne('/api/branding-overrides/revert');
+    expect(req.request.method).toBe('POST');
     req.flush({});
   });
 });
