@@ -16,25 +16,28 @@ describe('EditableTextBlockComponent', () => {
     fixture = TestBed.createComponent(EditableTextBlockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('binds initial content value', () => {
+  it('binds initial content value', async () => {
     component.content = 'initial';
     fixture.detectChanges();
+    await fixture.whenStable();
     const el = fixture.nativeElement.querySelector('quill-editor');
     expect(el.getAttribute('ng-reflect-model')).toContain('initial');
   });
 
-  it('updates content on ngModelChange and emits value', () => {
+  it('updates content on ngModelChange and emits value', async () => {
     const editor = fixture.debugElement.query(By.css('quill-editor'));
     let emitted: string | undefined;
     component.contentChange.subscribe(v => emitted = v);
     editor.triggerEventHandler('ngModelChange', 'updated');
     fixture.detectChanges();
+    await fixture.whenStable();
     expect(component.content).toBe('updated');
     expect(emitted).toBe('updated');
   });
