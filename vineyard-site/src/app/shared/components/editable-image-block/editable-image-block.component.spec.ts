@@ -20,4 +20,26 @@ describe('EditableImageBlockComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('binds initial src and alt inputs', () => {
+    component.src = 'test.jpg';
+    component.alt = 'desc';
+    fixture.detectChanges();
+    const img = fixture.nativeElement.querySelector('img') as HTMLImageElement;
+    const textInput = fixture.nativeElement.querySelector('input[type="text"]') as HTMLInputElement;
+    expect(img.getAttribute('src')).toContain('test.jpg');
+    expect(img.alt).toBe('desc');
+    expect(textInput.value).toBe('test.jpg');
+  });
+
+  it('updates src on input change and emits value', () => {
+    const input = fixture.nativeElement.querySelector('input[type="text"]') as HTMLInputElement;
+    let emitted: string | undefined;
+    component.srcChange.subscribe(v => emitted = v);
+    input.value = 'updated.jpg';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(component.src).toBe('updated.jpg');
+    expect(emitted).toBe('updated.jpg');
+  });
 });
