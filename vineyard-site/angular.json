@@ -89,6 +89,7 @@
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
+              "src/assets/temp-images",
               {
                 "glob": "**/*",
                 "input": "public"
