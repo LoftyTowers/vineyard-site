@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent, EditableImageBlockComponent } from '../../shared/components';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 export type GalleryBlock =
   | { type: 'h1' | 'h2' | 'p'; content: string }
@@ -23,8 +24,8 @@ export type GalleryBlock =
 })
 export class GalleryComponent implements OnInit {
   isAdmin = false;
-  constructor(private http: HttpClient) {}
-  galleryContentBlocks: GalleryBlock[] = [
+  constructor(private http: HttpClient, private auth: AuthService) {}
+  galleryContentBlocks: any[] = [
     { type: 'h1', content: 'Gallery' },
     { type: 'h2', content: 'A few moments from our journey so far.' },
     {
@@ -98,6 +99,7 @@ export class GalleryComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.http.get<Record<string, string>>('/api/overrides/gallery').subscribe((data) => {
       Object.entries(data).forEach(([key, value]) => {
         const index = parseInt(key.replace('block', ''), 10);

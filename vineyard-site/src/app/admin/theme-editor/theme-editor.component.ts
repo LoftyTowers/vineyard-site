@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-theme-editor',
@@ -22,10 +23,11 @@ export class ThemeEditorComponent implements OnInit {
 
   statusOptions = ['draft', 'published'];
   status = this.statusOptions[0];
-
-  constructor(private http: HttpClient) {}
+  isAdmin = false;
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.isAdmin = this.auth.hasRole('Admin');
     this.http.get<Record<string, string>>('/api/branding-overrides').subscribe((data) => {
       this.theme = { ...data };
     });

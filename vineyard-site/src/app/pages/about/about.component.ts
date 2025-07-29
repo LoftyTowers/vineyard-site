@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent, EditableImageBlockComponent } from '../../shared/components';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 type AboutBlock =
   | { type: 'h1' | 'h2' | 'h3' | 'p' | 'notice'; content: string }
@@ -31,7 +32,7 @@ type AboutBlock =
 })
 export class AboutComponent implements OnInit {
   isAdmin = false;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   aboutContentBlocks: AboutBlock[] = [
     { type: 'h1', content: 'Our Story' },
@@ -62,6 +63,7 @@ export class AboutComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.http.get<Record<string, string>>('/api/overrides/about').subscribe((data) => {
       Object.entries(data).forEach(([key, value]) => {
         const index = parseInt(key.replace('block', ''), 10);

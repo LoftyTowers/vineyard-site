@@ -24,7 +24,7 @@
     </select>
   </div>
 
-  <div class="actions">
+  <div class="actions" *ngIf="isAdmin">
     <button type="button" (click)="save()">Save</button>
     <button type="button" (click)="publish()">Publish</button>
     <button type="button" (click)="revert()">Revert</button>
