@@ -1,0 +1,11 @@
+.theme-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.color-input,
+.font-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
