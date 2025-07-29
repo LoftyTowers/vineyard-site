@@ -10,6 +10,7 @@ namespace VineyardApi.Data
 
         public DbSet<Page> Pages => Set<Page>();
         public DbSet<PageOverride> PageOverrides => Set<PageOverride>();
+        public DbSet<ContentOverride> ContentOverrides => Set<ContentOverride>();
         public DbSet<ThemeDefault> ThemeDefaults => Set<ThemeDefault>();
         public DbSet<ThemeOverride> ThemeOverrides => Set<ThemeOverride>();
         public DbSet<Image> Images => Set<Image>();
@@ -39,6 +40,12 @@ namespace VineyardApi.Data
             modelBuilder.Entity<PageOverride>()
                 .Property(p => p.OverrideContent)
                 .HasColumnType("jsonb");
+            modelBuilder.Entity<ContentOverride>()
+                .Property(c => c.Timestamp)
+                .HasDefaultValueSql("now() at time zone 'utc'");
+            modelBuilder.Entity<ContentOverride>()
+                .Property(c => c.Status)
+                .HasDefaultValue("draft");
             modelBuilder.Entity<AuditHistory>()
                 .Property(a => a.PreviousValue)
                 .HasColumnType("jsonb");

@@ -157,6 +157,48 @@ namespace VineyardApi.Migrations
                     b.ToTable("PageOverrides");
                 });
 
+            modelBuilder.Entity("VineyardApi.Models.ContentOverride", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("BlockKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("ChangedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("HtmlValue")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasDefaultValue("draft");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now() at time zone 'utc'");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangedById");
+
+                    b.HasIndex("PageId");
+
+                    b.ToTable("ContentOverrides");
+                });
+
             modelBuilder.Entity("VineyardApi.Models.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -312,6 +354,25 @@ namespace VineyardApi.Migrations
                     b.Navigation("Page");
 
                     b.Navigation("UpdatedBy");
+                });
+
+            modelBuilder.Entity("VineyardApi.Models.ContentOverride", b =>
+                {
+                    b.HasOne("VineyardApi.Models.User", "ChangedBy")
+                        .WithMany()
+                        .HasForeignKey("ChangedById")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("VineyardApi.Models.Page", "Page")
+                        .WithMany()
+                        .HasForeignKey("PageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedBy");
+
+                    b.Navigation("Page");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.ThemeOverride", b =>
