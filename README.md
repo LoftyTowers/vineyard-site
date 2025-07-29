@@ -12,7 +12,8 @@ dotnet restore
 dotnet run --project VineyardApi
 ```
 
-The API listens on `https://localhost:5001` by default.
+The API listens on `http://localhost:5212` by default. Use
+`https://localhost:7170` for HTTPS.
 
 ## Entity Framework migrations
 
