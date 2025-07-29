@@ -6,26 +6,32 @@ import { AboutComponent } from './about.component';
 describe('AboutComponent', () => {
   let component: AboutComponent;
   let fixture: ComponentFixture<AboutComponent>;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AboutComponent, HttpClientTestingModule]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AboutComponent);
     component = fixture.componentInstance;
-    const httpMock = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/about').flush({});
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
     httpMock.verify();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/about').flush({});
     expect(component).toBeTruthy();
   });
 
-  it('aboutContentBlocks should not be empty', () => {
-    expect(component.aboutContentBlocks.length).toBeGreaterThan(0);
+  it('renders merged block content', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/about').flush({ block0: 'override title' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('override title');
   });
 });
