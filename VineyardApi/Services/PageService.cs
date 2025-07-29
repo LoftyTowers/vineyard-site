@@ -50,7 +50,7 @@ namespace VineyardApi.Services
         {
             foreach (var prop in update)
             {
-                original[prop.Key] = prop.Value;
+                original[prop.Key] = prop.Value?.DeepClone();
             }
             return original;
         }

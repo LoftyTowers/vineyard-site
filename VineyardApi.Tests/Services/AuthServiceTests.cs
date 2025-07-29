@@ -23,7 +23,7 @@ namespace VineyardApi.Tests.Services
             _users = new Mock<IUserRepository>();
             var inMemorySettings = new Dictionary<string, string?>
             {
-                {"Jwt:Key", "supersecret"}
+                {"Jwt:Key", "supersecret_key_123"}
             };
             _config = new ConfigurationBuilder()
                 .AddInMemoryCollection(inMemorySettings)
