@@ -35,9 +35,14 @@ namespace VineyardApi.Services
                 keyString = keyString.PadRight(32, '0');
             }
             var key = Encoding.UTF8.GetBytes(keyString);
+            var claims = new List<Claim> { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) };
+            foreach (var role in user.Roles.Select(r => r.Role!.Name))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) }),
+                Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };

@@ -18,8 +18,8 @@
     <ng-container *ngFor="let block of galleryContentBlocks; let i = index">
       <div *ngIf="block.type === 'image'" class="space-y-2">
         <app-editable-image-block
-          [(src)]="galleryContentBlocks[i].content.src"
-          [alt]="block.content.alt"
+          [(src)]="$any(galleryContentBlocks[i].content).src"
+          [alt]="$any(block.content).alt"
           [editable]="isAdmin"></app-editable-image-block>
         <p *ngIf="block.content.caption" class="text-sm text-gray-600 italic text-center">
           {{ block.content.caption }}

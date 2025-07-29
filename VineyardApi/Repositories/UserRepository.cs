@@ -14,7 +14,10 @@ namespace VineyardApi.Repositories
 
         public Task<User?> GetByUsernameAsync(string username)
         {
-            return _context.Users.FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
+            return _context.Users
+                .Include(u => u.Roles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
         }
 
         public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
