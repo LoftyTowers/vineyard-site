@@ -8,10 +8,22 @@
 
 <div class="flex flex-col items-start gap-6 py-12 border-t border-gray-200">
   <div class="w-full space-y-4 font-body">
-    <ng-container *ngFor="let block of homeContentBlocks">
-      <p *ngIf="block.type === 'p'" class="text-contrast">{{ block.content }}</p>
-      <h2 *ngIf="block.type === 'h2'" class="text-contrast">{{ block.content }}</h2>
-      <h3 *ngIf="block.type === 'h3'" class="text-contrast">{{ block.content }}</h3>
+    <ng-container *ngFor="let block of homeContentBlocks; let i = index">
+      <p *ngIf="block.type === 'p'" class="text-contrast">
+        <app-editable-text-block
+          [(content)]="homeContentBlocks[i].content"
+          [editable]="isAdmin"></app-editable-text-block>
+      </p>
+      <h2 *ngIf="block.type === 'h2'" class="text-contrast">
+        <app-editable-text-block
+          [(content)]="homeContentBlocks[i].content"
+          [editable]="isAdmin"></app-editable-text-block>
+      </h2>
+      <h3 *ngIf="block.type === 'h3'" class="text-contrast">
+        <app-editable-text-block
+          [(content)]="homeContentBlocks[i].content"
+          [editable]="isAdmin"></app-editable-text-block>
+      </h3>
     </ng-container>
   </div>
 </div>

@@ -2,26 +2,25 @@
   <ng-container *ngFor="let block of galleryContentBlocks">
 
     <h1 *ngIf="block.type === 'h1'" class="text-4xl md:text-5xl font-heading font-normal text-brown-900">
-      {{ block.content }}
+      <app-editable-text-block [(content)]="block.content" [editable]="isAdmin"></app-editable-text-block>
     </h1>
 
     <h2 *ngIf="block.type === 'h2'" class="text-2xl md:text-3xl font-heading font-normal text-brown-800">
-      {{ block.content }}
+      <app-editable-text-block [(content)]="block.content" [editable]="isAdmin"></app-editable-text-block>
     </h2>
 
     <p *ngIf="block.type === 'p'" class="font-body text-contrast leading-relaxed">
-      {{ block.content }}
+      <app-editable-text-block [(content)]="block.content" [editable]="isAdmin"></app-editable-text-block>
     </p>
   </ng-container>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <ng-container *ngFor="let block of galleryContentBlocks">
+    <ng-container *ngFor="let block of galleryContentBlocks; let i = index">
       <div *ngIf="block.type === 'image'" class="space-y-2">
-        <img
-          [src]="block.content.src"
+        <app-editable-image-block
+          [(src)]="galleryContentBlocks[i].content.src"
           [alt]="block.content.alt"
-          class="w-full h-auto rounded shadow object-cover"
-        />
+          [editable]="isAdmin"></app-editable-image-block>
         <p *ngIf="block.content.caption" class="text-sm text-gray-600 italic text-center">
           {{ block.content.caption }}
         </p>

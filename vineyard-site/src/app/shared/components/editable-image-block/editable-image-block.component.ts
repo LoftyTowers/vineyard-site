@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 export class EditableImageBlockComponent {
   @Input() src = '';
   @Input() alt = '';
+  @Input() editable = false;
   @Output() srcChange = new EventEmitter<string>();
 
   onFileSelected(event: Event): void {

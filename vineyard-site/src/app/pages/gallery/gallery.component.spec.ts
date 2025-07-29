@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 import { GalleryComponent } from './gallery.component';
 
@@ -8,13 +9,16 @@ describe('GalleryComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GalleryComponent]
+      imports: [GalleryComponent, HttpClientTestingModule]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(GalleryComponent);
     component = fixture.componentInstance;
+    const httpMock = TestBed.inject(HttpTestingController);
     fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/gallery').flush({});
+    httpMock.verify();
   });
 
   it('should create', () => {
