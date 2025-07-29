@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VineyardApi", "VineyardApi\VineyardApi.csproj", "{B560B25A-7953-C250-F730-B02F429A9E17}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VineyardApi.Tests", "VineyardApi.Tests\VineyardApi.Tests.csproj", "{E35527AB-B54A-4F97-A47E-01FBFC0292C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{B560B25A-7953-C250-F730-B02F429A9E17}.Release|x64.Build.0 = Release|Any CPU
 		{B560B25A-7953-C250-F730-B02F429A9E17}.Release|x86.ActiveCfg = Release|Any CPU
 		{B560B25A-7953-C250-F730-B02F429A9E17}.Release|x86.Build.0 = Release|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Debug|x64.Build.0 = Debug|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Debug|x86.Build.0 = Debug|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Release|x64.ActiveCfg = Release|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Release|x64.Build.0 = Release|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Release|x86.ActiveCfg = Release|Any CPU
+		{E35527AB-B54A-4F97-A47E-01FBFC0292C2}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
