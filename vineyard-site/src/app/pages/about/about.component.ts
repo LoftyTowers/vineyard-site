@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
+import { EditableTextBlockComponent, EditableImageBlockComponent } from '../../shared/components';
+import { HttpClient } from '@angular/common/http';
 
 type AboutBlock =
   | { type: 'h1' | 'h2' | 'h3' | 'p' | 'notice'; content: string }
@@ -23,11 +25,14 @@ type AboutBlock =
 
 @Component({
   selector: 'app-about',
-  imports: [...SHARED_IMPORTS],
+  imports: [...SHARED_IMPORTS, EditableTextBlockComponent, EditableImageBlockComponent],
   templateUrl: './about.component.html',
   styleUrl: './about.component.scss'
 })
-export class AboutComponent {
+export class AboutComponent implements OnInit {
+  isAdmin = false;
+  constructor(private http: HttpClient) {}
+
   aboutContentBlocks: AboutBlock[] = [
     { type: 'h1', content: 'Our Story' },
     {
@@ -55,5 +60,16 @@ export class AboutComponent {
       content: 'Together, we are building something small, meaningful, and completely our own.'
     }
   ];
+
+  ngOnInit(): void {
+    this.http.get<Record<string, string>>('/api/overrides/about').subscribe((data) => {
+      Object.entries(data).forEach(([key, value]) => {
+        const index = parseInt(key.replace('block', ''), 10);
+        if (!isNaN(index) && (this.aboutContentBlocks as any)[index]) {
+          (this.aboutContentBlocks as any)[index].content = value;
+        }
+      });
+    });
+  }
 }
 

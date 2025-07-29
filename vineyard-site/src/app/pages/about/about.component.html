@@ -1,12 +1,26 @@
 <ng-container *ngFor="let block of aboutContentBlocks">
 
   <h1 *ngIf="block.type === 'h1'" class="text-4xl md:text-5xl font-heading font-normal text-brown-900 mb-6">
-    {{ block.content }}
+    <app-editable-text-block
+      [(content)]="block.content"
+      [editable]="isAdmin"></app-editable-text-block>
   </h1>
 
   <h2 *ngIf="block.type === 'h2'" class="text-3xl font-heading font-normal text-brown-800 pt-8 mb-4">
-    {{ block.content }}
+    <app-editable-text-block
+      [(content)]="block.content"
+      [editable]="isAdmin"></app-editable-text-block>
   </h2>
+
+  <div *ngIf="block.type === 'image'" class="my-6 text-center space-y-2">
+    <app-editable-image-block
+      [(src)]="block.content.src"
+      [alt]="block.content.alt"
+      [editable]="isAdmin"></app-editable-image-block>
+    <p *ngIf="block.content.caption" class="text-sm text-gray-600 italic">
+      {{ block.content.caption }}
+    </p>
+  </div>
 
   <!-- People block -->
   <ng-container *ngIf="block.type === 'people'">
@@ -32,7 +46,9 @@
   </ng-container>
 
   <p *ngIf="block.type === 'p'" class="font-body text-contrast leading-relaxed mt-6">
-    {{ block.content }}
+    <app-editable-text-block
+      [(content)]="block.content"
+      [editable]="isAdmin"></app-editable-text-block>
   </p>
 
 </ng-container>
