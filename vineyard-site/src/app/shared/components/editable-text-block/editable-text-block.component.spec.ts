@@ -15,6 +15,7 @@ describe('EditableTextBlockComponent', () => {
 
     fixture = TestBed.createComponent(EditableTextBlockComponent);
     component = fixture.componentInstance;
+    component.editable = true;
     fixture.detectChanges();
     await fixture.whenStable();
   });
