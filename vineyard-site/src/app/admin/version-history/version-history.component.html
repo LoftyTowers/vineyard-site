@@ -4,6 +4,7 @@
       <th>Date</th>
       <th>Author</th>
       <th>Note</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
@@ -11,6 +12,7 @@
       <td>{{ o.timestamp | date: 'short' }}</td>
       <td>{{ o.changedBy?.username }}</td>
       <td>{{ o.note }}</td>
+      <td><button type="button" (click)="onRevert(o.id)">Revert</button></td>
     </tr>
   </tbody>
 </table>
