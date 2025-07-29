@@ -18,6 +18,7 @@
     "@angular/platform-browser-dynamic": "^19.2.0",
     "@angular/router": "^19.2.0",
     "date-fns": "^4.1.0",
+    "jwt-decode": "^4.0.0",
     "ngx-color-picker": "^20.0.0",
     "ngx-quill": "^27.1.2",
     "quill": "^2.0.3",

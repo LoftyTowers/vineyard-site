@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent } from '../../shared/components';
 import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-home',
@@ -11,7 +12,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class HomeComponent implements OnInit {
   isAdmin = false;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   homeContentBlocks = [
     { type: 'p', content: 'Tucked away in the quiet countryside of North Essex, Hollywood Farm Vineyard is a small family project rooted in passion, tradition, and legacy.' },
@@ -21,6 +22,7 @@ export class HomeComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.http.get<Record<string, string>>('/api/overrides/home').subscribe((data) => {
       Object.entries(data).forEach(([key, value]) => {
         const index = parseInt(key.replace('block', ''), 10);
