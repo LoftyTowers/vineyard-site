@@ -1,0 +1,21 @@
+<div class="theme-editor">
+  <div *ngFor="let key of colorKeys" class="color-input">
+    <label [for]="key">{{ key }}</label>
+    <input
+      [id]="key"
+      [(ngModel)]="theme[key]"
+      [colorPicker]="theme[key]"
+      [style.background]="theme[key]"
+      [cpOutputFormat]="'hex'"
+    />
+  </div>
+
+  <div *ngFor="let key of fontKeys" class="font-input">
+    <label [for]="key">{{ key }}</label>
+    <select [id]="key" [(ngModel)]="theme[key]">
+      <option *ngFor="let f of fonts" [ngValue]="f">{{ f }}</option>
+    </select>
+  </div>
+
+  <button type="button" (click)="save()">Save</button>
+</div>
