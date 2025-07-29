@@ -6,26 +6,32 @@ import { GalleryComponent } from './gallery.component';
 describe('GalleryComponent', () => {
   let component: GalleryComponent;
   let fixture: ComponentFixture<GalleryComponent>;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [GalleryComponent, HttpClientTestingModule]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(GalleryComponent);
     component = fixture.componentInstance;
-    const httpMock = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/gallery').flush({});
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
     httpMock.verify();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/gallery').flush({});
     expect(component).toBeTruthy();
   });
 
-  it('galleryContentBlocks should not be empty', () => {
-    expect(component.galleryContentBlocks.length).toBeGreaterThan(0);
+  it('renders merged block content', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/gallery').flush({ block0: 'new gallery' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('new gallery');
   });
 });

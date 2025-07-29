@@ -6,26 +6,32 @@ import { HomeComponent } from './home.component';
 describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
+  let httpMock: HttpTestingController;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [HomeComponent, HttpClientTestingModule]
-    })
-    .compileComponents();
+    }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
-    const httpMock = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/home').flush({});
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
     httpMock.verify();
   });
 
   it('should create', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/home').flush({});
     expect(component).toBeTruthy();
   });
 
-  it('homeContentBlocks should not be empty', () => {
-    expect(component.homeContentBlocks.length).toBeGreaterThan(0);
+  it('renders merged block content', () => {
+    fixture.detectChanges();
+    httpMock.expectOne('/api/overrides/home').flush({ block0: 'override text' });
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('override text');
   });
 });
