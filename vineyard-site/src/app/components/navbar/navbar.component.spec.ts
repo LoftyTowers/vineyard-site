@@ -20,4 +20,22 @@ describe('NavbarComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('toggleMenu should switch isMenuOpen', () => {
+    expect(component.isMenuOpen).toBeFalse();
+    component.toggleMenu();
+    expect(component.isMenuOpen).toBeTrue();
+    component.toggleMenu();
+    expect(component.isMenuOpen).toBeFalse();
+  });
+
+  it('handleClickOutside closes menu when clicking outside', () => {
+    component.isMenuOpen = true;
+    const div = document.createElement('div');
+    component.mobileMenuRef = { nativeElement: div } as any;
+    const event = new MouseEvent('click', { bubbles: true });
+    document.dispatchEvent(event); // ensure listener exists
+    component.handleClickOutside(new MouseEvent('click', { target: document.body } as any));
+    expect(component.isMenuOpen).toBeFalse();
+  });
 });

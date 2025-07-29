@@ -20,4 +20,8 @@ describe('AboutComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('aboutContentBlocks should not be empty', () => {
+    expect(component.aboutContentBlocks.length).toBeGreaterThan(0);
+  });
 });
