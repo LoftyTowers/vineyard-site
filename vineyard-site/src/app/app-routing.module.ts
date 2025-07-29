@@ -4,12 +4,18 @@ import { HomeComponent } from './pages/home/home.component';
 import { AboutComponent } from './pages/about/about.component';
 import { GalleryComponent } from './pages/gallery/gallery.component';
 import { ThemeEditorComponent } from './admin/theme-editor/theme-editor.component';
+import { authGuard } from './services/auth.guard';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'about', component: AboutComponent },
   { path: 'gallery', component: GalleryComponent },
-  { path: 'admin/theme-editor', component: ThemeEditorComponent },
+  {
+    path: 'admin/theme-editor',
+    component: ThemeEditorComponent,
+    canActivate: [authGuard],
+    data: { roles: ['Admin'] }
+  },
   { path: '**', redirectTo: '', pathMatch: 'full' }
 ];
 
