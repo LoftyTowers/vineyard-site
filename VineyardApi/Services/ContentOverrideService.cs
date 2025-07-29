@@ -37,6 +37,14 @@ namespace VineyardApi.Services
             await _repository.SaveChangesAsync();
         }
 
+        public async Task PublishAsync(ContentOverride model)
+        {
+            model.Status = "published";
+            model.Timestamp = DateTime.UtcNow;
+            _repository.Add(model);
+            await _repository.SaveChangesAsync();
+        }
+
         public async Task PublishDraftAsync(Guid id)
         {
             var draft = await _repository.GetByIdAsync(id);
