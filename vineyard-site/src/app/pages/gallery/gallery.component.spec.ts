@@ -20,4 +20,8 @@ describe('GalleryComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('galleryContentBlocks should not be empty', () => {
+    expect(component.galleryContentBlocks.length).toBeGreaterThan(0);
+  });
 });
