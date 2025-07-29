@@ -35,9 +35,13 @@ namespace VineyardApi.Tests.Services
 
             var result = await _service.GetThemeAsync();
 
-            result.Should().ContainKey("primary").WhichValue.Should().Be("#fff");
-            result.Should().ContainKey("secondary").WhichValue.Should().Be("#000");
+            result.Should().ContainKey("primary");
+            result["primary"].Should().Be("#fff");
+
+            result.Should().ContainKey("secondary");
+            result["secondary"].Should().Be("#000");
         }
+
 
         [Test]
         public async Task GetThemeAsync_MergesOverrides_WhenPresent()
