@@ -8,6 +8,23 @@ namespace VineyardApi.Tests.Data
 {
     public class VineyardDbContextTests
     {
+        private class TestVineyardDbContext : VineyardDbContext
+        {
+            public TestVineyardDbContext(DbContextOptions<VineyardDbContext> options)
+                : base(options) { }
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+            {
+                base.OnModelCreating(modelBuilder);
+
+                // Ignore JsonObject properties not supported by the in-memory provider
+                modelBuilder.Entity<AuditHistory>().Ignore(a => a.PreviousValue);
+                modelBuilder.Entity<AuditHistory>().Ignore(a => a.NewValue);
+                modelBuilder.Entity<Page>().Ignore(p => p.DefaultContent);
+                modelBuilder.Entity<PageOverride>().Ignore(p => p.OverrideContent);
+            }
+        }
+
         [Test]
         public void Model_Contains_ContentOverrides_Entity()
         {
@@ -15,7 +32,7 @@ namespace VineyardApi.Tests.Data
                 .UseInMemoryDatabase(databaseName: "test_db")
                 .Options;
 
-            using var context = new VineyardDbContext(options);
+            using var context = new TestVineyardDbContext(options);
 
             // Property should be accessible as DbSet
             context.ContentOverrides.Should().NotBeNull();
