@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface OverrideInfo {
   id: string;
@@ -17,15 +18,26 @@ interface OverrideInfo {
 })
 export class VersionHistoryComponent implements OnInit {
   overrides: OverrideInfo[] = [];
+  loading = false;
 
   @Output() revert = new EventEmitter<string>();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
+    this.loading = true;
     this.http
       .get<OverrideInfo[]>('/api/overrides/history/home/block0')
-      .subscribe((data) => (this.overrides = data));
+      .subscribe({
+        next: (data) => {
+          this.overrides = data;
+          this.loading = false;
+        },
+        error: () => {
+          this.loading = false;
+          this.snackBar.open('Failed to load history', 'Close', { duration: 3000 });
+        }
+      });
   }
 
   onRevert(id: string): void {
