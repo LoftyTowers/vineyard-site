@@ -29,7 +29,12 @@ namespace VineyardApi.Services
             await _users.SaveChangesAsync();
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_config["Jwt:Key"]!);
+            var keyString = _config["Jwt:Key"] ?? string.Empty;
+            if (keyString.Length < 32)
+            {
+                keyString = keyString.PadRight(32, '0');
+            }
+            var key = Encoding.UTF8.GetBytes(keyString);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()) }),
