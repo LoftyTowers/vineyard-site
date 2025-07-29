@@ -27,6 +27,8 @@ dotnet ef database update
 ```
 
 The connection string can be edited in `VineyardApi/appsettings.json`.
+You can also set the environment variables `ConnectionStrings__DefaultConnection`
+and `Jwt__Key` to override the database connection and JWT signing key at runtime.
 
 ## Images
 
