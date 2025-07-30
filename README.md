@@ -47,6 +47,18 @@ npx ng build
 
 The optimized assets will be written to `vineyard-site/dist/`.
 
+## Running with Docker Compose
+
+You can spin up the API, database and Angular frontend using Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+The frontend is exposed on port `8080` by default. If port `80` is already in
+use or requires elevated privileges, you can edit `docker-compose.yml` and
+change the port mapping under the `frontend` service.
+
 ## Running tests
 
 Unit tests exist for both the API and the Angular client.
