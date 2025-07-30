@@ -15,6 +15,15 @@ dotnet run --project VineyardApi
 The API listens on `http://localhost:5212` by default. Use
 `https://localhost:7170` for HTTPS.
 
+Windows users may need to fix line endings for `VineyardApi/entrypoint.sh`.
+After pulling this repository with the new `.gitattributes` file, re-clone the
+repo or run the following commands to reset the file with LF endings:
+
+```bash
+git rm --cached VineyardApi/entrypoint.sh
+git checkout -- VineyardApi/entrypoint.sh
+```
+
 ## Entity Framework migrations
 
 To create or apply migrations use the `dotnet-ef` tool:
