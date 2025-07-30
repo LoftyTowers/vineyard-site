@@ -39,6 +39,12 @@ The connection string can be edited in `VineyardApi/appsettings.json`.
 You can also set the environment variables `ConnectionStrings__DefaultConnection`
 and `Jwt__Key` to override the database connection and JWT signing key at runtime.
 
+After applying migrations, seed the database with the default content:
+
+```bash
+psql -f SeedScripts/initial_seed.sql
+```
+
 ## Images
 
 Images are referenced by URL only. Upload files separately and store the
