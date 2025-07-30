@@ -15,7 +15,7 @@ COPY --from=build /app/publish .
 # Copy source for migrations
 COPY --from=build /root/.dotnet /root/.dotnet
 ENV PATH="/root/.dotnet/tools:$PATH"
-COPY entrypoint.sh /entrypoint.sh
+COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 EXPOSE 5212
 ENTRYPOINT ["/entrypoint.sh"]
