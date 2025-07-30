@@ -75,4 +75,11 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Apply pending EF Core migrations at startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<VineyardDbContext>();
+    db.Database.Migrate();
+}
+
 app.Run();
