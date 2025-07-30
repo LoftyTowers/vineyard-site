@@ -24,6 +24,9 @@ services:
     depends_on:
       - api
     ports:
-      - "80:80"
+      # Map host port 8080 to container port 80.
+      # Port 80 often requires elevated privileges or may be occupied on
+      # Windows machines, so we expose the frontend on port 8080 instead.
+      - "8080:80"
 volumes:
   db_data:
