@@ -13,8 +13,6 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 # Copy source for migrations
-COPY --from=build /src ./src
-# Copy installed tools
 COPY --from=build /root/.dotnet /root/.dotnet
 ENV PATH="/root/.dotnet/tools:$PATH"
 COPY entrypoint.sh /entrypoint.sh
