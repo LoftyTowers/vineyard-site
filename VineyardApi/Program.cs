@@ -8,6 +8,9 @@ using VineyardApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 // Allow overriding connection string and JWT key via environment variables
 var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
@@ -62,6 +65,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler("/error");
+app.UseStatusCodePagesWithReExecute("/error/{0}");
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
