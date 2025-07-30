@@ -11,7 +11,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0
 WORKDIR /app
 COPY --from=build /app/publish .
 # Copy source for migrations
-COPY --from=build /src ./VineyardApi
+COPY --from=build /src ./src
 # Install EF tool
 RUN dotnet tool install --global dotnet-ef --version 9.* --no-cache
 ENV PATH="/root/.dotnet/tools:$PATH"
