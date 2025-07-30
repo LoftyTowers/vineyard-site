@@ -1,0 +1,6 @@
+# Ignore node modules and build output
+node_modules
+dist
+.angular
+# Additional local-only files
+.vscode
