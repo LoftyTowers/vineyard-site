@@ -1,9 +1,5 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-# Apply database migrations if available
-if [ "$SKIP_MIGRATIONS" != "true" ]; then
-  dotnet ef database update --project ./src/VineyardApi.csproj --no-build
-fi
-
-exec dotnet VineyardApi.dll
+echo "Starting API and applying migrations..."
+dotnet VineyardApi.dll
