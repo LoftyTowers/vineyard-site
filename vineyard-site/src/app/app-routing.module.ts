@@ -7,6 +7,8 @@ import { ThemeEditorComponent } from './admin/theme-editor/theme-editor.componen
 import { VersionHistoryComponent } from './admin/version-history/version-history.component';
 import { ActivityLogComponent } from './admin/activity-log/activity-log.component';
 import { authGuard } from './services/auth.guard';
+import { NotFoundComponent } from './pages/not-found/not-found.component';
+import { ServerErrorComponent } from './pages/server-error/server-error.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -30,7 +32,8 @@ const routes: Routes = [
     canActivate: [authGuard],
     data: { roles: ['Admin'] }
   },
-  { path: '**', redirectTo: '', pathMatch: 'full' }
+  { path: 'error', component: ServerErrorComponent },
+  { path: '**', component: NotFoundComponent }
 ];
 
 @NgModule({
