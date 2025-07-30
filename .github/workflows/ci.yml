@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: vineyard-site/package-lock.json
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          cache: true
+          cache-dependency-path: |
+            VineyardApi/VineyardApi.csproj
+            VineyardApi.Tests/VineyardApi.Tests.csproj
+      - name: Install and test Node.js project
+        working-directory: vineyard-site
+        env:
+          CHROME_BIN: google-chrome
+        run: npm ci && npm test -- --watch=false --browsers=ChromeHeadless
+      - name: Test .NET solution
+        run: dotnet test Vineyard.sln
