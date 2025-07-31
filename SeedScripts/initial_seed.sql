@@ -1,4 +1,4 @@
--- Seed roles
+-- Seed theme defaults
 INSERT INTO "ThemeDefaults" ("Id","Key","Value") VALUES
   (1,'primary','#3B5F3B'),
   (2,'secondary','#A97449'),
@@ -78,6 +78,37 @@ ON CONFLICT ("Id") DO UPDATE SET
   "DefaultContent" = EXCLUDED."DefaultContent",
   "CreatedAt" = EXCLUDED."CreatedAt",
   "UpdatedAt" = EXCLUDED."UpdatedAt";
+
+-- Seed roles
+INSERT INTO "Roles" ("Id", "Name") VALUES
+  (1, 'Admin'),
+  (2, 'Editor')
+ON CONFLICT ("Id") DO UPDATE SET "Name" = EXCLUDED."Name";
+
+-- Seed permissions
+INSERT INTO "Permissions" ("Id", "Name") VALUES
+  (1, 'CanEditContent'),
+  (2, 'CanEditTheme'),
+  (3, 'CanManageUsers'),
+  (4, 'CanViewAdminPanel'),
+  (5, 'CanPublishContent')
+ON CONFLICT ("Id") DO UPDATE SET "Name" = EXCLUDED."Name";
+
+-- Assign permissions to roles
+INSERT INTO "RolePermissions" ("RoleId", "PermissionId") VALUES
+  (1,1), (1,2), (1,3), (1,4), (1,5),
+  (2,1), (2,2), (2,5), (2,4)
+ON CONFLICT DO NOTHING;
+
+-- Seed default superuser
+INSERT INTO "Users" ("Id", "Username", "PasswordHash", "Email", "CreatedAt", "IsActive") VALUES
+  ('00000000-0000-0000-0000-000000000001', 'admin@example.com', '$2b$12$f2GB4ciZjzhcqrEYgwh.IecJYxvd3uqS1RrQfj.V1kpTill.QmbMe', 'admin@example.com', NOW(), TRUE)
+ON CONFLICT ("Id") DO NOTHING;
+INSERT INTO "UserRoles" ("UserId", "RoleId")
+  SELECT '00000000-0000-0000-0000-000000000001', 1
+  WHERE NOT EXISTS (
+    SELECT 1 FROM "UserRoles" WHERE "UserId"='00000000-0000-0000-0000-000000000001' AND "RoleId"=1
+  );
 
 
 
