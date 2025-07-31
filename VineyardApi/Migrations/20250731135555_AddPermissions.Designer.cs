@@ -3,6 +3,7 @@ using System;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VineyardApi.Data;
@@ -12,9 +13,11 @@ using VineyardApi.Data;
 namespace VineyardApi.Migrations
 {
     [DbContext(typeof(VineyardDbContext))]
-    partial class VineyardDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250731135555_AddPermissions")]
+    partial class AddPermissions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
