@@ -24,7 +24,7 @@ MERGE INTO "Pages" AS t
 USING (
   VALUES
     (
-      '75f1dc70-6120-42c0-9c5e-8138fb755bbe',
+      '75f1dc70-6120-42c0-9c5e-8138fb755bbe'::uuid,
       '',
       '{
         "blocks": [
@@ -34,11 +34,11 @@ USING (
           { "type": "p", "content": "We have had one hand-picked harvest so far and while we are just getting started, the roots run deep." }
         ]
       }'::jsonb,
-      '2025-07-23 00:00:00+00',
-      '2025-07-23 00:00:00+00'
+      '2025-07-23 00:00:00+00'::timestamptz,
+      '2025-07-23 00:00:00+00'::timestamptz
     ),
     (
-      'd1c84029-8121-47cc-9d84-a94c30b163b3',
+      'd1c84029-8121-47cc-9d84-a94c30b163b3'::uuid,
       'about',
       '{
         "blocks": [
@@ -51,11 +51,11 @@ USING (
           { "type": "p", "content": "Together, we are building something small, meaningful, and completely our own." }
         ]
       }'::jsonb,
-      '2025-07-23 00:00:00+00',
-      '2025-07-23 00:00:00+00'
+      '2025-07-23 00:00:00+00'::timestamptz,
+      '2025-07-23 00:00:00+00'::timestamptz
     ),
     (
-      'a0412df9-703d-420a-a1af-2bec3380769f',
+      'a0412df9-703d-420a-a1af-2bec3380769f'::uuid,
       'gallery',
       '{
         "blocks": [
@@ -72,8 +72,8 @@ USING (
           { "type": "image", "content": { "src": "assets/temp-images/TheMoonlitMist.jpg", "alt": "The moonlit mist", "caption": "Taken on a quiet evening just before harvest" } }
         ]
       }'::jsonb,
-      '2025-07-23 00:00:00+00',
-      '2025-07-23 00:00:00+00'
+      '2025-07-23 00:00:00+00'::timestamptz,
+      '2025-07-23 00:00:00+00'::timestamptz
     )
 ) AS s("Id","Route","DefaultContent","CreatedAt","UpdatedAt")
 ON t."Id" = s."Id"
@@ -130,7 +130,7 @@ WHEN NOT MATCHED THEN
 -- Seed default superuser
 MERGE INTO "Users" AS t
 USING (
-  VALUES ('00000000-0000-0000-0000-000000000001', 'admin@example.com', '$2b$12$f2GB4ciZjzhcqrEYgwh.IecJYxvd3uqS1RrQfj.V1kpTill.QmbMe', 'admin@example.com', NOW(), TRUE)
+  VALUES ('00000000-0000-0000-0000-000000000001'::uuid, 'admin@example.com', '$2b$12$f2GB4ciZjzhcqrEYgwh.IecJYxvd3uqS1RrQfj.V1kpTill.QmbMe', 'admin@example.com', NOW(), TRUE)
 ) AS s("Id","Username","PasswordHash","Email","CreatedAt","IsActive")
 ON t."Id" = s."Id"
 WHEN NOT MATCHED THEN
