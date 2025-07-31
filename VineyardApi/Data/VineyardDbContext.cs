@@ -17,6 +17,8 @@ namespace VineyardApi.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserRole> UserRoles => Set<UserRole>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
         public DbSet<AuditHistory> AuditHistories => Set<AuditHistory>();
 
@@ -32,6 +34,9 @@ namespace VineyardApi.Data
 
             modelBuilder.Entity<UserRole>()
                 .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder.Entity<RolePermission>()
+                .HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
             // JSONB conversions
             modelBuilder.Entity<Page>()
