@@ -75,11 +75,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Apply pending EF Core migrations at startup
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<VineyardDbContext>();
-    db.Database.Migrate();
-}
+// Apply pending EF Core migrations and seed data at startup
+app.MigrateDatabase();
+await DbInitializer.SeedAsync(app.Services);
 
 app.Run();
