@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent } from '../../shared/components';
-import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { PageService, PageData } from '../../services/page.service';
 
 @Component({
   selector: 'app-home',
@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class HomeComponent implements OnInit {
   isAdmin = false;
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private pageService: PageService, private auth: AuthService) {}
 
   homeContentBlocks = [
     { type: 'p', content: 'Tucked away in the quiet countryside of North Essex, Hollywood Farm Vineyard is a small family project rooted in passion, tradition, and legacy.' },
@@ -23,13 +23,10 @@ export class HomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
-    this.http.get<Record<string, string>>('/api/overrides/home').subscribe((data) => {
-      Object.entries(data).forEach(([key, value]) => {
-        const index = parseInt(key.replace('block', ''), 10);
-        if (!isNaN(index) && this.homeContentBlocks[index]) {
-          this.homeContentBlocks[index].content = value;
-        }
-      });
+    this.pageService.getPage('').subscribe((data: PageData) => {
+      if (Array.isArray(data.blocks)) {
+        this.homeContentBlocks = data.blocks as any[];
+      }
     });
   }
 }

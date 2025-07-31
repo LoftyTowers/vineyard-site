@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent, EditableImageBlockComponent } from '../../shared/components';
-import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { PageService, PageData } from '../../services/page.service';
 
 export type GalleryBlock =
   | { type: 'h1' | 'h2' | 'p'; content: string }
@@ -24,7 +24,7 @@ export type GalleryBlock =
 })
 export class GalleryComponent implements OnInit {
   isAdmin = false;
-  constructor(private http: HttpClient, private auth: AuthService) {}
+  constructor(private pageService: PageService, private auth: AuthService) {}
   galleryContentBlocks: any[] = [
     { type: 'h1', content: 'Gallery' },
     { type: 'h2', content: 'A few moments from our journey so far.' },
@@ -100,18 +100,10 @@ export class GalleryComponent implements OnInit {
 
   ngOnInit(): void {
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
-    this.http.get<Record<string, string>>('/api/overrides/gallery').subscribe((data) => {
-      Object.entries(data).forEach(([key, value]) => {
-        const index = parseInt(key.replace('block', ''), 10);
-        if (!isNaN(index) && this.galleryContentBlocks[index]) {
-          (this.galleryContentBlocks[index] as any).content = (this.galleryContentBlocks[index] as any).content || '';
-          if (typeof this.galleryContentBlocks[index].content === 'object' && 'src' in this.galleryContentBlocks[index].content) {
-            (this.galleryContentBlocks[index].content as any).src = value;
-          } else {
-            (this.galleryContentBlocks[index] as any).content = value;
-          }
-        }
-      });
+    this.pageService.getPage('gallery').subscribe((data: PageData) => {
+      if (Array.isArray(data.blocks)) {
+        this.galleryContentBlocks = data.blocks as any[];
+      }
     });
   }
 }
