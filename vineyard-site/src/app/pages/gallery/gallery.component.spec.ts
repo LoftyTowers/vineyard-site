@@ -24,13 +24,13 @@ describe('GalleryComponent', () => {
 
   it('should create', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/gallery').flush({});
+    httpMock.expectOne('/api/pages/gallery').flush({ blocks: [] });
     expect(component).toBeTruthy();
   });
 
   it('renders merged block content', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/gallery').flush({ block0: 'new gallery' });
+    httpMock.expectOne('/api/pages/gallery').flush({ blocks: [{ type: 'h1', content: 'new gallery' }] });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('new gallery');
   });
