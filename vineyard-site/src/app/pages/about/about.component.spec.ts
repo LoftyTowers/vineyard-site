@@ -24,13 +24,13 @@ describe('AboutComponent', () => {
 
   it('should create', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/about').flush({});
+    httpMock.expectOne('/api/pages/about').flush({ blocks: [] });
     expect(component).toBeTruthy();
   });
 
   it('renders merged block content', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/overrides/about').flush({ block0: 'override title' });
+    httpMock.expectOne('/api/pages/about').flush({ blocks: [{ type: 'h1', content: 'override title' }] });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('override title');
   });
