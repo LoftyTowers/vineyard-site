@@ -1,0 +1,6 @@
+<div class="status-page">
+  <h2>API Status</h2>
+  <p *ngIf="status">Status: {{status.status}} ({{status.checkedAt | date:'medium'}})</p>
+  <p *ngIf="!status">No status checked yet.</p>
+  <button (click)="ping()" [disabled]="loading">Ping Now</button>
+</div>
