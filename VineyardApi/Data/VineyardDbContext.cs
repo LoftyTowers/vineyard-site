@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Nodes;
+using System.Text.Json;
+using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 
 namespace VineyardApi.Data
@@ -24,9 +25,20 @@ namespace VineyardApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Page>()
-                .HasIndex(p => p.Route)
-                .IsUnique();
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Page>(e =>
+            {
+                e.Property(p => p.DefaultContent)
+                 .HasColumnType("jsonb");
+                e.HasIndex(p => p.Route).IsUnique();
+            });
+
+            modelBuilder.Entity<PageOverride>(e =>
+            {
+                e.Property(p => p.OverrideContent)
+                 .HasColumnType("jsonb");
+            });
 
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Username)
@@ -38,26 +50,19 @@ namespace VineyardApi.Data
             modelBuilder.Entity<RolePermission>()
                 .HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
-            // JSONB conversions
-            modelBuilder.Entity<Page>()
-                .Property(p => p.DefaultContent)
-                .HasColumnType("jsonb");
-            modelBuilder.Entity<PageOverride>()
-                .Property(p => p.OverrideContent)
-                .HasColumnType("jsonb");
             modelBuilder.Entity<ContentOverride>()
                 .Property(c => c.Timestamp)
                 .HasDefaultValueSql("now() at time zone 'utc'");
             modelBuilder.Entity<ContentOverride>()
                 .Property(c => c.Status)
                 .HasDefaultValue("draft");
+
             modelBuilder.Entity<AuditHistory>()
                 .Property(a => a.PreviousValue)
                 .HasColumnType("jsonb");
             modelBuilder.Entity<AuditHistory>()
                 .Property(a => a.NewValue)
                 .HasColumnType("jsonb");
-
         }
 
 
@@ -100,8 +105,10 @@ namespace VineyardApi.Data
                 {
                     Id = Guid.NewGuid(),
                     AuditLog = log,
-                    PreviousValue = entry.State == EntityState.Modified ? (JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(entry.OriginalValues.ToObject())) as JsonObject) : null,
-                    NewValue = JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(entry.CurrentValues.ToObject())) as JsonObject,
+                    PreviousValue = entry.State == EntityState.Modified
+                        ? JsonSerializer.Serialize(entry.OriginalValues.ToObject())
+                        : null,
+                    NewValue = JsonSerializer.Serialize(entry.CurrentValues.ToObject()),
                     ChangedAt = DateTime.UtcNow
                 };
                 AuditHistories.Add(history);
