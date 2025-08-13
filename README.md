@@ -73,10 +73,13 @@ The optimized assets will be written to `vineyard-site/dist/`.
 
 ## Running with Docker Compose
 
-You can spin up the API, database and Angular frontend using Docker Compose:
+Environment variables for the stack are stored in `.env.*` files. Combine the
+base compose file with an environment-specific override and pass the matching
+env file when starting services. For example, to run the test configuration
+with prebuilt images:
 
 ```bash
-docker-compose up -d
+docker compose --env-file .env.test -f docker-compose.yml -f docker-compose.test.yml up -d
 ```
 
 The frontend is exposed on port `8080` by default. If port `80` is already in
