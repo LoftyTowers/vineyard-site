@@ -17,9 +17,7 @@ namespace VineyardApi.Tests.Data
             {
                 base.OnModelCreating(modelBuilder);
 
-                // Ignore JsonObject properties not supported by the in-memory provider
-                modelBuilder.Entity<AuditHistory>().Ignore(a => a.PreviousValue);
-                modelBuilder.Entity<AuditHistory>().Ignore(a => a.NewValue);
+                // Ignore content types not supported by the in-memory provider
                 modelBuilder.Entity<Page>().Ignore(p => p.DefaultContent);
                 modelBuilder.Entity<PageOverride>().Ignore(p => p.OverrideContent);
             }

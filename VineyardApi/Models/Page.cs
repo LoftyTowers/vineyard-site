@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Nodes;
+using VineyardApi.Domain.Content;
 
 namespace VineyardApi.Models
 {
@@ -15,7 +15,7 @@ namespace VineyardApi.Models
         public string Route { get; set; } = string.Empty;
 
         [Column(TypeName = "jsonb")]
-        public JsonObject? DefaultContent { get; set; }
+        public PageContent DefaultContent { get; set; } = new();
 
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

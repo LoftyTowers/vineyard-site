@@ -1,11 +1,11 @@
-using System.Text.Json.Nodes;
+using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 
 namespace VineyardApi.Services
 {
     public interface IPageService
     {
-        Task<JsonObject?> GetPageContentAsync(string route);
+        Task<PageContent?> GetPageContentAsync(string route);
         Task SaveOverrideAsync(PageOverride model);
     }
 }
