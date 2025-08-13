@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Nodes;
 
 namespace VineyardApi.Models
 {
@@ -15,9 +14,9 @@ namespace VineyardApi.Models
         public AuditLog? AuditLog { get; set; }
 
         [Column(TypeName = "jsonb")]
-        public JsonObject? PreviousValue { get; set; }
+        public string? PreviousValue { get; set; }
         [Column(TypeName = "jsonb")]
-        public JsonObject? NewValue { get; set; }
+        public string? NewValue { get; set; }
         public DateTime ChangedAt { get; set; }
     }
 }

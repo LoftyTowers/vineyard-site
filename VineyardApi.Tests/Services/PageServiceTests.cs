@@ -1,9 +1,9 @@
 using System;
-using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NUnit.Framework;
+using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
@@ -29,12 +29,18 @@ namespace VineyardApi.Tests.Services
             {
                 Id = Guid.NewGuid(),
                 Route = "home",
-                DefaultContent = JsonNode.Parse("{\"greeting\":\"hi\"}")!.AsObject(),
+                DefaultContent = new PageContent
+                {
+                    Blocks = { new RichTextBlock { Type = "richText", Html = "hi" } }
+                },
                 Overrides = new[]
                 {
                     new PageOverride
                     {
-                        OverrideContent = JsonNode.Parse("{\"greeting\":\"bye\"}")!.AsObject(),
+                        OverrideContent = new PageContent
+                        {
+                            Blocks = { new RichTextBlock { Type = "richText", Html = "bye" } }
+                        },
                         UpdatedAt = DateTime.UtcNow
                     }
                 }
@@ -44,7 +50,7 @@ namespace VineyardApi.Tests.Services
             var result = await _service.GetPageContentAsync("home");
 
             result.Should().NotBeNull();
-            result!["greeting"]!.GetValue<string>().Should().Be("bye");
+            (result!.Blocks.First() as RichTextBlock)!.Html.Should().Be("bye");
         }
 
         [Test]
@@ -73,13 +79,28 @@ namespace VineyardApi.Tests.Services
         [Test]
         public async Task SaveOverrideAsync_Updates_WhenExisting()
         {
-            var existing = new PageOverride { PageId = Guid.NewGuid(), OverrideContent = new JsonObject { ["foo"] = "bar" } };
-            var model = new PageOverride { PageId = existing.PageId, OverrideContent = new JsonObject { ["foo"] = "baz" }, UpdatedById = Guid.NewGuid() };
+            var existing = new PageOverride
+            {
+                PageId = Guid.NewGuid(),
+                OverrideContent = new PageContent
+                {
+                    Blocks = { new RichTextBlock { Type = "richText", Html = "bar" } }
+                }
+            };
+            var model = new PageOverride
+            {
+                PageId = existing.PageId,
+                OverrideContent = new PageContent
+                {
+                    Blocks = { new RichTextBlock { Type = "richText", Html = "baz" } }
+                },
+                UpdatedById = Guid.NewGuid()
+            };
             _repo.Setup(r => r.GetPageOverrideByPageIdAsync(existing.PageId)).ReturnsAsync(existing);
 
             await _service.SaveOverrideAsync(model);
 
-            existing.OverrideContent!["foo"]!.GetValue<string>().Should().Be("baz");
+            (existing.OverrideContent!.Blocks.First() as RichTextBlock)!.Html.Should().Be("baz");
             existing.UpdatedById.Should().Be(model.UpdatedById);
             _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
             _repo.Verify(r => r.AddPageOverride(It.IsAny<PageOverride>()), Times.Never);

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -24,7 +25,7 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task GetPage_ReturnsOk_WhenFound()
         {
-            var content = new System.Text.Json.Nodes.JsonObject();
+            var content = new PageContent();
             _service.Setup(s => s.GetPageContentAsync("home")).ReturnsAsync(content);
 
             var result = await _controller.GetPage("home");
@@ -35,7 +36,7 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task GetPage_ReturnsNotFound_WhenMissing()
         {
-            _service.Setup(s => s.GetPageContentAsync("missing")).ReturnsAsync((System.Text.Json.Nodes.JsonObject?)null);
+            _service.Setup(s => s.GetPageContentAsync("missing")).ReturnsAsync((PageContent?)null);
 
             var result = await _controller.GetPage("missing");
 
