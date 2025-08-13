@@ -20,8 +20,6 @@ namespace VineyardApi.Tests.Data
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
                 base.OnModelCreating(modelBuilder);
-                modelBuilder.Entity<AuditHistory>().Ignore(a => a.PreviousValue);
-                modelBuilder.Entity<AuditHistory>().Ignore(a => a.NewValue);
                 modelBuilder.Entity<Page>().Ignore(p => p.DefaultContent);
                 modelBuilder.Entity<PageOverride>().Ignore(p => p.OverrideContent);
             }

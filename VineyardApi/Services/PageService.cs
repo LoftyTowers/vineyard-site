@@ -1,4 +1,4 @@
-using System.Text.Json.Nodes;
+using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 
@@ -13,7 +13,7 @@ namespace VineyardApi.Services
             _repository = repository;
         }
 
-        public async Task<JsonObject?> GetPageContentAsync(string route)
+        public async Task<PageContent?> GetPageContentAsync(string route)
         {
             var page = await _repository.GetPageWithOverridesAsync(route);
             if (page == null) return null;
@@ -21,12 +21,8 @@ namespace VineyardApi.Services
             var overrideContent = page.Overrides
                 .OrderByDescending(o => o.UpdatedAt)
                 .FirstOrDefault();
-            var merged = (page.DefaultContent?.DeepClone() as JsonObject) ?? new JsonObject();
-            if (overrideContent?.OverrideContent != null)
-            {
-                merged = MergeJson(merged, overrideContent.OverrideContent);
-            }
-            return merged;
+
+            return overrideContent?.OverrideContent ?? page.DefaultContent;
         }
 
         public async Task SaveOverrideAsync(PageOverride model)
@@ -46,13 +42,6 @@ namespace VineyardApi.Services
             await _repository.SaveChangesAsync();
         }
 
-        private static JsonObject MergeJson(JsonObject original, JsonObject update)
-        {
-            foreach (var prop in update)
-            {
-                original[prop.Key] = prop.Value?.DeepClone();
-            }
-            return original;
-        }
+        
     }
 }

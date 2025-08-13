@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text.Json.Nodes;
+using VineyardApi.Domain.Content;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -34,7 +34,7 @@ namespace VineyardApi.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Route = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    DefaultContent = table.Column<JsonObject>(type: "jsonb", nullable: true),
+                    DefaultContent = table.Column<PageContent>(type: "jsonb", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
@@ -115,7 +115,7 @@ namespace VineyardApi.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PageId = table.Column<Guid>(type: "uuid", nullable: false),
-                    OverrideContent = table.Column<JsonObject>(type: "jsonb", nullable: true),
+                    OverrideContent = table.Column<PageContent>(type: "jsonb", nullable: true),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedById = table.Column<Guid>(type: "uuid", nullable: false)
                 },
@@ -193,8 +193,8 @@ namespace VineyardApi.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AuditLogId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PreviousValue = table.Column<JsonObject>(type: "jsonb", nullable: true),
-                    NewValue = table.Column<JsonObject>(type: "jsonb", nullable: true),
+                    PreviousValue = table.Column<string>(type: "jsonb", nullable: true),
+                    NewValue = table.Column<string>(type: "jsonb", nullable: true),
                     ChangedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
