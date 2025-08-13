@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace VineyardApi.Controllers
 {
     [ApiController]
-    [Route("health")]
+    [Route("api/health")]
     public class HealthController : ControllerBase
     {
         [HttpGet]

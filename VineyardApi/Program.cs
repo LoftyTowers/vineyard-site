@@ -24,6 +24,13 @@ builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddControllers();
 
+// Development CORS policy
+builder.Services.AddCors(options =>
+    options.AddPolicy("Dev", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod()));
+
 builder.Services.AddDbContext<VineyardDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -64,6 +71,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("Dev");
 }
 
 app.UseExceptionHandler("/error");

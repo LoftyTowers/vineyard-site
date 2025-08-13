@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "VineyardApi",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/VineyardApi/bin/Debug/net9.0/VineyardApi.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/VineyardApi",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ConnectionStrings__DefaultConnection": "Host=localhost;Database=vineyarddb;Username=vineyard;Password=vineyard123",
+        "SUPERADMIN_EMAIL": "admin@example.com",
+        "SUPERADMIN_PASSWORD": "ChangeMe123!"
+      }
+    }
+  ]
+}
+
