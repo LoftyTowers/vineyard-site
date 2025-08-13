@@ -4,7 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY . .
 RUN npm install
-RUN npx ng build --configuration=production
+ARG CONFIG=production
+RUN npx ng build --configuration=$CONFIG
 
 # Serve stage
 FROM nginx:alpine
