@@ -45,6 +45,15 @@ After applying migrations, seed the database with the default content:
 psql -f SeedScripts/initial_seed.sql
 ```
 
+## Environment variables
+
+The API reads sensitive settings from environment variables:
+
+- `ConnectionStrings__DefaultConnection` - PostgreSQL connection string.
+- `Jwt__Key` - JWT signing key.
+- `SUPERADMIN_EMAIL` - email for the initial super admin user.
+- `SUPERADMIN_PASSWORD` - password for the super admin user.
+
 ## Images
 
 Images are referenced by URL only. Upload files separately and store the
