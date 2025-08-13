@@ -6,7 +6,7 @@ using VineyardApi.Services;
 namespace VineyardApi.Controllers
 {
     [ApiController]
-    [Route("theme")]
+    [Route("api/theme")]
     public class ThemeController : ControllerBase
     {
         private readonly IThemeService _service;
