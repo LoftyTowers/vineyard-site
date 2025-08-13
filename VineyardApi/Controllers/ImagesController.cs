@@ -6,7 +6,7 @@ using VineyardApi.Services;
 namespace VineyardApi.Controllers
 {
     [ApiController]
-    [Route("images")]
+    [Route("api/images")]
     public class ImagesController : ControllerBase
     {
         private readonly IImageService _service;
