@@ -1,5 +1,18 @@
 version: '3.9'
 services:
+  db:
+    env_file:
+      - .env.production
+    ports: []
   api:
+    env_file:
+      - .env.production
+    image: vineyard-api:latest
+    build: null
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+  frontend:
+    env_file:
+      - .env.production
+    image: vineyard-frontend:latest
+    build: null
