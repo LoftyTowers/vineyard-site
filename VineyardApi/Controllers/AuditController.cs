@@ -5,7 +5,7 @@ using VineyardApi.Services;
 namespace VineyardApi.Controllers
 {
     [ApiController]
-    [Route("audit")]
+    [Route("api/audit")]
     [Authorize(Roles = "Admin")]
     public class AuditController : ControllerBase
     {

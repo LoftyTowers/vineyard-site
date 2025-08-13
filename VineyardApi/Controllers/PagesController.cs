@@ -6,7 +6,7 @@ using VineyardApi.Services;
 namespace VineyardApi.Controllers
 {
     [ApiController]
-    [Route("pages")]
+    [Route("api/pages")]
     public class PagesController : ControllerBase
     {
         private readonly IPageService _service;

@@ -6,7 +6,7 @@ using VineyardApi.Services;
 namespace VineyardApi.Controllers
 {
     [ApiController]
-    [Route("overrides")]
+    [Route("api/overrides")]
     public class OverridesController : ControllerBase
     {
         private readonly IContentOverrideService _service;
