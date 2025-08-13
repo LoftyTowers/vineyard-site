@@ -2,7 +2,9 @@
 
 This folder contains a minimal ASP.NET Core 9 API used by the Angular front end.
 
-## Running the API
+## Local Development
+
+### Run the API
 
 1. Install the .NET 9 SDK.
 2. Restore packages and run the server:
@@ -24,25 +26,51 @@ git rm --cached VineyardApi/entrypoint.sh
 git checkout -- VineyardApi/entrypoint.sh
 ```
 
-## Entity Framework migrations
+### Run the Angular client
 
-To create or apply migrations use the `dotnet-ef` tool:
+The Angular application lives under `vineyard-site`. Start the development
+server with:
+
+```bash
+cd vineyard-site
+npm install
+npm start
+```
+
+The client will proxy API requests to the backend and serve the site on
+`http://localhost:4200`.
+
+### Migrations and seeding
+
+Use the `dotnet-ef` tool to manage migrations and apply them to your local
+database:
 
 ```bash
 dotnet ef migrations add <Name> --project VineyardApi
-# Apply to the configured database
 cd VineyardApi
 dotnet ef database update
 ```
 
-The connection string can be edited in `VineyardApi/appsettings.json`.
-You can also set the environment variables `ConnectionStrings__DefaultConnection`
-and `Jwt__Key` to override the database connection and JWT signing key at runtime.
-
-After applying migrations, seed the database with the default content:
+After applying migrations, seed the database with default content:
 
 ```bash
 psql -f SeedScripts/initial_seed.sql
+```
+
+### Run unit tests
+
+API tests:
+
+```bash
+dotnet test Vineyard.sln
+```
+
+Angular tests (requires a headless Chrome install):
+
+```bash
+cd vineyard-site
+npm install
+CHROME_BIN=/usr/bin/chromium-browser npx ng test --watch=false
 ```
 
 ## Environment variables
@@ -59,52 +87,36 @@ The API reads sensitive settings from environment variables:
 Images are referenced by URL only. Upload files separately and store the
 link in the `Images` table using the `/images` endpoint.
 
-## Building the Angular site
+## Staging/Test Deployment
 
-The Angular application lives under `vineyard-site`. To build the front end:
-
-```bash
-cd vineyard-site
-npm install
-npx ng build
-```
-
-The optimized assets will be written to `vineyard-site/dist/`.
-
-## Running with Docker Compose
-
-Environment variables for the stack are stored in `.env.*` files. Combine the
-base compose file with an environment-specific override and pass the matching
-env file when starting services. For example, to run the test configuration
-with prebuilt images:
+Use the test configuration to spin up the full stack with prebuilt images. The
+`.env.test` file supplies credentials and connection strings.
 
 ```bash
 docker compose --env-file .env.test -f docker-compose.yml -f docker-compose.test.yml up -d
+# Apply migrations and seed data inside the running containers
+docker compose exec api dotnet ef database update
+cat SeedScripts/initial_seed.sql | docker compose exec -T db psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
-The frontend is exposed on port `8080` by default. If port `80` is already in
-use or requires elevated privileges, you can edit `docker-compose.yml` and
-change the port mapping under the `frontend` service.
+The stack exposes the Angular site on port `8080`. Adjust the port mapping in
+`docker-compose.yml` if needed.
 
-## Running tests
+## Production Deployment
 
-Unit tests exist for both the API and the Angular client.
-
-### API tests
+For production, use `.env.production` with the production override file:
 
 ```bash
-dotnet test Vineyard.sln
+docker compose --env-file .env.production -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose exec api dotnet ef database update
+cat SeedScripts/initial_seed.sql | docker compose exec -T db psql -U $POSTGRES_USER -d $POSTGRES_DB
 ```
 
-### Angular tests
+Best practices:
 
-These tests require a headless Chrome install. Run them with:
-
-```bash
-cd vineyard-site
-npm install
-CHROME_BIN=/usr/bin/chromium-browser npx ng test --watch=false
-```
+- Run the stack behind a reverse proxy such as Nginx or Traefik.
+- Enable TLS and automate certificate renewal (e.g., with Let's Encrypt).
+- Schedule regular backups of the `db_data` volume and `.env.production` file.
 
 ## Managing roles and logging in
 
