@@ -45,3 +45,10 @@ testem.log
 Thumbs.db
 bin/
 obj/
+
+# Local-only task states
+.cursorignore
+.gemini/
+.opus/
+.baseline/
+*.zip
