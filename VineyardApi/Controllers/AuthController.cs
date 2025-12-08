@@ -1,5 +1,6 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Models;
+using VineyardApi.Models.Requests;
 using VineyardApi.Services;
 
 namespace VineyardApi.Controllers
@@ -9,20 +10,23 @@ namespace VineyardApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _service;
+        private readonly IValidator<LoginRequest> _validator;
 
-        public AuthController(IAuthService service)
+        public AuthController(IAuthService service, IValidator<LoginRequest> validator)
         {
             _service = service;
+            _validator = validator;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
+            var validationResult = await _validator.ValidateAsync(request, cancellationToken);
+            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+
             var token = await _service.LoginAsync(request.Username, request.Password);
             if (token == null) return Unauthorized();
             return Ok(new { token });
         }
     }
-
-    public record LoginRequest(string Username, string Password);
 }

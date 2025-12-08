@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -10,10 +11,12 @@ namespace VineyardApi.Controllers
     public class PagesController : ControllerBase
     {
         private readonly IPageService _service;
+        private readonly IValidator<PageOverride> _validator;
 
-        public PagesController(IPageService service)
+        public PagesController(IPageService service, IValidator<PageOverride> validator)
         {
             _service = service;
+            _validator = validator;
         }
 
         [HttpGet("{route}")]
@@ -26,8 +29,11 @@ namespace VineyardApi.Controllers
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model)
+        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model, CancellationToken cancellationToken)
         {
+            var validationResult = await _validator.ValidateAsync(model, cancellationToken);
+            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+
             await _service.SaveOverrideAsync(model);
             return Ok();
         }
