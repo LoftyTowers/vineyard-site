@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{B36A84DF-456D-A817-6EDD-3EC3E7F6E11F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotnet", "dotnet", "{9E09FF96-367B-7A25-3C2D-BD1EADA612D7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "layered-microservice", "layered-microservice", "{4433E0F9-A002-DB1E-CA16-18DF2C325DDB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LayeredMicroservice.Tests", "examples\dotnet\layered-microservice\tests\LayeredMicroservice.Tests.csproj", "{837706E3-A2AD-A85E-998B-058B11F1EF5B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{837706E3-A2AD-A85E-998B-058B11F1EF5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{837706E3-A2AD-A85E-998B-058B11F1EF5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{837706E3-A2AD-A85E-998B-058B11F1EF5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{837706E3-A2AD-A85E-998B-058B11F1EF5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9E09FF96-367B-7A25-3C2D-BD1EADA612D7} = {B36A84DF-456D-A817-6EDD-3EC3E7F6E11F}
+		{4433E0F9-A002-DB1E-CA16-18DF2C325DDB} = {9E09FF96-367B-7A25-3C2D-BD1EADA612D7}
+		{837706E3-A2AD-A85E-998B-058B11F1EF5B} = {4433E0F9-A002-DB1E-CA16-18DF2C325DDB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7E7898F6-E6DF-4D33-B120-23B76C2E235F}
+	EndGlobalSection
+EndGlobal
