@@ -1,6 +1,8 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Models;
@@ -18,21 +20,22 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IImageRepository>();
-            _service = new ImageService(_repo.Object);
+            _service = new ImageService(_repo.Object, Mock.Of<ILogger<ImageService>>());
         }
 
         [Test]
         public async Task SaveImageAsync_SetsIdAndCreatedAt_AndPersists()
         {
             var image = new Image { Url = "test" };
-            _repo.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var saved = await _service.SaveImageAsync(image);
 
-            saved.Id.Should().NotBeEmpty();
-            saved.CreatedAt.Should().NotBe(default);
+            saved.IsSuccess.Should().BeTrue();
+            saved.Value!.Id.Should().NotBeEmpty();
+            saved.Value.CreatedAt.Should().NotBe(default);
             _repo.Verify(r => r.AddImage(image), Times.Once);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

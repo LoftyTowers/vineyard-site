@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Models;
@@ -19,7 +21,7 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IThemeRepository>();
-            _service = new ThemeService(_repo.Object);
+            _service = new ThemeService(_repo.Object, Mock.Of<ILogger<ThemeService>>());
         }
 
         [Test]
@@ -30,16 +32,17 @@ namespace VineyardApi.Tests.Services
                 new ThemeDefault { Id = 1, Key = "primary", Value = "#fff" },
                 new ThemeDefault { Id = 2, Key = "secondary", Value = "#000" }
             };
-            _repo.Setup(r => r.GetDefaultsAsync()).ReturnsAsync(defaults);
-            _repo.Setup(r => r.GetOverridesAsync()).ReturnsAsync(new List<ThemeOverride>());
+            _repo.Setup(r => r.GetDefaultsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(defaults);
+            _repo.Setup(r => r.GetOverridesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ThemeOverride>());
 
             var result = await _service.GetThemeAsync();
 
-            result.Should().ContainKey("primary");
-            result["primary"].Should().Be("#fff");
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().ContainKey("primary");
+            result.Value!["primary"].Should().Be("#fff");
 
-            result.Should().ContainKey("secondary");
-            result["secondary"].Should().Be("#000");
+            result.Value.Should().ContainKey("secondary");
+            result.Value!["secondary"].Should().Be("#000");
         }
 
 
@@ -54,24 +57,27 @@ namespace VineyardApi.Tests.Services
             {
                 new ThemeOverride { ThemeDefaultId = 1, Value = "#111", UpdatedAt = DateTime.UtcNow }
             };
-            _repo.Setup(r => r.GetDefaultsAsync()).ReturnsAsync(defaults);
-            _repo.Setup(r => r.GetOverridesAsync()).ReturnsAsync(overrides);
+            _repo.Setup(r => r.GetDefaultsAsync(It.IsAny<CancellationToken>())).ReturnsAsync(defaults);
+            _repo.Setup(r => r.GetOverridesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(overrides);
 
             var result = await _service.GetThemeAsync();
 
-            result["primary"].Should().Be("#111");
+            result.IsSuccess.Should().BeTrue();
+            result.Value!["primary"].Should().Be("#111");
         }
 
         [Test]
         public async Task SaveOverrideAsync_Adds_WhenNoExisting()
         {
             var model = new ThemeOverride { ThemeDefaultId = 1 };
-            _repo.Setup(r => r.GetOverrideAsync(1)).ReturnsAsync((ThemeOverride?)null);
+            _repo.Setup(r => r.GetOverrideAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync((ThemeOverride?)null);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model);
 
+            result.IsSuccess.Should().BeTrue();
             _repo.Verify(r => r.AddThemeOverride(model), Times.Once);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             model.UpdatedAt.Should().NotBe(default);
         }
 
@@ -80,14 +86,16 @@ namespace VineyardApi.Tests.Services
         {
             var existing = new ThemeOverride { ThemeDefaultId = 1, Value = "old" };
             var model = new ThemeOverride { ThemeDefaultId = 1, Value = "new", UpdatedById = Guid.NewGuid() };
-            _repo.Setup(r => r.GetOverrideAsync(1)).ReturnsAsync(existing);
+            _repo.Setup(r => r.GetOverrideAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model);
 
+            result.IsSuccess.Should().BeTrue();
             existing.Value.Should().Be("new");
             existing.UpdatedById.Should().Be(model.UpdatedById);
             _repo.Verify(r => r.AddThemeOverride(It.IsAny<ThemeOverride>()), Times.Never);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

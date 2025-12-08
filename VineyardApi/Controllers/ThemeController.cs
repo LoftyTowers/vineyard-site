@@ -17,17 +17,27 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTheme()
+        public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
         {
-            var result = await _service.GetThemeAsync();
-            return Ok(result);
+            var result = await _service.GetThemeAsync(cancellationToken);
+            if (result.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
+            return Ok(result.Value);
         }
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] ThemeOverride model)
+        public async Task<IActionResult> SaveOverride([FromBody] ThemeOverride model, CancellationToken cancellationToken)
         {
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model, cancellationToken);
+            if (result.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
             return Ok();
         }
     }

@@ -16,10 +16,15 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetRecent()
+        public async Task<IActionResult> GetRecent(CancellationToken cancellationToken)
         {
-            var logs = await _service.GetRecentAsync();
-            return Ok(logs);
+            var logs = await _service.GetRecentAsync(cancellationToken: cancellationToken);
+            if (logs.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
+            return Ok(logs.Value);
         }
     }
 }

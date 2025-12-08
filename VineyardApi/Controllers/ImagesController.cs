@@ -17,10 +17,15 @@ namespace VineyardApi.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> SaveImage([FromBody] Image img)
+        public async Task<IActionResult> SaveImage([FromBody] Image img, CancellationToken cancellationToken)
         {
-            var saved = await _service.SaveImageAsync(img);
-            return Ok(saved);
+            var saved = await _service.SaveImageAsync(img, cancellationToken);
+            if (saved.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
+            return Ok(saved.Value);
         }
     }
 }
