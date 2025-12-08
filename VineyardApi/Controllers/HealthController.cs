@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Models;
 
 namespace VineyardApi.Controllers
 {
@@ -7,10 +8,31 @@ namespace VineyardApi.Controllers
     [Route("api/health")]
     public class HealthController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult Get()
+        private readonly ILogger<HealthController> _logger;
+
+        public HealthController(ILogger<HealthController> logger)
         {
-            return Ok(new { status = "Healthy", checkedAt = DateTime.UtcNow });
+            _logger = logger;
+        }
+
+        [HttpGet]
+        public IActionResult Get(CancellationToken cancellationToken)
+        {
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = HttpContext.TraceIdentifier
+            });
+
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return Ok(new { status = "Healthy", checkedAt = DateTime.UtcNow });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Health check failed");
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Health check failed"));
+            }
         }
     }
 }

@@ -13,17 +13,17 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public async Task<Page?> GetPageWithOverridesAsync(string route)
+        public async Task<Page?> GetPageWithOverridesAsync(string route, CancellationToken cancellationToken)
         {
             return await _context.Pages
                 .Include(p => p.Overrides)
-                .FirstOrDefaultAsync(p => p.Route == route);
+                .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
         }
 
-        public async Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId)
+        public async Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId, CancellationToken cancellationToken)
         {
             return await _context.PageOverrides
-                .FirstOrDefaultAsync(p => p.PageId == pageId);
+                .FirstOrDefaultAsync(p => p.PageId == pageId, cancellationToken);
         }
 
         public void AddPageOverride(PageOverride model)
@@ -31,6 +31,6 @@ namespace VineyardApi.Repositories
             _context.PageOverrides.Add(model);
         }
 
-        public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
     }
 }

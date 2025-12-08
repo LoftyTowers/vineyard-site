@@ -4,6 +4,6 @@ namespace VineyardApi.Services
 {
     public interface IAuditService
     {
-        Task<List<AuditLog>> GetRecentAsync(int count = 100);
+        Task<Result<List<AuditLog>>> GetRecentAsync(int count, CancellationToken cancellationToken);
     }
 }

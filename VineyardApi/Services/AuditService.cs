@@ -11,9 +11,10 @@ namespace VineyardApi.Services
             _repository = repository;
         }
 
-        public Task<List<AuditLog>> GetRecentAsync(int count = 100)
+        public async Task<Result<List<AuditLog>>> GetRecentAsync(int count, CancellationToken cancellationToken)
         {
-            return _repository.GetRecentAsync(count);
+            var logs = await _repository.GetRecentAsync(count, cancellationToken);
+            return Result<List<AuditLog>>.Ok(logs);
         }
     }
 }
