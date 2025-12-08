@@ -12,35 +12,35 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public async Task<List<ContentOverride>> GetLatestPublishedAsync(string route)
+        public async Task<List<ContentOverride>> GetLatestPublishedAsync(string route, CancellationToken cancellationToken)
         {
             return await _context.ContentOverrides
                 .Include(o => o.Page)
                 .Where(o => o.Page!.Route == route && o.Status == "published")
                 .GroupBy(o => o.BlockKey)
                 .Select(g => g.OrderByDescending(o => o.Timestamp).First())
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
-        public Task<ContentOverride?> GetDraftAsync(Guid pageId, string blockKey)
+        public Task<ContentOverride?> GetDraftAsync(Guid pageId, string blockKey, CancellationToken cancellationToken)
         {
             return _context.ContentOverrides
-                .FirstOrDefaultAsync(o => o.PageId == pageId && o.BlockKey == blockKey && o.Status == "draft");
+                .FirstOrDefaultAsync(o => o.PageId == pageId && o.BlockKey == blockKey && o.Status == "draft", cancellationToken);
         }
 
-        public Task<ContentOverride?> GetByIdAsync(Guid id)
+        public Task<ContentOverride?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
         {
-            return _context.ContentOverrides.FirstOrDefaultAsync(o => o.Id == id);
+            return _context.ContentOverrides.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
         }
 
-        public async Task<List<ContentOverride>> GetHistoryAsync(string route, string blockKey)
+        public async Task<List<ContentOverride>> GetHistoryAsync(string route, string blockKey, CancellationToken cancellationToken)
         {
             return await _context.ContentOverrides
                 .Include(o => o.Page)
                 .Include(o => o.ChangedBy)
                 .Where(o => o.Page!.Route == route && o.BlockKey == blockKey)
                 .OrderByDescending(o => o.Timestamp)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
 
         public void Add(ContentOverride model)
@@ -48,6 +48,6 @@ namespace VineyardApi.Repositories
             _context.ContentOverrides.Add(model);
         }
 
-        public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
     }
 }

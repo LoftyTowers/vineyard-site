@@ -13,22 +13,25 @@ namespace VineyardApi.Services
             _repository = repository;
         }
 
-        public async Task<PageContent?> GetPageContentAsync(string route)
+        public async Task<Result<PageContent>> GetPageContentAsync(string route, CancellationToken cancellationToken)
         {
-            var page = await _repository.GetPageWithOverridesAsync(route);
-            if (page == null) return null;
+            var page = await _repository.GetPageWithOverridesAsync(route, cancellationToken);
+            if (page == null)
+            {
+                return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found");
+            }
 
             var overrideContent = page.Overrides
                 .OrderByDescending(o => o.UpdatedAt)
                 .FirstOrDefault();
 
-            return overrideContent?.OverrideContent ?? page.DefaultContent;
+            return Result<PageContent>.Ok(overrideContent?.OverrideContent ?? page.DefaultContent);
         }
 
-        public async Task SaveOverrideAsync(PageOverride model)
+        public async Task<Result> SaveOverrideAsync(PageOverride model, CancellationToken cancellationToken)
         {
             model.UpdatedAt = DateTime.UtcNow;
-            var existing = await _repository.GetPageOverrideByPageIdAsync(model.PageId);
+            var existing = await _repository.GetPageOverrideByPageIdAsync(model.PageId, cancellationToken);
             if (existing == null)
             {
                 _repository.AddPageOverride(model);
@@ -39,7 +42,8 @@ namespace VineyardApi.Services
                 existing.UpdatedAt = model.UpdatedAt;
                 existing.UpdatedById = model.UpdatedById;
             }
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(cancellationToken);
+            return Result.Ok();
         }
 
         

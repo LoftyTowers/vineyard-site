@@ -12,13 +12,13 @@ namespace VineyardApi.Services
             _repository = repository;
         }
 
-        public async Task<Image> SaveImageAsync(Image img)
+        public async Task<Result<Image>> SaveImageAsync(Image img, CancellationToken cancellationToken)
         {
             img.Id = Guid.NewGuid();
             img.CreatedAt = DateTime.UtcNow;
             _repository.AddImage(img);
-            await _repository.SaveChangesAsync();
-            return img;
+            await _repository.SaveChangesAsync(cancellationToken);
+            return Result<Image>.Ok(img);
         }
     }
 }
