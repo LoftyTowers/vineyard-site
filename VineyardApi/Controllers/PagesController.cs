@@ -17,18 +17,27 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet("{route}")]
-        public async Task<IActionResult> GetPage(string route)
+        public async Task<IActionResult> GetPage(string route, CancellationToken cancellationToken)
         {
-            var result = await _service.GetPageContentAsync(route);
-            if (result == null) return NotFound();
-            return Ok(result);
+            var result = await _service.GetPageContentAsync(route, cancellationToken);
+            if (result.IsFailure)
+            {
+                return result.Error == ErrorCode.NotFound ? NotFound() : StatusCode(500);
+            }
+
+            return Ok(result.Value);
         }
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model)
+        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model, CancellationToken cancellationToken)
         {
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model, cancellationToken);
+            if (result.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
             return Ok();
         }
     }

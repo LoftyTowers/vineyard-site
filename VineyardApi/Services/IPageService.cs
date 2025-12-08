@@ -5,7 +5,7 @@ namespace VineyardApi.Services
 {
     public interface IPageService
     {
-        Task<PageContent?> GetPageContentAsync(string route);
-        Task SaveOverrideAsync(PageOverride model);
+        Task<Result<PageContent>> GetPageContentAsync(string route, CancellationToken cancellationToken = default);
+        Task<Result> SaveOverrideAsync(PageOverride model, CancellationToken cancellationToken = default);
     }
 }

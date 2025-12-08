@@ -2,6 +2,6 @@ namespace VineyardApi.Services
 {
     public interface IAuthService
     {
-        Task<string?> LoginAsync(string username, string password);
+        Task<Result<string>> LoginAsync(string username, string password, CancellationToken cancellationToken = default);
     }
 }
