@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -5,6 +6,7 @@ using System.Text;
 using VineyardApi.Data;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
+using VineyardApi.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,7 @@ builder.Configuration["ConnectionStrings:DefaultConnection"] = defaultConnection
 builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddControllers();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 // Development CORS policy
 builder.Services.AddCors(options =>

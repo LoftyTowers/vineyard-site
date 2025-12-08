@@ -4,10 +4,10 @@ namespace VineyardApi.Repositories
 {
     public interface IThemeRepository
     {
-        Task<List<ThemeDefault>> GetDefaultsAsync();
-        Task<List<ThemeOverride>> GetOverridesAsync();
-        Task<ThemeOverride?> GetOverrideAsync(int defaultId);
+        Task<List<ThemeDefault>> GetDefaultsAsync(CancellationToken cancellationToken);
+        Task<List<ThemeOverride>> GetOverridesAsync(CancellationToken cancellationToken);
+        Task<ThemeOverride?> GetOverrideAsync(int defaultId, CancellationToken cancellationToken);
         void AddThemeOverride(ThemeOverride model);
-        Task<int> SaveChangesAsync();
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

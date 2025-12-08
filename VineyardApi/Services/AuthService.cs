@@ -4,6 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using VineyardApi.Repositories;
+using VineyardApi.Models;
 
 namespace VineyardApi.Services
 {
@@ -18,15 +19,21 @@ namespace VineyardApi.Services
             _config = config;
         }
 
-        public async Task<string?> LoginAsync(string username, string password)
+        public async Task<Result<string>> LoginAsync(string username, string password, CancellationToken cancellationToken)
         {
-            var user = await _users.GetByUsernameAsync(username);
-            if (user == null) return null;
+            var user = await _users.GetByUsernameAsync(username, cancellationToken);
+            if (user == null)
+            {
+                return Result<string>.Failure(ErrorCode.Unauthorized, "Invalid credentials");
+            }
+
             if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return null;
+            {
+                return Result<string>.Failure(ErrorCode.Unauthorized, "Invalid credentials");
+            }
 
             user.LastLogin = DateTime.UtcNow;
-            await _users.SaveChangesAsync();
+            await _users.SaveChangesAsync(cancellationToken);
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var keyString = _config["Jwt:Key"] ?? string.Empty;
@@ -47,7 +54,7 @@ namespace VineyardApi.Services
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            return Result<string>.Ok(tokenHandler.WriteToken(token));
         }
     }
 }

@@ -12,23 +12,23 @@ namespace VineyardApi.Services
             _repository = repository;
         }
 
-        public async Task<Dictionary<string, string>> GetThemeAsync()
+        public async Task<Result<Dictionary<string, string>>> GetThemeAsync(CancellationToken cancellationToken)
         {
-            var defaults = await _repository.GetDefaultsAsync();
-            var overrides = await _repository.GetOverridesAsync();
+            var defaults = await _repository.GetDefaultsAsync(cancellationToken);
+            var overrides = await _repository.GetOverridesAsync(cancellationToken);
             var result = defaults.ToDictionary(d => d.Key, d => d.Value);
             foreach (var ovr in overrides.OrderByDescending(o => o.UpdatedAt))
             {
                 var key = defaults.FirstOrDefault(d => d.Id == ovr.ThemeDefaultId)?.Key;
                 if (key != null) result[key] = ovr.Value;
             }
-            return result;
+            return Result<Dictionary<string, string>>.Ok(result);
         }
 
-        public async Task SaveOverrideAsync(ThemeOverride model)
+        public async Task<Result> SaveOverrideAsync(ThemeOverride model, CancellationToken cancellationToken)
         {
             model.UpdatedAt = DateTime.UtcNow;
-            var existing = await _repository.GetOverrideAsync(model.ThemeDefaultId);
+            var existing = await _repository.GetOverrideAsync(model.ThemeDefaultId, cancellationToken);
             if (existing == null)
             {
                 _repository.AddThemeOverride(model);
@@ -39,7 +39,8 @@ namespace VineyardApi.Services
                 existing.UpdatedAt = model.UpdatedAt;
                 existing.UpdatedById = model.UpdatedById;
             }
-            await _repository.SaveChangesAsync();
+            await _repository.SaveChangesAsync(cancellationToken);
+            return Result.Ok();
         }
     }
 }

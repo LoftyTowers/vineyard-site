@@ -16,6 +16,6 @@ namespace VineyardApi.Repositories
             _context.Images.Add(image);
         }
 
-        public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
     }
 }
