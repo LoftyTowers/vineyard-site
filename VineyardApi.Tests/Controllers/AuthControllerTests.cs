@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Services;
 
 namespace VineyardApi.Tests.Controllers
@@ -37,7 +39,10 @@ namespace VineyardApi.Tests.Controllers
 
             var result = await _controller.Login(new LoginRequest("u", "p"));
 
-            result.Should().BeOfType<UnauthorizedResult>();
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status400BadRequest);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.BadRequest.ToString());
         }
     }
 }
