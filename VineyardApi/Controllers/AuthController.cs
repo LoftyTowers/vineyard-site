@@ -16,11 +16,15 @@ namespace VineyardApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
-            var token = await _service.LoginAsync(request.Username, request.Password);
-            if (token == null) return Unauthorized();
-            return Ok(new { token });
+            var tokenResult = await _service.LoginAsync(request.Username, request.Password, cancellationToken);
+            if (tokenResult.IsFailure)
+            {
+                return tokenResult.Error == ErrorCode.Unauthorized ? Unauthorized() : StatusCode(500);
+            }
+
+            return Ok(new { token = tokenResult.Value });
         }
     }
 

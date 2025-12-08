@@ -10,46 +10,73 @@ namespace VineyardApi.Controllers
     public class OverridesController : ControllerBase
     {
         private readonly IContentOverrideService _service;
+
         public OverridesController(IContentOverrideService service)
         {
             _service = service;
         }
 
         [HttpGet("{page}")]
-        public async Task<IActionResult> GetOverrides(string page)
+        public async Task<IActionResult> GetOverrides(string page, CancellationToken cancellationToken)
         {
-            var result = await _service.GetPublishedOverridesAsync(page);
-            return Ok(result);
+            var result = await _service.GetPublishedOverridesAsync(page, cancellationToken);
+            if (result.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
+            return Ok(result.Value);
         }
 
-        [Authorize(Roles = "Admin,Editor")]
-        [HttpPost]
-        public async Task<IActionResult> SaveDraft([FromBody] ContentOverride model)
+        [Authorize]
+        [HttpPost("draft")]
+        public async Task<IActionResult> SaveDraft([FromBody] ContentOverride model, CancellationToken cancellationToken)
         {
-            await _service.SaveDraftAsync(model);
+            var result = await _service.SaveDraftAsync(model, cancellationToken);
+            if (result.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
             return Ok();
         }
 
-        [Authorize(Roles = "Admin,Editor")]
+        [Authorize]
         [HttpPost("publish")]
-        public async Task<IActionResult> PublishDraft([FromBody] IdRequest request)
+        public async Task<IActionResult> PublishDraft([FromBody] IdRequest request, CancellationToken cancellationToken)
         {
-            await _service.PublishDraftAsync(request.Id);
+            var result = await _service.PublishDraftAsync(request.Id, cancellationToken);
+            if (result.IsFailure)
+            {
+                return result.Error == ErrorCode.NotFound ? NotFound() : StatusCode(500);
+            }
+
             return Ok();
         }
 
+        [Authorize]
         [HttpGet("history/{page}/{blockKey}")]
-        public async Task<IActionResult> GetHistory(string page, string blockKey)
+        public async Task<IActionResult> GetHistory(string page, string blockKey, CancellationToken cancellationToken)
         {
-            var history = await _service.GetHistoryAsync(page, blockKey);
-            return Ok(history);
+            var result = await _service.GetHistoryAsync(page, blockKey, cancellationToken);
+            if (result.IsFailure)
+            {
+                return StatusCode(500);
+            }
+
+            return Ok(result.Value);
         }
 
-        [Authorize(Roles = "Admin,Editor")]
+        [Authorize]
         [HttpPost("revert")]
-        public async Task<IActionResult> Revert([FromBody] RevertRequest request)
+        public async Task<IActionResult> Revert([FromBody] RevertRequest request, CancellationToken cancellationToken)
         {
-            await _service.RevertAsync(request.Id, request.ChangedById);
+            var result = await _service.RevertAsync(request.Id, request.ChangedById, cancellationToken);
+            if (result.IsFailure)
+            {
+                return result.Error == ErrorCode.NotFound ? NotFound() : StatusCode(500);
+            }
+
             return Ok();
         }
     }
