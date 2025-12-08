@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.AddJsonConsole();
 
 // Allow overriding connection string and JWT key via environment variables
 var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
@@ -23,6 +26,8 @@ builder.Configuration["ConnectionStrings:DefaultConnection"] = defaultConnection
 builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Scoped);
 
 // Development CORS policy
 builder.Services.AddCors(options =>
