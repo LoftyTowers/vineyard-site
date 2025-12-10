@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
@@ -19,7 +20,7 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IPageRepository>();
-            _service = new PageService(_repo.Object);
+            _service = new PageService(_repo.Object, NullLogger<PageService>.Instance);
         }
 
         [Test]

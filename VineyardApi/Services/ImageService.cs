@@ -18,10 +18,10 @@ namespace VineyardApi.Services
 
         public async Task<Image> SaveImageAsync(Image img)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ImageName", img.Name}});
+            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ImageUrl", img.Url}});
             img.Id = Guid.NewGuid();
             img.CreatedAt = DateTime.UtcNow;
-            _logger.LogInformation("Persisting image {ImageName}", img.Name);
+            _logger.LogInformation("Persisting image {ImageUrl}", img.Url);
             _repository.AddImage(img);
             await _repository.SaveChangesAsync();
             return img;

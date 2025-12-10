@@ -32,7 +32,7 @@ namespace VineyardApi.Middleware
             });
 
             var stopwatch = Stopwatch.StartNew();
-            _logger.LogInformation("Starting {RequestMethod} {RequestPath}");
+            _logger.LogInformation("Starting {RequestMethod} {RequestPath}", context.Request.Method, context.Request.Path);
 
             try
             {

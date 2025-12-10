@@ -32,8 +32,8 @@ namespace VineyardApi.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveDraft([FromBody] ContentOverride model)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"Page", model.PageRoute}});
-            _logger.LogInformation("Saving draft override for page {Page}", model.PageRoute);
+            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"Page", model.PageId}});
+            _logger.LogInformation("Saving draft override for page {Page}", model.PageId);
             await _service.SaveDraftAsync(model);
             return Ok();
         }
