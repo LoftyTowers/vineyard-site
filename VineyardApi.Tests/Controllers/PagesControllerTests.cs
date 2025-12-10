@@ -1,12 +1,15 @@
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using VineyardApi.Tests;
 
 namespace VineyardApi.Tests.Controllers
 {
@@ -40,7 +43,10 @@ namespace VineyardApi.Tests.Controllers
 
             var result = await _controller.GetPage("missing");
 
-            result.Should().BeOfType<NotFoundResult>();
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status404NotFound);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.NotFound.ToString());
         }
 
         [Test]

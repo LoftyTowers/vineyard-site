@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 using System.Collections.Generic;
@@ -30,11 +31,12 @@ namespace VineyardApi.Controllers
             if (token == null)
             {
                 _logger.LogWarning("Login failed for {Username}", request.Username);
-                return Unauthorized();
+                return Result<string>.Failure(ErrorCode.BadRequest, "Invalid username or password")
+                    .ToActionResult(this);
             }
 
             _logger.LogInformation("Login succeeded for {Username}", request.Username);
-            return Ok(new { token });
+            return Result<object>.Success(new { token }).ToActionResult(this);
         }
     }
 
