@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Domain.Content;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 using System.Collections.Generic;
@@ -29,11 +31,11 @@ namespace VineyardApi.Controllers
             if (result == null)
             {
                 _logger.LogWarning("No page content found for {PageRoute}", route);
-                return NotFound();
+                return Result<PageContent>.Failure(ErrorCode.NotFound, "Page not found").ToActionResult(this);
             }
 
             _logger.LogInformation("Returning page content for {PageRoute}", route);
-            return Ok(result);
+            return Result<PageContent>.Success(result).ToActionResult(this);
         }
 
         [Authorize]
@@ -44,7 +46,7 @@ namespace VineyardApi.Controllers
             _logger.LogInformation("Saving override for page {PageId}");
             await _service.SaveOverrideAsync(model);
             _logger.LogInformation("Override saved for page {PageId}");
-            return Ok();
+            return Result.Success().ToActionResult(this);
         }
     }
 }
