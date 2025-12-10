@@ -23,7 +23,7 @@ namespace VineyardApi.Controllers
         public async Task<IActionResult> GetPage(string route)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageRoute", route}});
-            _logger.LogInformation("Fetching page content for {PageRoute}");
+            _logger.LogInformation("Fetching page content for {PageRoute}", route);
 
             var result = await _service.GetPageContentAsync(route);
             if (result == null)
