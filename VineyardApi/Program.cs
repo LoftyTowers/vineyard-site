@@ -8,6 +8,7 @@ using VineyardApi.Data;
 using VineyardApi.Middleware;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
+using VineyardApi.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,7 +33,7 @@ builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<Program>(ServiceLifetime.Scoped);
+builder.Services.AddValidatorsFromAssemblyContaining<ContentOverrideValidator>();
 builder.Services.AddHttpContextAccessor();
 
 // Development CORS policy

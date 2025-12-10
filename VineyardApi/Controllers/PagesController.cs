@@ -5,6 +5,7 @@ using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 using System.Collections.Generic;
+using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -14,11 +15,13 @@ namespace VineyardApi.Controllers
     {
         private readonly IPageService _service;
         private readonly ILogger<PagesController> _logger;
+        private readonly IValidator<PageOverride> _validator;
 
-        public PagesController(IPageService service, ILogger<PagesController> logger)
+        public PagesController(IPageService service, ILogger<PagesController> logger, IValidator<PageOverride> validator)
         {
             _service = service;
             _logger = logger;
+            _validator = validator;
         }
 
         [HttpGet("{route}")]
@@ -40,10 +43,13 @@ namespace VineyardApi.Controllers
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model)
+        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model, CancellationToken cancellationToken)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageId", model.PageId}});
             _logger.LogInformation($"Saving override for page {model.PageId}");
+            var validationResult = await _validator.ValidateAsync(model, cancellationToken);
+            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+
             await _service.SaveOverrideAsync(model);
             _logger.LogInformation($"Override saved for page {model.PageId}");
             return Result.Success().ToActionResult(this);
