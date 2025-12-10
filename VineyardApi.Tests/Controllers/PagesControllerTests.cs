@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Services;
@@ -42,8 +43,10 @@ namespace VineyardApi.Tests.Controllers
 
             var result = await _controller.GetPage("missing");
 
-            result.Should().BeOfType<NotFoundResult>();
-            ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status404NotFound);
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status404NotFound);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.NotFound.ToString());
         }
 
         [Test]

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Domain.Content;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -20,8 +22,12 @@ namespace VineyardApi.Controllers
         public async Task<IActionResult> GetPage(string route)
         {
             var result = await _service.GetPageContentAsync(route);
-            if (result == null) return NotFound();
-            return Ok(result);
+            if (result == null)
+            {
+                return Result<PageContent>.Failure(ErrorCode.NotFound, "Page not found").ToActionResult(this);
+            }
+
+            return Result<PageContent>.Success(result).ToActionResult(this);
         }
 
         [Authorize]
@@ -29,7 +35,7 @@ namespace VineyardApi.Controllers
         public async Task<IActionResult> SaveOverride([FromBody] PageOverride model)
         {
             await _service.SaveOverrideAsync(model);
-            return Ok();
+            return Result.Success().ToActionResult(this);
         }
     }
 }
