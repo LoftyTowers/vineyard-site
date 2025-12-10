@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Tests;
 
 namespace VineyardApi.Tests.Controllers
 {
@@ -48,6 +49,22 @@ namespace VineyardApi.Tests.Controllers
         }
 
         [Test]
+        public void HandleStatusCode_400_MapsToBadRequest()
+        {
+            var result = _controller.HandleStatusCode(StatusCodes.Status400BadRequest);
+
+            ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status400BadRequest);
+        }
+
+        [Test]
+        public void HandleStatusCode_499_MapsToClientClosedRequest()
+        {
+            var result = _controller.HandleStatusCode(499);
+
+            ResultHttpMapper.MapToStatusCode(result).Should().Be(499);
+        }
+
+        [Test]
         public void HandleException_LogsErrorAndReturnsProblem()
         {
             var httpContext = new DefaultHttpContext();
@@ -70,6 +87,7 @@ namespace VineyardApi.Tests.Controllers
             var problem = (result as ObjectResult)?.Value as ProblemDetails;
             problem.Should().NotBeNull();
             problem!.Status.Should().Be(500);
+            ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status500InternalServerError);
         }
     }
 }
