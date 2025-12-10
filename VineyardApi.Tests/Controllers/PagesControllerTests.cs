@@ -1,8 +1,11 @@
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
@@ -17,13 +20,24 @@ namespace VineyardApi.Tests.Controllers
     public class PagesControllerTests
     {
         private Mock<IPageService> _service = null!;
+        private Mock<IValidator<PageOverride>> _validator = null!;
         private PagesController _controller = null!;
 
         [SetUp]
         public void Setup()
         {
             _service = new Mock<IPageService>();
-            _controller = new PagesController(_service.Object, NullLogger<PagesController>.Instance);
+
+            _validator = new Mock<IValidator<PageOverride>>();
+            _validator
+                .Setup(v => v.ValidateAsync(It.IsAny<PageOverride>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+
+            _controller = new PagesController(
+                _service.Object,
+                NullLogger<PagesController>.Instance,
+                _validator.Object
+            );
         }
 
         [Test]
@@ -55,7 +69,7 @@ namespace VineyardApi.Tests.Controllers
         {
             var model = new PageOverride();
 
-            var result = await _controller.SaveOverride(model);
+            var result = await _controller.SaveOverride(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.SaveOverrideAsync(model), Times.Once);
