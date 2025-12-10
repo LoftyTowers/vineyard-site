@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
@@ -18,7 +19,7 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IImageRepository>();
-            _service = new ImageService(_repo.Object);
+            _service = new ImageService(_repo.Object, NullLogger<ImageService>.Instance);
         }
 
         [Test]

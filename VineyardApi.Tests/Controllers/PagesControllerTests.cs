@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
 using VineyardApi.Infrastructure;
@@ -22,7 +23,7 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IPageService>();
-            _controller = new PagesController(_service.Object);
+            _controller = new PagesController(_service.Object, NullLogger<PagesController>.Instance);
         }
 
         [Test]
