@@ -1,10 +1,14 @@
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Services;
+using VineyardApi.Tests;
 
 namespace VineyardApi.Tests.Controllers
 {
@@ -17,7 +21,7 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IAuthService>();
-            _controller = new AuthController(_service.Object);
+            _controller = new AuthController(_service.Object, NullLogger<AuthController>.Instance);
         }
 
         [Test]
@@ -28,6 +32,7 @@ namespace VineyardApi.Tests.Controllers
             var result = await _controller.Login(new LoginRequest("user", "pass"));
 
             result.Should().BeOfType<OkObjectResult>();
+            ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status200OK);
         }
 
         [Test]
@@ -37,7 +42,10 @@ namespace VineyardApi.Tests.Controllers
 
             var result = await _controller.Login(new LoginRequest("u", "p"));
 
-            result.Should().BeOfType<UnauthorizedResult>();
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status400BadRequest);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.BadRequest.ToString());
         }
     }
 }
