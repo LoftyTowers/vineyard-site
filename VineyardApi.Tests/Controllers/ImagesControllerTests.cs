@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
 using VineyardApi.Models;
@@ -18,7 +19,7 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IImageService>();
-            _controller = new ImagesController(_service.Object);
+            _controller = new ImagesController(_service.Object, NullLogger<ImagesController>.Instance);
         }
 
         [Test]

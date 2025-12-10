@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
 using VineyardApi.Models;
@@ -22,7 +23,7 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IContentOverrideService>();
-            _controller = new OverridesController(_service.Object);
+            _controller = new OverridesController(_service.Object, NullLogger<OverridesController>.Instance);
         }
 
         [Test]
