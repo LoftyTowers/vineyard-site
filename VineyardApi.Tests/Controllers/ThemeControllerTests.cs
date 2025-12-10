@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
 using VineyardApi.Models;
@@ -19,7 +20,7 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IThemeService>();
-            _controller = new ThemeController(_service.Object);
+            _controller = new ThemeController(_service.Object, NullLogger<ThemeController>.Instance);
         }
 
         [Test]
