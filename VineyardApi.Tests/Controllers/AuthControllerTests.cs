@@ -7,6 +7,7 @@ using NUnit.Framework;
 using VineyardApi.Controllers;
 using VineyardApi.Infrastructure;
 using VineyardApi.Services;
+using VineyardApi.Tests;
 
 namespace VineyardApi.Tests.Controllers
 {
@@ -30,6 +31,7 @@ namespace VineyardApi.Tests.Controllers
             var result = await _controller.Login(new LoginRequest("user", "pass"));
 
             result.Should().BeOfType<OkObjectResult>();
+            ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status200OK);
         }
 
         [Test]
