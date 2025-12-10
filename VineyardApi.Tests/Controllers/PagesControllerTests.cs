@@ -1,12 +1,16 @@
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using VineyardApi.Tests;
 
 namespace VineyardApi.Tests.Controllers
 {
@@ -19,7 +23,7 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IPageService>();
-            _controller = new PagesController(_service.Object);
+            _controller = new PagesController(_service.Object, NullLogger<PagesController>.Instance);
         }
 
         [Test]
@@ -40,7 +44,10 @@ namespace VineyardApi.Tests.Controllers
 
             var result = await _controller.GetPage("missing");
 
-            result.Should().BeOfType<NotFoundResult>();
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status404NotFound);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.NotFound.ToString());
         }
 
         [Test]
