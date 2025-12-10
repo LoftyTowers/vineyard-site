@@ -1,12 +1,16 @@
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
 using VineyardApi.Infrastructure;
+using VineyardApi.Models.Requests;
 using VineyardApi.Services;
 using VineyardApi.Tests;
 
@@ -15,32 +19,49 @@ namespace VineyardApi.Tests.Controllers
     public class AuthControllerTests
     {
         private Mock<IAuthService> _service = null!;
+        private Mock<IValidator<VineyardApi.Controllers.LoginRequest>> _validator = null!;
         private AuthController _controller = null!;
 
         [SetUp]
         public void Setup()
         {
             _service = new Mock<IAuthService>();
-            _controller = new AuthController(_service.Object, NullLogger<AuthController>.Instance);
+
+            _validator = new Mock<IValidator<VineyardApi.Controllers.LoginRequest>>();
+            _validator
+                .Setup(v => v.ValidateAsync(It.IsAny<VineyardApi.Controllers.LoginRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+
+            _controller = new AuthController(
+                _service.Object,
+                NullLogger<AuthController>.Instance,
+                _validator.Object
+            );
         }
 
         [Test]
         public async Task Login_ReturnsOk_WhenTokenReturned()
         {
-            _service.Setup(s => s.LoginAsync("user", "pass")).ReturnsAsync("tok");
+            _service.Setup(s => s.LoginAsync("user", "pass"))
+                .ReturnsAsync("tok");
 
-            var result = await _controller.Login(new LoginRequest("user", "pass"));
+            var request = new VineyardApi.Controllers.LoginRequest("user", "pass");
+
+            var result = await _controller.Login(request, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
             ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status200OK);
         }
 
         [Test]
-        public async Task Login_ReturnsUnauthorized_WhenTokenNull()
+        public async Task Login_ReturnsBadRequest_WhenTokenNull()
         {
-            _service.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync((string?)null);
+            _service.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync((string?)null);
 
-            var result = await _controller.Login(new LoginRequest("u", "p"));
+            var request = new VineyardApi.Controllers.LoginRequest("u", "p");
+
+            var result = await _controller.Login(request, CancellationToken.None);
 
             var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
             problem.Should().NotBeNull();
