@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using FluentValidation;
 using VineyardApi.Data;
 using VineyardApi.Middleware;
 using VineyardApi.Repositories;

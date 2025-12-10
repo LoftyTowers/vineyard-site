@@ -15,12 +15,20 @@ public class PageOverrideValidator : AbstractValidator<PageOverride>
     }
 }
 
-public class PageContentValidator : AbstractValidator<PageContent>
+public class PageContentValidator : AbstractValidator<PageContent?>
 {
     public PageContentValidator()
     {
-        RuleFor(x => x.Blocks).NotNull();
-        RuleForEach(x => x.Blocks).SetValidator(new ContentBlockValidator());
+        // Guard the root object itself
+        RuleFor(x => x)
+            .NotNull();
+
+        // Use x! when accessing members to tell the compiler it's non-null after the check
+        RuleFor(x => x!.Blocks)
+            .NotNull();
+
+        RuleForEach(x => x!.Blocks)
+            .SetValidator(new ContentBlockValidator());
     }
 }
 
