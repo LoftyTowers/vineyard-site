@@ -9,6 +9,7 @@ using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using VineyardApi.Tests;
 
 namespace VineyardApi.Tests.Controllers
 {
