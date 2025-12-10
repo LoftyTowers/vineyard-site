@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -19,8 +20,13 @@ namespace VineyardApi.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var token = await _service.LoginAsync(request.Username, request.Password);
-            if (token == null) return Unauthorized();
-            return Ok(new { token });
+            if (token == null)
+            {
+                return Result<string>.Failure(ErrorCode.BadRequest, "Invalid username or password")
+                    .ToActionResult(this);
+            }
+
+            return Result<object>.Success(new { token }).ToActionResult(this);
         }
     }
 
