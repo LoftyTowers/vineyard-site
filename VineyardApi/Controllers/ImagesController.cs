@@ -23,8 +23,8 @@ namespace VineyardApi.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveImage([FromBody] Image img)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ImageName", img.Name}});
-            _logger.LogInformation("Saving image {ImageName}", img.Name);
+            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ImageUrl", img.Url}});
+            _logger.LogInformation("Saving image {ImageUrl}", img.Url);
             var saved = await _service.SaveImageAsync(img);
             return Ok(saved);
         }
