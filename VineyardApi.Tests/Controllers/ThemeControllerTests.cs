@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
@@ -14,19 +17,31 @@ namespace VineyardApi.Tests.Controllers
     public class ThemeControllerTests
     {
         private Mock<IThemeService> _service = null!;
+        private Mock<IValidator<ThemeOverride>> _validator = null!;
         private ThemeController _controller = null!;
 
         [SetUp]
         public void Setup()
         {
             _service = new Mock<IThemeService>();
-            _controller = new ThemeController(_service.Object, NullLogger<ThemeController>.Instance);
+
+            _validator = new Mock<IValidator<ThemeOverride>>();
+            _validator
+                .Setup(v => v.ValidateAsync(It.IsAny<ThemeOverride>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+
+            _controller = new ThemeController(
+                _service.Object,
+                NullLogger<ThemeController>.Instance,
+                _validator.Object
+            );
         }
 
         [Test]
         public async Task GetTheme_ReturnsOk()
         {
-            _service.Setup(s => s.GetThemeAsync()).ReturnsAsync(new Dictionary<string, string>());
+            _service.Setup(s => s.GetThemeAsync())
+                .ReturnsAsync(new Dictionary<string, string>());
 
             var result = await _controller.GetTheme();
 
@@ -38,7 +53,7 @@ namespace VineyardApi.Tests.Controllers
         {
             var model = new ThemeOverride();
 
-            var result = await _controller.SaveOverride(model);
+            var result = await _controller.SaveOverride(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.SaveOverrideAsync(model), Times.Once);
