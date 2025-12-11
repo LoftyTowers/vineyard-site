@@ -6,7 +6,9 @@ using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
@@ -30,7 +32,7 @@ namespace VineyardApi.Tests.Services
             _config = new ConfigurationBuilder()
                 .AddInMemoryCollection(inMemorySettings)
                 .Build();
-            _service = new AuthService(_users.Object, _config, Mock.Of<ILogger<AuthService>>());
+            _service = new AuthService(_users.Object, _config, NullLogger<AuthService>.Instance);
         }
 
         [Test]

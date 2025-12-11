@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 

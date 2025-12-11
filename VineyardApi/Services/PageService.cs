@@ -1,7 +1,10 @@
 using Microsoft.Extensions.Logging;
+using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace VineyardApi.Services
 {
@@ -20,6 +23,7 @@ namespace VineyardApi.Services
         {
             try
             {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageRoute", route}});
                 var page = await _repository.GetPageWithOverridesAsync(route, cancellationToken);
                 if (page == null)
                 {
@@ -43,15 +47,18 @@ namespace VineyardApi.Services
         {
             try
             {
-                model.UpdatedAt = DateTime.UtcNow;
+                using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageId", model.PageId}});
+            model.UpdatedAt = DateTime.UtcNow;
                 var existing = await _repository.GetPageOverrideByPageIdAsync(model.PageId, cancellationToken);
                 if (existing == null)
                 {
-                    _repository.AddPageOverride(model);
+                    _logger.LogInformation("Creating override for page {PageId}", model.PageId);
+                _repository.AddPageOverride(model);
                 }
                 else
                 {
-                    existing.OverrideContent = model.OverrideContent;
+                    _logger.LogInformation("Updating override for page {PageId}", model.PageId);
+                existing.OverrideContent = model.OverrideContent;
                     existing.UpdatedAt = model.UpdatedAt;
                     existing.UpdatedById = model.UpdatedById;
                 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
@@ -21,7 +22,7 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IThemeRepository>();
-            _service = new ThemeService(_repo.Object, Mock.Of<ILogger<ThemeService>>());
+            _service = new ThemeService(_repo.Object, NullLogger<ThemeService>.Instance);
         }
 
         [Test]

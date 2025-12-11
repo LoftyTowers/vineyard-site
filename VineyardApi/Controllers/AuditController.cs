@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Services;
 
 namespace VineyardApi.Controllers
@@ -19,12 +20,7 @@ namespace VineyardApi.Controllers
         public async Task<IActionResult> GetRecent(CancellationToken cancellationToken)
         {
             var logs = await _service.GetRecentAsync(cancellationToken: cancellationToken);
-            if (logs.IsFailure)
-            {
-                return StatusCode(500);
-            }
-
-            return Ok(logs.Value);
+            return logs.ToActionResult(this);
         }
     }
 }
