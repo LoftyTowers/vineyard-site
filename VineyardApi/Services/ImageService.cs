@@ -1,9 +1,7 @@
 using Microsoft.Extensions.Logging;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 
 namespace VineyardApi.Services
 {
@@ -28,7 +26,7 @@ namespace VineyardApi.Services
                 _logger.LogInformation("Persisting image {ImageUrl}", img.Url);
             _repository.AddImage(img);
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result<Image>.Success(img);
+                return Result<Image>.Ok(img);
             }
             catch (Exception ex)
             {

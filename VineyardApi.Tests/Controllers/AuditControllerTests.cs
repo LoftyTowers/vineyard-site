@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -22,14 +22,14 @@ namespace VineyardApi.Tests.Controllers
         public void Setup()
         {
             _service = new Mock<IAuditService>();
-            _controller = new AuditController(_service.Object);
+            _controller = new AuditController(_service.Object, NullLogger<AuditController>.Instance);
         }
 
         [Test]
         public async Task GetRecent_ReturnsOk()
         {
             _service.Setup(s => s.GetRecentAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result<List<AuditLog>>.Success(new List<AuditLog>()));
+                .ReturnsAsync(Result<List<AuditLog>>.Ok(new List<AuditLog>()));
 
             var result = await _controller.GetRecent(CancellationToken.None);
 

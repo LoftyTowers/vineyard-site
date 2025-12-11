@@ -35,6 +35,7 @@ builder.Services.AddControllers();
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<ContentOverrideValidator>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 // Development CORS policy
 builder.Services.AddCors(options =>

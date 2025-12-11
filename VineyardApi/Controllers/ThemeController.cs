@@ -1,10 +1,9 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Models;
 using VineyardApi.Services;
-using System.Collections.Generic;
-using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -26,22 +25,52 @@ namespace VineyardApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Fetching theme values");
-            var result = await _service.GetThemeAsync(cancellationToken);
-            return result.ToActionResult(this);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId
+            });
+
+            try
+            {
+                var result = await _service.GetThemeAsync(cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load theme");
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unknown, "Failed to load theme"));
+            }
         }
 
         [Authorize]
         [HttpPost("override")]
         public async Task<IActionResult> SaveOverride([FromBody] ThemeOverride model, CancellationToken cancellationToken)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ThemeDefaultId", model.ThemeDefaultId}});
-            _logger.LogInformation("Saving theme override {ThemeDefaultId}", model.ThemeDefaultId);
-            var validationResult = await _validator.ValidateAsync(model, cancellationToken);
-            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["ThemeDefaultId"] = model.ThemeDefaultId,
+                ["UpdatedById"] = model.UpdatedById
+            });
 
-            var result = await _service.SaveOverrideAsync(model, cancellationToken);
-            return result.ToActionResult(this);
+            try
+            {
+                var validation = await _validator.ValidateAsync(model, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    return ResultMapper.FromValidationResult(this, validation);
+                }
+
+                var result = await _service.SaveOverrideAsync(model, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save theme override for default {ThemeDefaultId}", model.ThemeDefaultId);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save theme override"));
+            }
         }
     }
 }
