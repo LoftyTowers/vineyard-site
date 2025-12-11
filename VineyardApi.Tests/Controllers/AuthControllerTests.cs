@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Models;
 using Moq;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using VineyardApi.Infrastructure;
 using VineyardApi.Controllers;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
@@ -43,7 +43,7 @@ namespace VineyardApi.Tests.Controllers
         public async Task Login_ReturnsOk_WhenTokenReturned()
         {
             _service.Setup(s => s.LoginAsync("user", "pass", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result<string>.Success("tok"));
+                .ReturnsAsync(Result<string>.Ok("tok"));
 
             var request = new VineyardApi.Controllers.LoginRequest("user", "pass");
 

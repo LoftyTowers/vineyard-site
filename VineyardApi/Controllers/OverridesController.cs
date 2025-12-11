@@ -1,12 +1,10 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Models;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
-using System.Collections.Generic;
-using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -37,9 +35,10 @@ namespace VineyardApi.Controllers
         [HttpGet("{page}")]
         public async Task<IActionResult> GetOverrides(string page, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["Page"] = page
             });
 
@@ -59,16 +58,17 @@ namespace VineyardApi.Controllers
         [HttpPost("draft")]
         public async Task<IActionResult> SaveDraft([FromBody] ContentOverride model, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["PageId"] = model.PageId,
                 ["BlockKey"] = model.BlockKey
             });
 
             try
             {
-                var validation = await _contentValidator.ValidateAsync(model, cancellationToken);
+                var validation = await _overrideValidator.ValidateAsync(model, cancellationToken);
                 if (!validation.IsValid)
                 {
                     return ResultMapper.FromValidationResult(this, validation);
@@ -88,9 +88,10 @@ namespace VineyardApi.Controllers
         [HttpPost("publish")]
         public async Task<IActionResult> PublishDraft([FromBody] IdRequest request, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["Id"] = request.Id
             });
 
@@ -116,9 +117,10 @@ namespace VineyardApi.Controllers
         [HttpGet("history/{page}/{blockKey}")]
         public async Task<IActionResult> GetHistory(string page, string blockKey, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["Page"] = page,
                 ["BlockKey"] = blockKey
             });
@@ -139,9 +141,10 @@ namespace VineyardApi.Controllers
         [HttpPost("revert")]
         public async Task<IActionResult> Revert([FromBody] RevertRequest request, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["Id"] = request.Id,
                 ["ChangedById"] = request.ChangedById
             });
@@ -165,6 +168,4 @@ namespace VineyardApi.Controllers
         }
     }
 
-    public record IdRequest(Guid Id);
-    public record RevertRequest(Guid Id, Guid ChangedById);
 }

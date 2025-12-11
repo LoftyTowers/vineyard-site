@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 
@@ -21,7 +20,7 @@ namespace VineyardApi.Services
             try
             {
                 var items = await _repository.GetLatestPublishedAsync(route, cancellationToken);
-                return Result<Dictionary<string, string>>.Success(items.ToDictionary(i => i.BlockKey, i => i.HtmlValue));
+                return Result<Dictionary<string, string>>.Ok(items.ToDictionary(i => i.BlockKey, i => i.HtmlValue));
             }
             catch (Exception ex)
             {
@@ -51,7 +50,7 @@ namespace VineyardApi.Services
                 }
 
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {
@@ -68,7 +67,7 @@ namespace VineyardApi.Services
                 model.Timestamp = DateTime.UtcNow;
                 _repository.Add(model);
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {
@@ -90,7 +89,7 @@ namespace VineyardApi.Services
                 draft.Status = "published";
                 draft.Timestamp = DateTime.UtcNow;
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {
@@ -104,7 +103,7 @@ namespace VineyardApi.Services
             try
             {
                 var history = await _repository.GetHistoryAsync(route, blockKey, cancellationToken);
-                return Result<List<ContentOverride>>.Success(history);
+                return Result<List<ContentOverride>>.Ok(history);
             }
             catch (Exception ex)
             {
@@ -136,7 +135,7 @@ namespace VineyardApi.Services
                 };
                 _repository.Add(draft);
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {

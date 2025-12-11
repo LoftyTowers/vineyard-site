@@ -12,7 +12,6 @@ using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
@@ -60,7 +59,7 @@ namespace VineyardApi.Tests.Controllers
         public async Task GetOverrides_ReturnsOk()
         {
             _service.Setup(s => s.GetPublishedOverridesAsync("home", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result<Dictionary<string, string>>.Success(new Dictionary<string, string>()));
+                .ReturnsAsync(Result<Dictionary<string, string>>.Ok(new Dictionary<string, string>()));
 
             var result = await _controller.GetOverrides("home", CancellationToken.None);
 
@@ -72,7 +71,7 @@ namespace VineyardApi.Tests.Controllers
         {
             var model = new ContentOverride();
             _service.Setup(s => s.SaveDraftAsync(model, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Success());
+                .ReturnsAsync(Result.Ok());
 
             var result = await _controller.SaveDraft(model, CancellationToken.None);
 
@@ -99,7 +98,7 @@ namespace VineyardApi.Tests.Controllers
             var id = Guid.NewGuid();
             var request = new IdRequest(id);
             _service.Setup(s => s.PublishDraftAsync(id, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Success());
+                .ReturnsAsync(Result.Ok());
 
             var result = await _controller.PublishDraft(request, CancellationToken.None);
 
@@ -124,7 +123,7 @@ namespace VineyardApi.Tests.Controllers
         public async Task GetHistory_ReturnsOk()
         {
             _service.Setup(s => s.GetHistoryAsync("home", "key", It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result<List<ContentOverride>>.Success(new List<ContentOverride>()));
+                .ReturnsAsync(Result<List<ContentOverride>>.Ok(new List<ContentOverride>()));
 
             var result = await _controller.GetHistory("home", "key", CancellationToken.None);
 
@@ -137,7 +136,7 @@ namespace VineyardApi.Tests.Controllers
         {
             var request = new RevertRequest(Guid.NewGuid(), Guid.NewGuid());
             _service.Setup(s => s.RevertAsync(request.Id, request.ChangedById, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Success());
+                .ReturnsAsync(Result.Ok());
 
             var result = await _controller.Revert(request, CancellationToken.None);
 

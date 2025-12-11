@@ -1,11 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Models;
 using VineyardApi.Services;
-using System.Collections.Generic;
-using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -27,9 +25,10 @@ namespace VineyardApi.Controllers
         [HttpGet]
         public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier
+                ["CorrelationId"] = correlationId
             });
 
             try
@@ -48,9 +47,10 @@ namespace VineyardApi.Controllers
         [HttpPost("override")]
         public async Task<IActionResult> SaveOverride([FromBody] ThemeOverride model, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["ThemeDefaultId"] = model.ThemeDefaultId,
                 ["UpdatedById"] = model.UpdatedById
             });

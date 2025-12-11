@@ -1,12 +1,10 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using VineyardApi.Domain.Content;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
-using System.Collections.Generic;
-using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -28,9 +26,10 @@ namespace VineyardApi.Controllers
         [HttpGet("{route}")]
         public async Task<IActionResult> GetPage(string route, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["Route"] = route
             });
 
@@ -50,9 +49,10 @@ namespace VineyardApi.Controllers
         [HttpPost("override")]
         public async Task<IActionResult> SaveOverride([FromBody] PageOverride model, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["PageId"] = model.PageId,
                 ["UpdatedById"] = model.UpdatedById
             });

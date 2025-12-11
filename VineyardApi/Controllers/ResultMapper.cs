@@ -1,4 +1,5 @@
 using FluentValidation.Results;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VineyardApi.Models;
 
@@ -42,12 +43,24 @@ namespace VineyardApi.Controllers
                 ErrorCode.Validation => controller.UnprocessableEntity(new ValidationProblemDetails(result.ValidationErrors
                     .GroupBy(e => e.Field)
                     .ToDictionary(g => g.Key, g => g.Select(v => v.Message).ToArray()))),
-                ErrorCode.NotFound => controller.NotFound(result.Message ?? "Not found"),
+                ErrorCode.NotFound => BuildProblem(controller, StatusCodes.Status404NotFound, result, "Not found"),
+                ErrorCode.BadRequest => BuildProblem(controller, StatusCodes.Status400BadRequest, result, "Bad request"),
                 ErrorCode.Unauthorized => controller.Unauthorized(),
                 ErrorCode.Forbidden => controller.Forbid(),
                 ErrorCode.Conflict => controller.Conflict(result.Message),
-                _ => controller.Problem(title: result.Message ?? "An unexpected error occurred")
+                _ => BuildProblem(controller, StatusCodes.Status500InternalServerError, result, "An unexpected error occurred")
             };
+        }
+
+        private static IActionResult BuildProblem(ControllerBase controller, int statusCode, Result result, string fallbackMessage)
+        {
+            var problem = new ProblemDetails
+            {
+                Status = statusCode,
+                Title = result.Message ?? fallbackMessage
+            };
+            problem.Extensions["errorCode"] = result.ErrorCode.ToString();
+            return controller.StatusCode(statusCode, problem);
         }
     }
 }

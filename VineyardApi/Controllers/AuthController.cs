@@ -1,9 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
+using VineyardApi.Models;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
-using System.Collections.Generic;
 
 namespace VineyardApi.Controllers
 {
@@ -25,9 +25,10 @@ namespace VineyardApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["Username"] = request.Username
             });
 
