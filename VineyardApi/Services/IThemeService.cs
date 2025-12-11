@@ -1,8 +1,10 @@
+using VineyardApi.Infrastructure;
+
 namespace VineyardApi.Services
 {
     public interface IThemeService
     {
-        Task<Dictionary<string, string>> GetThemeAsync();
-        Task SaveOverrideAsync(Models.ThemeOverride model);
+        Task<Result<Dictionary<string, string>>> GetThemeAsync(CancellationToken cancellationToken = default);
+        Task<Result> SaveOverrideAsync(Models.ThemeOverride model, CancellationToken cancellationToken = default);
     }
 }

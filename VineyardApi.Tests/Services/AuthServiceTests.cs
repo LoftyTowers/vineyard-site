@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
@@ -41,31 +44,32 @@ namespace VineyardApi.Tests.Services
                 Username = "john",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("pass")
             };
-            _users.Setup(u => u.GetByUsernameAsync("john"))
+            _users.Setup(u => u.GetByUsernameAsync("john", It.IsAny<CancellationToken>()))
                   .ReturnsAsync(user);
-            _users.Setup(u => u.SaveChangesAsync())
+            _users.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
                   .ReturnsAsync(1);
 
             var token = await _service.LoginAsync("john", "pass");
 
-            token.Should().NotBeNull();
-            _users.Verify(u => u.SaveChangesAsync(), Times.Once);
+            token.IsSuccess.Should().BeTrue();
+            _users.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             user.LastLogin.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
         }
 
         [Test]
-        public async Task LoginAsync_ReturnsNull_WhenUserNotFound()
+        public async Task LoginAsync_ReturnsUnauthorized_WhenUserNotFound()
         {
-            _users.Setup(u => u.GetByUsernameAsync("missing"))
+            _users.Setup(u => u.GetByUsernameAsync("missing", It.IsAny<CancellationToken>()))
                   .ReturnsAsync((User?)null);
 
             var token = await _service.LoginAsync("missing", "pass");
 
-            token.Should().BeNull();
+            token.IsFailure.Should().BeTrue();
+            token.Error.Should().Be(ErrorCode.Unauthorized);
         }
 
         [Test]
-        public async Task LoginAsync_ReturnsNull_WhenPasswordInvalid()
+        public async Task LoginAsync_ReturnsUnauthorized_WhenPasswordInvalid()
         {
             var user = new User
             {
@@ -73,12 +77,13 @@ namespace VineyardApi.Tests.Services
                 Username = "john",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("pass")
             };
-            _users.Setup(u => u.GetByUsernameAsync("john"))
+            _users.Setup(u => u.GetByUsernameAsync("john", It.IsAny<CancellationToken>()))
                   .ReturnsAsync(user);
 
             var token = await _service.LoginAsync("john", "wrong");
 
-            token.Should().BeNull();
+            token.IsFailure.Should().BeTrue();
+            token.Error.Should().Be(ErrorCode.Unauthorized);
         }
     }
 }

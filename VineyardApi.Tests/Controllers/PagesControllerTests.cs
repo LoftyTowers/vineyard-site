@@ -8,8 +8,8 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using VineyardApi.Controllers;
 using VineyardApi.Infrastructure;
+using VineyardApi.Controllers;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Services;
@@ -44,9 +44,9 @@ namespace VineyardApi.Tests.Controllers
         public async Task GetPage_ReturnsOk_WhenFound()
         {
             var content = new PageContent();
-            _service.Setup(s => s.GetPageContentAsync("home")).ReturnsAsync(content);
+            _service.Setup(s => s.GetPageContentAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Success(content));
 
-            var result = await _controller.GetPage("home");
+            var result = await _controller.GetPage("home", CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }
@@ -54,9 +54,9 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task GetPage_ReturnsNotFound_WhenMissing()
         {
-            _service.Setup(s => s.GetPageContentAsync("missing")).ReturnsAsync((PageContent?)null);
+            _service.Setup(s => s.GetPageContentAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Failure(ErrorCode.NotFound));
 
-            var result = await _controller.GetPage("missing");
+            var result = await _controller.GetPage("missing", CancellationToken.None);
 
             var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
             problem.Should().NotBeNull();
@@ -68,11 +68,13 @@ namespace VineyardApi.Tests.Controllers
         public async Task SaveOverride_ReturnsOk()
         {
             var model = new PageOverride();
+            _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Success());
 
             var result = await _controller.SaveOverride(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
-            _service.Verify(s => s.SaveOverrideAsync(model), Times.Once);
+            _service.Verify(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

@@ -25,20 +25,19 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet("{route}")]
-        public async Task<IActionResult> GetPage(string route)
+        public async Task<IActionResult> GetPage(string route, CancellationToken cancellationToken)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageRoute", route}});
             _logger.LogInformation($"Fetching page content for {route}");
 
-            var result = await _service.GetPageContentAsync(route);
-            if (result == null)
+            var result = await _service.GetPageContentAsync(route, cancellationToken);
+            if (result.IsFailure)
             {
                 _logger.LogWarning($"No page content found for {route}");
-                return Result<PageContent>.Failure(ErrorCode.NotFound, "Page not found").ToActionResult(this);
+                return result.ToActionResult(this);
             }
 
-            _logger.LogInformation($"Returning page content for {route}");
-            return Result<PageContent>.Success(result).ToActionResult(this);
+            return result.ToActionResult(this);
         }
 
         [Authorize]
@@ -50,9 +49,9 @@ namespace VineyardApi.Controllers
             var validationResult = await _validator.ValidateAsync(model, cancellationToken);
             if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
 
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model, cancellationToken);
             _logger.LogInformation($"Override saved for page {model.PageId}");
-            return Result.Success().ToActionResult(this);
+            return result.ToActionResult(this);
         }
     }
 }

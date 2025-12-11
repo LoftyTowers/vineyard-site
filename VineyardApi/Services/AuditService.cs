@@ -1,19 +1,33 @@
+using Microsoft.Extensions.Logging;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
+using VineyardApi.Infrastructure;
 
 namespace VineyardApi.Services
 {
     public class AuditService : IAuditService
     {
         private readonly IAuditRepository _repository;
-        public AuditService(IAuditRepository repository)
+        private readonly ILogger<AuditService> _logger;
+
+        public AuditService(IAuditRepository repository, ILogger<AuditService> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
-        public Task<List<AuditLog>> GetRecentAsync(int count = 100)
+        public async Task<Result<List<AuditLog>>> GetRecentAsync(int count = 100, CancellationToken cancellationToken = default)
         {
-            return _repository.GetRecentAsync(count);
+            try
+            {
+                var logs = await _repository.GetRecentAsync(count, cancellationToken);
+                return Result<List<AuditLog>>.Success(logs);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving recent audit logs with count {Count}", count);
+                return Result<List<AuditLog>>.Failure(ErrorCode.Unexpected);
+            }
         }
     }
 }
