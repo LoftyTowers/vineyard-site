@@ -9,7 +9,6 @@ using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -42,7 +41,7 @@ namespace VineyardApi.Tests.Controllers
         public async Task GetTheme_ReturnsOk()
         {
             _service.Setup(s => s.GetThemeAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result<Dictionary<string, string>>.Success(new Dictionary<string, string>()));
+                .ReturnsAsync(Result<Dictionary<string, string>>.Ok(new Dictionary<string, string>()));
 
             var result = await _controller.GetTheme(CancellationToken.None);
 
@@ -54,7 +53,7 @@ namespace VineyardApi.Tests.Controllers
         {
             var model = new ThemeOverride();
             _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Success());
+                .ReturnsAsync(Result.Ok());
 
             var result = await _controller.SaveOverride(model, CancellationToken.None);
 

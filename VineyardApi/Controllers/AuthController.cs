@@ -1,9 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
+using VineyardApi.Models;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
-using System.Collections.Generic;
 
 namespace VineyardApi.Controllers
 {
@@ -25,23 +25,29 @@ namespace VineyardApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
+                ["CorrelationId"] = correlationId,
                 ["Username"] = request.Username
             });
 
-            var validationResult = await _validator.ValidateAsync(request, cancellationToken);
-            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
-
-            var tokenResult = await _service.LoginAsync(request.Username, request.Password, cancellationToken);
-            if (tokenResult.IsFailure)
+            try
             {
-                _logger.LogWarning("Login failed for {Username}", request.Username);
-                return tokenResult.ToActionResult(this);
-            }
+                var validation = await _validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    return ResultMapper.FromValidationResult(this, validation);
+                }
 
-            _logger.LogInformation("Login succeeded for {Username}", request.Username);
-            return Result<object>.Success(new { token = tokenResult.Value }).ToActionResult(this);
+                var result = await _service.LoginAsync(request.Username, request.Password, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to login user {Username}", request.Username);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Login failed"));
+            }
         }
     }
 

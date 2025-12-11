@@ -1,13 +1,12 @@
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using VineyardApi.Models;
 using VineyardApi.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
-using VineyardApi.Infrastructure;
 
 namespace VineyardApi.Services
 {
@@ -60,7 +59,7 @@ namespace VineyardApi.Services
                     SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
-                return Result<string>.Success(tokenHandler.WriteToken(token));
+                return Result<string>.Ok(tokenHandler.WriteToken(token));
             }
             catch (Exception ex)
             {

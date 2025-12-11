@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
