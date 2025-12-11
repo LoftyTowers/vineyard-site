@@ -1,3 +1,5 @@
+using VineyardApi.Infrastructure;
+
 namespace VineyardApi.Services
 {
     public interface IAuthService

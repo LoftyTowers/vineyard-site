@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
+using VineyardApi.Infrastructure;
 
 namespace VineyardApi.Services
 {
