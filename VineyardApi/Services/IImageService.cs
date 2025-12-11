@@ -1,9 +1,10 @@
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 
 namespace VineyardApi.Services
 {
     public interface IImageService
     {
-        Task<Image> SaveImageAsync(Image img);
+        Task<Result<Image>> SaveImageAsync(Image img, CancellationToken cancellationToken = default);
     }
 }

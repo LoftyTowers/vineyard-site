@@ -5,36 +5,48 @@ namespace VineyardApi.Infrastructure;
 
 public enum ErrorCode
 {
+    None,
     BadRequest,
     NotFound,
     Validation,
     ClientClosedRequest,
-    InternalError
+    InternalError,
+    Domain,
+    Unauthorized,
+    Unexpected
 }
 
 public class Result
 {
-    protected Result(bool isSuccess, ErrorCode? errorCode, string? errorMessage)
+    protected Result(bool isSuccess, ErrorCode errorCode, string? errorMessage)
     {
         IsSuccess = isSuccess;
-        ErrorCode = errorCode;
+        Error = isSuccess ? global::VineyardApi.Infrastructure.ErrorCode.None : errorCode;
         ErrorMessage = errorMessage;
     }
 
     public bool IsSuccess { get; }
 
-    public ErrorCode? ErrorCode { get; }
+    public bool IsFailure => !IsSuccess;
+
+    // Alias for backward-compatibility with the services/tests.
+    public ErrorCode Error { get; }
+
+    public ErrorCode? Code => IsSuccess ? null : Error;
+
+    // Alias to preserve the previous Infrastructure name.
+    public ErrorCode? ErrorCode => Code;
 
     public string? ErrorMessage { get; }
 
-    public static Result Success() => new(true, null, null);
+    public static Result Success() => new(true, global::VineyardApi.Infrastructure.ErrorCode.None, null);
 
     public static Result Failure(ErrorCode errorCode, string? message = null) => new(false, errorCode, message);
 }
 
 public class Result<T> : Result
 {
-    private Result(T value) : base(true, null, null)
+    private Result(T value) : base(true, global::VineyardApi.Infrastructure.ErrorCode.None, null)
     {
         Value = value;
     }
@@ -79,25 +91,28 @@ public static class ResultExtensions
 
     private static IActionResult BuildProblemResult(Result result, ControllerBase controller)
     {
-        var (statusCode, title) = GetStatusAndTitle(result.ErrorCode);
+        var (statusCode, title) = GetStatusAndTitle(result.Error);
         var problem = new ProblemDetails
         {
             Status = statusCode,
             Title = result.ErrorMessage ?? title,
         };
-        problem.Extensions["errorCode"] = result.ErrorCode?.ToString();
+        problem.Extensions["errorCode"] = result.Error.ToString();
 
         return controller.StatusCode(statusCode, problem);
     }
 
-    private static (int StatusCode, string Title) GetStatusAndTitle(ErrorCode? errorCode)
+    private static (int StatusCode, string Title) GetStatusAndTitle(ErrorCode errorCode)
     {
         return errorCode switch
         {
             ErrorCode.BadRequest => (StatusCodes.Status400BadRequest, "Bad request"),
-            ErrorCode.NotFound => (StatusCodes.Status404NotFound, "Resource not found"),
+            ErrorCode.Domain => (StatusCodes.Status400BadRequest, "Domain error"),
             ErrorCode.Validation => (StatusCodes.Status422UnprocessableEntity, "Validation failed"),
+            ErrorCode.Unauthorized => (StatusCodes.Status401Unauthorized, "Unauthorized"),
+            ErrorCode.NotFound => (StatusCodes.Status404NotFound, "Resource not found"),
             ErrorCode.ClientClosedRequest => (499, "Client closed request"),
+            ErrorCode.Unexpected or ErrorCode.InternalError => (StatusCodes.Status500InternalServerError, "An unexpected error occurred"),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred")
         };
     }

@@ -12,14 +12,14 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public async Task<List<AuditLog>> GetRecentAsync(int count)
+        public async Task<List<AuditLog>> GetRecentAsync(int count, CancellationToken cancellationToken = default)
         {
             return await _context.AuditLogs
                 .Include(l => l.User)
                 .Include(l => l.History)
                 .OrderByDescending(l => l.Timestamp)
                 .Take(count)
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
         }
     }
 }

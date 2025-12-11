@@ -9,6 +9,7 @@ using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -40,10 +41,10 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task GetTheme_ReturnsOk()
         {
-            _service.Setup(s => s.GetThemeAsync())
-                .ReturnsAsync(new Dictionary<string, string>());
+            _service.Setup(s => s.GetThemeAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result<Dictionary<string, string>>.Success(new Dictionary<string, string>()));
 
-            var result = await _controller.GetTheme();
+            var result = await _controller.GetTheme(CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }
@@ -52,11 +53,13 @@ namespace VineyardApi.Tests.Controllers
         public async Task SaveOverride_ReturnsOk()
         {
             var model = new ThemeOverride();
+            _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Success());
 
             var result = await _controller.SaveOverride(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
-            _service.Verify(s => s.SaveOverrideAsync(model), Times.Once);
+            _service.Verify(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

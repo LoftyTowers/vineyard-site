@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 using System.Collections.Generic;
@@ -32,8 +33,8 @@ namespace VineyardApi.Controllers
             var validationResult = await _validator.ValidateAsync(img, cancellationToken);
             if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
 
-            var saved = await _service.SaveImageAsync(img);
-            return Ok(saved);
+            var saved = await _service.SaveImageAsync(img, cancellationToken);
+            return saved.ToActionResult(this);
         }
     }
 }

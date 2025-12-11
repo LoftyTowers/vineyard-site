@@ -8,8 +8,8 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using VineyardApi.Controllers;
 using VineyardApi.Infrastructure;
+using VineyardApi.Controllers;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
 using VineyardApi.Tests;
@@ -42,8 +42,8 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task Login_ReturnsOk_WhenTokenReturned()
         {
-            _service.Setup(s => s.LoginAsync("user", "pass"))
-                .ReturnsAsync("tok");
+            _service.Setup(s => s.LoginAsync("user", "pass", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result<string>.Success("tok"));
 
             var request = new VineyardApi.Controllers.LoginRequest("user", "pass");
 
@@ -56,8 +56,8 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task Login_ReturnsBadRequest_WhenTokenNull()
         {
-            _service.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync((string?)null);
+            _service.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result<string>.Failure(ErrorCode.BadRequest, "Invalid username or password"));
 
             var request = new VineyardApi.Controllers.LoginRequest("u", "p");
 

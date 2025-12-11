@@ -1,6 +1,8 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Models;
@@ -18,7 +20,7 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IContentOverrideRepository>();
-            _service = new ContentOverrideService(_repo.Object);
+            _service = new ContentOverrideService(_repo.Object, Mock.Of<ILogger<ContentOverrideService>>());
         }
 
         [Test]
@@ -32,13 +34,14 @@ namespace VineyardApi.Tests.Services
                 Note = "test note",
                 ChangedById = Guid.NewGuid()
             };
-            _repo.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            await _service.PublishAsync(model);
+            var result = await _service.PublishAsync(model);
 
+            result.IsSuccess.Should().BeTrue();
             model.Status.Should().Be("published");
             _repo.Verify(r => r.Add(model), Times.Once);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

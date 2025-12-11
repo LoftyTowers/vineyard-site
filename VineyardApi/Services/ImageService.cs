@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
 using Microsoft.Extensions.Logging;
@@ -16,15 +18,23 @@ namespace VineyardApi.Services
             _logger = logger;
         }
 
-        public async Task<Image> SaveImageAsync(Image img)
+        public async Task<Result<Image>> SaveImageAsync(Image img, CancellationToken cancellationToken = default)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ImageUrl", img.Url}});
-            img.Id = Guid.NewGuid();
-            img.CreatedAt = DateTime.UtcNow;
-            _logger.LogInformation("Persisting image {ImageUrl}", img.Url);
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ImageUrl", img.Url}});
+                img.Id = Guid.NewGuid();
+                img.CreatedAt = DateTime.UtcNow;
+                _logger.LogInformation("Persisting image {ImageUrl}", img.Url);
             _repository.AddImage(img);
-            await _repository.SaveChangesAsync();
-            return img;
+                await _repository.SaveChangesAsync(cancellationToken);
+                return Result<Image>.Success(img);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving image {ImageUrl}", img.Url);
+                return Result<Image>.Failure(ErrorCode.Unexpected);
+            }
         }
     }
 }
