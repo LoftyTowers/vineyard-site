@@ -1,7 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using VineyardApi.Infrastructure;
-using VineyardApi.Models;
 using VineyardApi.Models.Requests;
 using VineyardApi.Services;
 using System.Collections.Generic;
@@ -34,16 +33,15 @@ namespace VineyardApi.Controllers
             var validationResult = await _validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
 
-            var token = await _service.LoginAsync(request.Username, request.Password);
-            if (token == null)
+            var tokenResult = await _service.LoginAsync(request.Username, request.Password, cancellationToken);
+            if (tokenResult.IsFailure)
             {
                 _logger.LogWarning("Login failed for {Username}", request.Username);
-                return Result<string>.Failure(ErrorCode.BadRequest, "Invalid username or password")
-                    .ToActionResult(this);
+                return tokenResult.ToActionResult(this);
             }
 
             _logger.LogInformation("Login succeeded for {Username}", request.Username);
-            return Result<object>.Success(new { token }).ToActionResult(this);
+            return Result<object>.Success(new { token = tokenResult.Value }).ToActionResult(this);
         }
     }
 

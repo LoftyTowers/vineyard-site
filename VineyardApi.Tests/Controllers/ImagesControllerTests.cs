@@ -8,6 +8,7 @@ using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -42,13 +43,13 @@ namespace VineyardApi.Tests.Controllers
             var input = new Image { Url = "a" };
 
             _service
-                .Setup(s => s.SaveImageAsync(input))
-                .ReturnsAsync(input);
+                .Setup(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result<Image>.Success(input));
 
             var result = await _controller.SaveImage(input, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
-            _service.Verify(s => s.SaveImageAsync(input), Times.Once);
+            _service.Verify(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }

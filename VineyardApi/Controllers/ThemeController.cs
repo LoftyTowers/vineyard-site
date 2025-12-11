@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 using System.Collections.Generic;
@@ -23,11 +24,11 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTheme()
+        public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Fetching theme values");
-            var result = await _service.GetThemeAsync();
-            return Ok(result);
+            var result = await _service.GetThemeAsync(cancellationToken);
+            return result.ToActionResult(this);
         }
 
         [Authorize]
@@ -39,8 +40,8 @@ namespace VineyardApi.Controllers
             var validationResult = await _validator.ValidateAsync(model, cancellationToken);
             if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
 
-            await _service.SaveOverrideAsync(model);
-            return Ok();
+            var result = await _service.SaveOverrideAsync(model, cancellationToken);
+            return result.ToActionResult(this);
         }
     }
 }

@@ -12,14 +12,14 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public Task<User?> GetByUsernameAsync(string username)
+        public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             return _context.Users
                 .Include(u => u.Roles)
                 .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
+                .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
         }
 
-        public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
     }
 }
