@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NUnit.Framework;
 using VineyardApi.Controllers;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -27,10 +28,10 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task GetRecent_ReturnsOk()
         {
-            _service.Setup(s => s.GetRecentAsync(It.IsAny<int>()))
-                .ReturnsAsync(new List<AuditLog>());
+            _service.Setup(s => s.GetRecentAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result<List<AuditLog>>.Success(new List<AuditLog>()));
 
-            var result = await _controller.GetRecent();
+            var result = await _controller.GetRecent(CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }

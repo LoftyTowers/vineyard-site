@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Logging;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 
 namespace VineyardApi.Services
 {
@@ -19,6 +22,7 @@ namespace VineyardApi.Services
         {
             try
             {
+                _logger.LogInformation("Loading theme defaults and overrides");
                 var defaults = await _repository.GetDefaultsAsync(cancellationToken);
                 var overrides = await _repository.GetOverridesAsync(cancellationToken);
                 var result = defaults.ToDictionary(d => d.Key, d => d.Value);
@@ -41,15 +45,18 @@ namespace VineyardApi.Services
         {
             try
             {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>{{"ThemeDefaultId", model.ThemeDefaultId}});
                 model.UpdatedAt = DateTime.UtcNow;
                 var existing = await _repository.GetOverrideAsync(model.ThemeDefaultId, cancellationToken);
                 if (existing == null)
                 {
-                    _repository.AddThemeOverride(model);
+                    _logger.LogInformation("Creating theme override {ThemeDefaultId}", model.ThemeDefaultId);
+                _repository.AddThemeOverride(model);
                 }
                 else
                 {
-                    existing.Value = model.Value;
+                    _logger.LogInformation("Updating theme override {ThemeDefaultId}", model.ThemeDefaultId);
+                existing.Value = model.Value;
                     existing.UpdatedAt = model.UpdatedAt;
                     existing.UpdatedById = model.UpdatedById;
                 }

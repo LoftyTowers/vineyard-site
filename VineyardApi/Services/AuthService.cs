@@ -5,6 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using VineyardApi.Repositories;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using VineyardApi.Infrastructure;
 
 namespace VineyardApi.Services
 {
@@ -28,11 +31,13 @@ namespace VineyardApi.Services
                 var user = await _users.GetByUsernameAsync(username, cancellationToken);
                 if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
                 {
+                    _logger.LogWarning("User not found during login");
                     return Result<string>.Failure(ErrorCode.Unauthorized, "Invalid credentials.");
                 }
 
                 user.LastLogin = DateTime.UtcNow;
                 await _users.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Recorded login for {Username}", username);
 
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var keyString = _config["Jwt:Key"] ?? string.Empty;
