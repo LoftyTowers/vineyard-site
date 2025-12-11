@@ -9,7 +9,6 @@ using VineyardApi.Middleware;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
 using VineyardApi.Validators;
-using VineyardApi.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 

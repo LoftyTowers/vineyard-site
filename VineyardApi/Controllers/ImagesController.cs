@@ -1,11 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Models;
 using VineyardApi.Services;
-using System.Collections.Generic;
-using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -29,11 +27,12 @@ namespace VineyardApi.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveImage([FromBody] Image img, CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier,
+                ["CorrelationId"] = correlationId,
                 ["ImageId"] = img.Id == Guid.Empty ? null : img.Id,
-                ["ImageUrl"] = img.Url
+                ["ImageUrl"] = img.Url ?? string.Empty
             });
 
             try
