@@ -1,11 +1,10 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using VineyardApi.Domain.Content;
-using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
-using System.Collections.Generic;
-using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -27,31 +26,53 @@ namespace VineyardApi.Controllers
         [HttpGet("{route}")]
         public async Task<IActionResult> GetPage(string route, CancellationToken cancellationToken)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageRoute", route}});
-            _logger.LogInformation($"Fetching page content for {route}");
-
-            var result = await _service.GetPageContentAsync(route, cancellationToken);
-            if (result.IsFailure)
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                _logger.LogWarning($"No page content found for {route}");
-                return result.ToActionResult(this);
-            }
+                ["CorrelationId"] = correlationId,
+                ["Route"] = route
+            });
 
-            return result.ToActionResult(this);
+            try
+            {
+                var result = await _service.GetPageContentAsync(route, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to get page {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unknown, "Failed to load page"));
+            }
         }
 
         [Authorize]
         [HttpPost("override")]
         public async Task<IActionResult> SaveOverride([FromBody] PageOverride model, CancellationToken cancellationToken)
         {
-            using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageId", model.PageId}});
-            _logger.LogInformation($"Saving override for page {model.PageId}");
-            var validationResult = await _validator.ValidateAsync(model, cancellationToken);
-            if (!validationResult.IsValid) return BadRequest(validationResult.Errors);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["PageId"] = model.PageId,
+                ["UpdatedById"] = model.UpdatedById
+            });
 
-            var result = await _service.SaveOverrideAsync(model, cancellationToken);
-            _logger.LogInformation($"Override saved for page {model.PageId}");
-            return result.ToActionResult(this);
+            try
+            {
+                var validation = await _validator.ValidateAsync(model, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    return ResultMapper.FromValidationResult(this, validation);
+                }
+
+                var result = await _service.SaveOverrideAsync(model, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to save page override for page {PageId}", model.PageId);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save override"));
+            }
         }
     }
 }

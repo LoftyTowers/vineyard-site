@@ -1,4 +1,3 @@
-using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 

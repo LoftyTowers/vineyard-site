@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
-using VineyardApi.Infrastructure;
 
 namespace VineyardApi.Services
 {
@@ -21,7 +20,7 @@ namespace VineyardApi.Services
             try
             {
                 var logs = await _repository.GetRecentAsync(count, cancellationToken);
-                return Result<List<AuditLog>>.Success(logs);
+                return Result<List<AuditLog>>.Ok(logs);
             }
             catch (Exception ex)
             {

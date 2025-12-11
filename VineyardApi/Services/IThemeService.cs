@@ -1,4 +1,4 @@
-using VineyardApi.Infrastructure;
+using VineyardApi.Models;
 
 namespace VineyardApi.Services
 {
