@@ -8,7 +8,6 @@ using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
-using VineyardApi.Infrastructure;
 using VineyardApi.Controllers;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
@@ -44,7 +43,7 @@ namespace VineyardApi.Tests.Controllers
         public async Task GetPage_ReturnsOk_WhenFound()
         {
             var content = new PageContent();
-            _service.Setup(s => s.GetPageContentAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Success(content));
+            _service.Setup(s => s.GetPageContentAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Ok(content));
 
             var result = await _controller.GetPage("home", CancellationToken.None);
 
@@ -69,7 +68,7 @@ namespace VineyardApi.Tests.Controllers
         {
             var model = new PageOverride();
             _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(Result.Success());
+                .ReturnsAsync(Result.Ok());
 
             var result = await _controller.SaveOverride(model, CancellationToken.None);
 

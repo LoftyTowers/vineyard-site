@@ -1,10 +1,8 @@
 using Microsoft.Extensions.Logging;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 
 namespace VineyardApi.Services
 {
@@ -34,7 +32,7 @@ namespace VineyardApi.Services
                     .OrderByDescending(o => o.UpdatedAt)
                     .FirstOrDefault();
 
-                return Result<PageContent>.Success(overrideContent?.OverrideContent ?? page.DefaultContent);
+                return Result<PageContent>.Ok(overrideContent?.OverrideContent ?? page.DefaultContent);
             }
             catch (Exception ex)
             {
@@ -64,7 +62,7 @@ namespace VineyardApi.Services
                 }
 
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {

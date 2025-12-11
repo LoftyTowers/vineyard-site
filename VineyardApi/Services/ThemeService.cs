@@ -1,9 +1,7 @@
 using Microsoft.Extensions.Logging;
-using VineyardApi.Infrastructure;
+using System.Collections.Generic;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
-using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 
 namespace VineyardApi.Services
 {
@@ -32,7 +30,7 @@ namespace VineyardApi.Services
                     if (key != null) result[key] = ovr.Value;
                 }
 
-                return Result<Dictionary<string, string>>.Success(result);
+                return Result<Dictionary<string, string>>.Ok(result);
             }
             catch (Exception ex)
             {
@@ -62,7 +60,7 @@ namespace VineyardApi.Services
                 }
 
                 await _repository.SaveChangesAsync(cancellationToken);
-                return Result.Success();
+                return Result.Ok();
             }
             catch (Exception ex)
             {

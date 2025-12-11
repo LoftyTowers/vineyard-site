@@ -1,7 +1,5 @@
 using VineyardApi.Models;
 
-using VineyardApi.Infrastructure;
-
 namespace VineyardApi.Services
 {
     public interface IContentOverrideService

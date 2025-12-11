@@ -18,9 +18,10 @@ namespace VineyardApi.Controllers
         [HttpGet]
         public IActionResult Get(CancellationToken cancellationToken)
         {
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
-                ["CorrelationId"] = HttpContext.TraceIdentifier
+                ["CorrelationId"] = correlationId
             });
 
             try
