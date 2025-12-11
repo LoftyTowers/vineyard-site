@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
 

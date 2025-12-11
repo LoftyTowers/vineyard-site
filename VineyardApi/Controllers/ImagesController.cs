@@ -1,8 +1,11 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using System.Collections.Generic;
+using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -11,14 +14,15 @@ namespace VineyardApi.Controllers
     public class ImagesController : ControllerBase
     {
         private readonly IImageService _service;
-        private readonly IValidator<Image> _validator;
         private readonly ILogger<ImagesController> _logger;
 
-        public ImagesController(IImageService service, IValidator<Image> validator, ILogger<ImagesController> logger)
+        private readonly IValidator<Image> _validator;
+
+        public ImagesController(IImageService service, ILogger<ImagesController> logger, IValidator<Image> validator)
         {
             _service = service;
-            _validator = validator;
             _logger = logger;
+            _validator = validator;
         }
 
         [Authorize]

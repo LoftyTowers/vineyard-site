@@ -1,8 +1,12 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
+using VineyardApi.Models.Requests;
 using VineyardApi.Services;
+using System.Collections.Generic;
+using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -11,23 +15,23 @@ namespace VineyardApi.Controllers
     public class OverridesController : ControllerBase
     {
         private readonly IContentOverrideService _service;
-        private readonly IValidator<ContentOverride> _contentValidator;
-        private readonly IValidator<IdRequest> _idValidator;
-        private readonly IValidator<RevertRequest> _revertValidator;
         private readonly ILogger<OverridesController> _logger;
 
+        private readonly IValidator<ContentOverride> _overrideValidator;
+        private readonly IValidator<IdRequest> _idValidator;
+        private readonly IValidator<RevertRequest> _revertValidator;
+
         public OverridesController(
-            IContentOverrideService service,
-            IValidator<ContentOverride> contentValidator,
+            IContentOverrideService service, ILogger<OverridesController> logger,
+            IValidator<ContentOverride> overrideValidator,
             IValidator<IdRequest> idValidator,
-            IValidator<RevertRequest> revertValidator,
-            ILogger<OverridesController> logger)
+            IValidator<RevertRequest> revertValidator)
         {
             _service = service;
-            _contentValidator = contentValidator;
+            _logger = logger;
+            _overrideValidator = overrideValidator;
             _idValidator = idValidator;
             _revertValidator = revertValidator;
-            _logger = logger;
         }
 
         [HttpGet("{page}")]
@@ -52,7 +56,7 @@ namespace VineyardApi.Controllers
         }
 
         [Authorize(Roles = "Admin,Editor")]
-        [HttpPost]
+        [HttpPost("draft")]
         public async Task<IActionResult> SaveDraft([FromBody] ContentOverride model, CancellationToken cancellationToken)
         {
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -108,6 +112,7 @@ namespace VineyardApi.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin,Editor")]
         [HttpGet("history/{page}/{blockKey}")]
         public async Task<IActionResult> GetHistory(string page, string blockKey, CancellationToken cancellationToken)
         {

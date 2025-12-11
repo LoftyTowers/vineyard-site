@@ -12,17 +12,17 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public Task<List<ThemeDefault>> GetDefaultsAsync(CancellationToken cancellationToken)
+        public Task<List<ThemeDefault>> GetDefaultsAsync(CancellationToken cancellationToken = default)
         {
             return _context.ThemeDefaults.ToListAsync(cancellationToken);
         }
 
-        public Task<List<ThemeOverride>> GetOverridesAsync(CancellationToken cancellationToken)
+        public Task<List<ThemeOverride>> GetOverridesAsync(CancellationToken cancellationToken = default)
         {
             return _context.ThemeOverrides.ToListAsync(cancellationToken);
         }
 
-        public Task<ThemeOverride?> GetOverrideAsync(int defaultId, CancellationToken cancellationToken)
+        public Task<ThemeOverride?> GetOverrideAsync(int defaultId, CancellationToken cancellationToken = default)
         {
             return _context.ThemeOverrides.FirstOrDefaultAsync(t => t.ThemeDefaultId == defaultId, cancellationToken);
         }
@@ -32,6 +32,6 @@ namespace VineyardApi.Repositories
             _context.ThemeOverrides.Add(model);
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
     }
 }

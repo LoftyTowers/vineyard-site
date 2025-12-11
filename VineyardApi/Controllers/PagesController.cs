@@ -2,8 +2,11 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VineyardApi.Domain.Content;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using System.Collections.Generic;
+using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -12,14 +15,14 @@ namespace VineyardApi.Controllers
     public class PagesController : ControllerBase
     {
         private readonly IPageService _service;
-        private readonly IValidator<PageOverride> _validator;
         private readonly ILogger<PagesController> _logger;
+        private readonly IValidator<PageOverride> _validator;
 
-        public PagesController(IPageService service, IValidator<PageOverride> validator, ILogger<PagesController> logger)
+        public PagesController(IPageService service, ILogger<PagesController> logger, IValidator<PageOverride> validator)
         {
             _service = service;
-            _validator = validator;
             _logger = logger;
+            _validator = validator;
         }
 
         [HttpGet("{route}")]
