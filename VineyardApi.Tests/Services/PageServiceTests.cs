@@ -1,8 +1,12 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using VineyardApi.Infrastructure;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
@@ -19,7 +23,7 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IPageRepository>();
-            _service = new PageService(_repo.Object);
+            _service = new PageService(_repo.Object, NullLogger<PageService>.Instance);
         }
 
         [Test]
@@ -45,34 +49,37 @@ namespace VineyardApi.Tests.Services
                     }
                 }
             };
-            _repo.Setup(r => r.GetPageWithOverridesAsync("home")).ReturnsAsync(page);
+            _repo.Setup(r => r.GetPageWithOverridesAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(page);
 
             var result = await _service.GetPageContentAsync("home");
 
-            result.Should().NotBeNull();
-            (result!.Blocks.First() as RichTextBlock)!.Html.Should().Be("bye");
+            result.IsSuccess.Should().BeTrue();
+            (result.Value!.Blocks.First() as RichTextBlock)!.Html.Should().Be("bye");
         }
 
         [Test]
-        public async Task GetPageContentAsync_ReturnsNull_WhenPageMissing()
+        public async Task GetPageContentAsync_ReturnsError_WhenPageMissing()
         {
-            _repo.Setup(r => r.GetPageWithOverridesAsync("missing")).ReturnsAsync((Page?)null);
+            _repo.Setup(r => r.GetPageWithOverridesAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync((Page?)null);
 
             var result = await _service.GetPageContentAsync("missing");
 
-            result.Should().BeNull();
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be(ErrorCode.NotFound);
         }
 
         [Test]
         public async Task SaveOverrideAsync_Inserts_WhenNoExisting()
         {
             var model = new PageOverride { PageId = Guid.NewGuid() };
-            _repo.Setup(r => r.GetPageOverrideByPageIdAsync(model.PageId)).ReturnsAsync((PageOverride?)null);
+            _repo.Setup(r => r.GetPageOverrideByPageIdAsync(model.PageId, It.IsAny<CancellationToken>())).ReturnsAsync((PageOverride?)null);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model);
 
+            result.IsSuccess.Should().BeTrue();
             _repo.Verify(r => r.AddPageOverride(model), Times.Once);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             model.UpdatedAt.Should().NotBe(default);
         }
 
@@ -96,13 +103,15 @@ namespace VineyardApi.Tests.Services
                 },
                 UpdatedById = Guid.NewGuid()
             };
-            _repo.Setup(r => r.GetPageOverrideByPageIdAsync(existing.PageId)).ReturnsAsync(existing);
+            _repo.Setup(r => r.GetPageOverrideByPageIdAsync(existing.PageId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            await _service.SaveOverrideAsync(model);
+            var result = await _service.SaveOverrideAsync(model);
 
+            result.IsSuccess.Should().BeTrue();
             (existing.OverrideContent!.Blocks.First() as RichTextBlock)!.Html.Should().Be("baz");
             existing.UpdatedById.Should().Be(model.UpdatedById);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             _repo.Verify(r => r.AddPageOverride(It.IsAny<PageOverride>()), Times.Never);
         }
     }

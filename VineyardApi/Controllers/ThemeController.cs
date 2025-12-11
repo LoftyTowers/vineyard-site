@@ -1,8 +1,11 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Infrastructure;
 using VineyardApi.Models;
 using VineyardApi.Services;
+using System.Collections.Generic;
+using FluentValidation;
 
 namespace VineyardApi.Controllers
 {
@@ -11,14 +14,14 @@ namespace VineyardApi.Controllers
     public class ThemeController : ControllerBase
     {
         private readonly IThemeService _service;
-        private readonly IValidator<ThemeOverride> _validator;
         private readonly ILogger<ThemeController> _logger;
+        private readonly IValidator<ThemeOverride> _validator;
 
-        public ThemeController(IThemeService service, IValidator<ThemeOverride> validator, ILogger<ThemeController> logger)
+        public ThemeController(IThemeService service, ILogger<ThemeController> logger, IValidator<ThemeOverride> validator)
         {
             _service = service;
-            _validator = validator;
             _logger = logger;
+            _validator = validator;
         }
 
         [HttpGet]

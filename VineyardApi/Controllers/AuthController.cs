@@ -1,7 +1,9 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using VineyardApi.Models;
+using VineyardApi.Infrastructure;
+using VineyardApi.Models.Requests;
 using VineyardApi.Services;
+using System.Collections.Generic;
 
 namespace VineyardApi.Controllers
 {
@@ -10,14 +12,14 @@ namespace VineyardApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _service;
-        private readonly IValidator<LoginRequest> _validator;
         private readonly ILogger<AuthController> _logger;
+        private readonly IValidator<LoginRequest> _validator;
 
-        public AuthController(IAuthService service, IValidator<LoginRequest> validator, ILogger<AuthController> logger)
+        public AuthController(IAuthService service, ILogger<AuthController> logger, IValidator<LoginRequest> validator)
         {
             _service = service;
-            _validator = validator;
             _logger = logger;
+            _validator = validator;
         }
 
         [HttpPost("login")]

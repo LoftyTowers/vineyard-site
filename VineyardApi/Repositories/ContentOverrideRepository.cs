@@ -12,7 +12,7 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public async Task<List<ContentOverride>> GetLatestPublishedAsync(string route, CancellationToken cancellationToken)
+        public async Task<List<ContentOverride>> GetLatestPublishedAsync(string route, CancellationToken cancellationToken = default)
         {
             return await _context.ContentOverrides
                 .Include(o => o.Page)
@@ -22,18 +22,18 @@ namespace VineyardApi.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        public Task<ContentOverride?> GetDraftAsync(Guid pageId, string blockKey, CancellationToken cancellationToken)
+        public Task<ContentOverride?> GetDraftAsync(Guid pageId, string blockKey, CancellationToken cancellationToken = default)
         {
             return _context.ContentOverrides
                 .FirstOrDefaultAsync(o => o.PageId == pageId && o.BlockKey == blockKey && o.Status == "draft", cancellationToken);
         }
 
-        public Task<ContentOverride?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        public Task<ContentOverride?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
         {
             return _context.ContentOverrides.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
         }
 
-        public async Task<List<ContentOverride>> GetHistoryAsync(string route, string blockKey, CancellationToken cancellationToken)
+        public async Task<List<ContentOverride>> GetHistoryAsync(string route, string blockKey, CancellationToken cancellationToken = default)
         {
             return await _context.ContentOverrides
                 .Include(o => o.Page)
@@ -48,6 +48,6 @@ namespace VineyardApi.Repositories
             _context.ContentOverrides.Add(model);
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
     }
 }
