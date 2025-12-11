@@ -1,17 +1,25 @@
 using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using VineyardApi.Data;
+using VineyardApi.Middleware;
 using VineyardApi.Repositories;
 using VineyardApi.Services;
+using VineyardApi.Validators;
 using VineyardApi.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
+builder.Logging.AddJsonConsole(options =>
+{
+    options.IncludeScopes = true;
+    options.UseUtcTimestamp = true;
+    options.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ ";
+});
 
 // Allow overriding connection string and JWT key via environment variables
 var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
@@ -25,6 +33,9 @@ builder.Configuration["ConnectionStrings:DefaultConnection"] = defaultConnection
 builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<ContentOverrideValidator>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 
 // Development CORS policy
@@ -59,7 +70,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
     });
 
@@ -79,6 +90,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler("/error");
 app.UseStatusCodePagesWithReExecute("/error/{0}");
+
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

@@ -12,7 +12,7 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken)
+        public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
             return _context.Users
                 .Include(u => u.Roles)
@@ -20,6 +20,6 @@ namespace VineyardApi.Repositories
                 .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
     }
 }
