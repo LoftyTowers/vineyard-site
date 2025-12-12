@@ -40,7 +40,7 @@ namespace VineyardApi.Controllers
         {
             return result.ErrorCode switch
             {
-                ErrorCode.Validation => controller.UnprocessableEntity(new ValidationProblemDetails(result.ValidationErrors
+                ErrorCode.Validation => controller.BadRequest(new ValidationProblemDetails(result.ValidationErrors
                     .GroupBy(e => e.Field)
                     .ToDictionary(g => g.Key, g => g.Select(v => v.Message).ToArray()))),
                 ErrorCode.NotFound => BuildProblem(controller, StatusCodes.Status404NotFound, result, "Not found"),
@@ -48,7 +48,8 @@ namespace VineyardApi.Controllers
                 ErrorCode.Unauthorized => controller.Unauthorized(),
                 ErrorCode.Forbidden => controller.Forbid(),
                 ErrorCode.Conflict => controller.Conflict(result.Message),
-                _ => BuildProblem(controller, StatusCodes.Status500InternalServerError, result, "An unexpected error occurred")
+                ErrorCode.Unknown or ErrorCode.Unexpected => BuildProblem(controller, StatusCodes.Status500InternalServerError, result, "An unexpected error occurred"),
+                _ => BuildProblem(controller, StatusCodes.Status422UnprocessableEntity, result, "Domain error")
             };
         }
 

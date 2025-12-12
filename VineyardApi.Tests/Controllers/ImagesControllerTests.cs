@@ -45,7 +45,7 @@ namespace VineyardApi.Tests.Controllers
                 .Setup(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<Image>.Ok(input));
 
-            var result = await _controller.SaveImage(input, CancellationToken.None);
+            var result = await _controller.SaveImageAsync(input, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
             _service.Verify(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()), Times.Once);

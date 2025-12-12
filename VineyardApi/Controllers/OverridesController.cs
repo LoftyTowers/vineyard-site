@@ -33,7 +33,7 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet("{page}")]
-        public async Task<IActionResult> GetOverrides(string page, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetOverridesAsync(string page, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -56,7 +56,7 @@ namespace VineyardApi.Controllers
 
         [Authorize(Roles = "Admin,Editor")]
         [HttpPost("draft")]
-        public async Task<IActionResult> SaveDraft([FromBody] ContentOverride model, CancellationToken cancellationToken)
+        public async Task<IActionResult> SaveDraftAsync([FromBody] ContentOverride model, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -86,7 +86,7 @@ namespace VineyardApi.Controllers
 
         [Authorize(Roles = "Admin,Editor")]
         [HttpPost("publish")]
-        public async Task<IActionResult> PublishDraft([FromBody] IdRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> PublishDraftAsync([FromBody] IdRequest request, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -115,7 +115,7 @@ namespace VineyardApi.Controllers
 
         [Authorize(Roles = "Admin,Editor")]
         [HttpGet("history/{page}/{blockKey}")]
-        public async Task<IActionResult> GetHistory(string page, string blockKey, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetHistoryAsync(string page, string blockKey, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -139,7 +139,7 @@ namespace VineyardApi.Controllers
 
         [Authorize(Roles = "Admin,Editor")]
         [HttpPost("revert")]
-        public async Task<IActionResult> Revert([FromBody] RevertRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> RevertAsync([FromBody] RevertRequest request, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>

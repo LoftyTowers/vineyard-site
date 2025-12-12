@@ -1,3 +1,4 @@
+using System;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -13,9 +14,26 @@ namespace VineyardApi.Repositories
 
         public void AddImage(Image image)
         {
-            _context.Images.Add(image);
+            try
+            {
+                _context.Images.Add(image);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

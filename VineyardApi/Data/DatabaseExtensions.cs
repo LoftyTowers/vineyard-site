@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace VineyardApi.Data
 {
@@ -6,9 +7,16 @@ namespace VineyardApi.Data
     {
         public static void MigrateDatabase(this WebApplication app)
         {
-            using var scope = app.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<VineyardDbContext>();
-            db.Database.Migrate();
+            try
+            {
+                using var scope = app.Services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<VineyardDbContext>();
+                db.Database.Migrate();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }

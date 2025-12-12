@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -14,12 +15,19 @@ namespace VineyardApi.Repositories
 
         public async Task<List<AuditLog>> GetRecentAsync(int count, CancellationToken cancellationToken = default)
         {
-            return await _context.AuditLogs
-                .Include(l => l.User)
-                .Include(l => l.History)
-                .OrderByDescending(l => l.Timestamp)
-                .Take(count)
-                .ToListAsync(cancellationToken);
+            try
+            {
+                return await _context.AuditLogs
+                    .Include(l => l.User)
+                    .Include(l => l.History)
+                    .OrderByDescending(l => l.Timestamp)
+                    .Take(count)
+                    .ToListAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
     }
 }

@@ -45,7 +45,7 @@ namespace VineyardApi.Tests.Controllers
             var content = new PageContent();
             _service.Setup(s => s.GetPageContentAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Ok(content));
 
-            var result = await _controller.GetPage("home", CancellationToken.None);
+            var result = await _controller.GetPageAsync("home", CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }
@@ -55,7 +55,7 @@ namespace VineyardApi.Tests.Controllers
         {
             _service.Setup(s => s.GetPageContentAsync("missing", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Failure(ErrorCode.NotFound));
 
-            var result = await _controller.GetPage("missing", CancellationToken.None);
+            var result = await _controller.GetPageAsync("missing", CancellationToken.None);
 
             var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
             problem.Should().NotBeNull();
@@ -70,7 +70,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result.Ok());
 
-            var result = await _controller.SaveOverride(model, CancellationToken.None);
+            var result = await _controller.SaveOverrideAsync(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()), Times.Once);
