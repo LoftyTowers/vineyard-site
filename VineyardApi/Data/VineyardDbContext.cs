@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Text.Json;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
@@ -25,93 +26,121 @@ namespace VineyardApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-
-            modelBuilder.Entity<Page>(e =>
+            try
             {
-                e.Property(p => p.DefaultContent)
-                 .HasColumnType("jsonb");
-                e.HasIndex(p => p.Route).IsUnique();
-            });
+                base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<PageOverride>(e =>
+                modelBuilder.Entity<Page>(e =>
+                {
+                    e.Property(p => p.DefaultContent)
+                     .HasColumnType("jsonb");
+                    e.HasIndex(p => p.Route).IsUnique();
+                });
+
+                modelBuilder.Entity<PageOverride>(e =>
+                {
+                    e.Property(p => p.OverrideContent)
+                     .HasColumnType("jsonb");
+                });
+
+                modelBuilder.Entity<User>()
+                    .HasIndex(u => u.Username)
+                    .IsUnique();
+
+                modelBuilder.Entity<UserRole>()
+                    .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+                modelBuilder.Entity<RolePermission>()
+                    .HasKey(rp => new { rp.RoleId, rp.PermissionId });
+
+                modelBuilder.Entity<ContentOverride>()
+                    .Property(c => c.Timestamp)
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+                modelBuilder.Entity<ContentOverride>()
+                    .Property(c => c.Status)
+                    .HasDefaultValue("draft");
+
+                modelBuilder.Entity<AuditHistory>()
+                    .Property(a => a.PreviousValue)
+                    .HasColumnType("jsonb");
+                modelBuilder.Entity<AuditHistory>()
+                    .Property(a => a.NewValue)
+                    .HasColumnType("jsonb");
+            }
+            catch (Exception)
             {
-                e.Property(p => p.OverrideContent)
-                 .HasColumnType("jsonb");
-            });
-
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Username)
-                .IsUnique();
-
-            modelBuilder.Entity<UserRole>()
-                .HasKey(ur => new { ur.UserId, ur.RoleId });
-
-            modelBuilder.Entity<RolePermission>()
-                .HasKey(rp => new { rp.RoleId, rp.PermissionId });
-
-            modelBuilder.Entity<ContentOverride>()
-                .Property(c => c.Timestamp)
-                .HasDefaultValueSql("now() at time zone 'utc'");
-            modelBuilder.Entity<ContentOverride>()
-                .Property(c => c.Status)
-                .HasDefaultValue("draft");
-
-            modelBuilder.Entity<AuditHistory>()
-                .Property(a => a.PreviousValue)
-                .HasColumnType("jsonb");
-            modelBuilder.Entity<AuditHistory>()
-                .Property(a => a.NewValue)
-                .HasColumnType("jsonb");
+                throw;
+            }
         }
 
 
         public override int SaveChanges()
         {
-            AddAuditEntries();
-            return base.SaveChanges();
+            try
+            {
+                AddAuditEntries();
+                return base.SaveChanges();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            AddAuditEntries();
-            return await base.SaveChangesAsync(cancellationToken);
+            try
+            {
+                AddAuditEntries();
+                return await base.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         private void AddAuditEntries()
         {
-            var entries = ChangeTracker.Entries()
-                .Where(e => (e.Entity is PageOverride || e.Entity is ThemeOverride) &&
-                            (e.State == EntityState.Added || e.State == EntityState.Modified));
-
-            foreach (var entry in entries)
+            try
             {
-                var entityName = entry.Entity.GetType().Name;
-                var entityId = (Guid)entry.Property("Id").CurrentValue!;
-                var userId = entry.Property("UpdatedById").CurrentValue as Guid? ?? Guid.Empty;
+                var entries = ChangeTracker.Entries()
+                    .Where(e => (e.Entity is PageOverride || e.Entity is ThemeOverride) &&
+                                (e.State == EntityState.Added || e.State == EntityState.Modified));
 
-                var log = new AuditLog
+                foreach (var entry in entries)
                 {
-                    Id = Guid.NewGuid(),
-                    UserId = userId,
-                    Action = entry.State == EntityState.Added ? "Created" : "Updated",
-                    EntityType = entityName,
-                    EntityId = entityId,
-                    Timestamp = DateTime.UtcNow
-                };
-                AuditLogs.Add(log);
+                    var entityName = entry.Entity.GetType().Name;
+                    var entityId = (Guid)entry.Property("Id").CurrentValue!;
+                    var userId = entry.Property("UpdatedById").CurrentValue as Guid? ?? Guid.Empty;
 
-                var history = new AuditHistory
-                {
-                    Id = Guid.NewGuid(),
-                    AuditLog = log,
-                    PreviousValue = entry.State == EntityState.Modified
-                        ? JsonSerializer.Serialize(entry.OriginalValues.ToObject())
-                        : null,
-                    NewValue = JsonSerializer.Serialize(entry.CurrentValues.ToObject()),
-                    ChangedAt = DateTime.UtcNow
-                };
-                AuditHistories.Add(history);
+                    var log = new AuditLog
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = userId,
+                        Action = entry.State == EntityState.Added ? "Created" : "Updated",
+                        EntityType = entityName,
+                        EntityId = entityId,
+                        Timestamp = DateTime.UtcNow
+                    };
+                    AuditLogs.Add(log);
+
+                    var history = new AuditHistory
+                    {
+                        Id = Guid.NewGuid(),
+                        AuditLog = log,
+                        PreviousValue = entry.State == EntityState.Modified
+                            ? JsonSerializer.Serialize(entry.OriginalValues.ToObject())
+                            : null,
+                        NewValue = JsonSerializer.Serialize(entry.CurrentValues.ToObject()),
+                        ChangedAt = DateTime.UtcNow
+                    };
+                    AuditHistories.Add(history);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
             }
         }
     }

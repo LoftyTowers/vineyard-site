@@ -100,6 +100,6 @@ app.MapControllers();
 
 // Apply pending EF Core migrations and seed data at startup
 app.MigrateDatabase();
-await DbInitializer.SeedAsync(app.Services);
+await DbInitializer.SeedAsync(app.Services, app.Lifetime.ApplicationStopping);
 
 app.Run();
