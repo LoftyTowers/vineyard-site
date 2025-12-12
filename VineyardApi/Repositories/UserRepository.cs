@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -14,12 +15,29 @@ namespace VineyardApi.Repositories
 
         public Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
         {
-            return _context.Users
-                .Include(u => u.Roles)
-                .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
+            try
+            {
+                return _context.Users
+                    .Include(u => u.Roles)
+                    .ThenInclude(ur => ur.Role)
+                    .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

@@ -47,7 +47,7 @@ namespace VineyardApi.Tests.Controllers
 
             var request = new VineyardApi.Controllers.LoginRequest("user", "pass");
 
-            var result = await _controller.Login(request, CancellationToken.None);
+            var result = await _controller.LoginAsync(request, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
             ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status200OK);
@@ -61,7 +61,7 @@ namespace VineyardApi.Tests.Controllers
 
             var request = new VineyardApi.Controllers.LoginRequest("u", "p");
 
-            var result = await _controller.Login(request, CancellationToken.None);
+            var result = await _controller.LoginAsync(request, CancellationToken.None);
 
             var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
             problem.Should().NotBeNull();

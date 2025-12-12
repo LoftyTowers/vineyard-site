@@ -23,7 +23,7 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetThemeAsync(CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -45,7 +45,7 @@ namespace VineyardApi.Controllers
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] ThemeOverride model, CancellationToken cancellationToken)
+        public async Task<IActionResult> SaveOverrideAsync([FromBody] ThemeOverride model, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>

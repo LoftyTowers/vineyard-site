@@ -61,7 +61,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.GetPublishedOverridesAsync("home", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<Dictionary<string, string>>.Ok(new Dictionary<string, string>()));
 
-            var result = await _controller.GetOverrides("home", CancellationToken.None);
+            var result = await _controller.GetOverridesAsync("home", CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }
@@ -73,7 +73,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.SaveDraftAsync(model, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result.Ok());
 
-            var result = await _controller.SaveDraft(model, CancellationToken.None);
+            var result = await _controller.SaveDraftAsync(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.SaveDraftAsync(model, It.IsAny<CancellationToken>()), Times.Once);
@@ -83,7 +83,7 @@ namespace VineyardApi.Tests.Controllers
         public void SaveDraft_HasAuthorizeAttribute()
         {
             var attr = typeof(OverridesController)
-                .GetMethod(nameof(OverridesController.SaveDraft))!
+                .GetMethod(nameof(OverridesController.SaveDraftAsync))!
                 .GetCustomAttributes(typeof(AuthorizeAttribute), false)
                 .Cast<AuthorizeAttribute>()
                 .SingleOrDefault();
@@ -100,7 +100,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.PublishDraftAsync(id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result.Ok());
 
-            var result = await _controller.PublishDraft(request, CancellationToken.None);
+            var result = await _controller.PublishDraftAsync(request, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.PublishDraftAsync(id, It.IsAny<CancellationToken>()), Times.Once);
@@ -110,7 +110,7 @@ namespace VineyardApi.Tests.Controllers
         public void PublishDraft_HasAuthorizeAttribute()
         {
             var attr = typeof(OverridesController)
-                .GetMethod(nameof(OverridesController.PublishDraft))!
+                .GetMethod(nameof(OverridesController.PublishDraftAsync))!
                 .GetCustomAttributes(typeof(AuthorizeAttribute), false)
                 .Cast<AuthorizeAttribute>()
                 .SingleOrDefault();
@@ -125,7 +125,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.GetHistoryAsync("home", "key", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<List<ContentOverride>>.Ok(new List<ContentOverride>()));
 
-            var result = await _controller.GetHistory("home", "key", CancellationToken.None);
+            var result = await _controller.GetHistoryAsync("home", "key", CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
             _service.Verify(s => s.GetHistoryAsync("home", "key", It.IsAny<CancellationToken>()), Times.Once);
@@ -138,7 +138,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.RevertAsync(request.Id, request.ChangedById, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result.Ok());
 
-            var result = await _controller.Revert(request, CancellationToken.None);
+            var result = await _controller.RevertAsync(request, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.RevertAsync(request.Id, request.ChangedById, It.IsAny<CancellationToken>()), Times.Once);
@@ -148,7 +148,7 @@ namespace VineyardApi.Tests.Controllers
         public void Revert_HasAuthorizeAttribute()
         {
             var attr = typeof(OverridesController)
-                .GetMethod(nameof(OverridesController.Revert))!
+                .GetMethod(nameof(OverridesController.RevertAsync))!
                 .GetCustomAttributes(typeof(AuthorizeAttribute), false)
                 .Cast<AuthorizeAttribute>()
                 .SingleOrDefault();

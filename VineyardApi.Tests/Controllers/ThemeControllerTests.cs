@@ -43,7 +43,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.GetThemeAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<Dictionary<string, string>>.Ok(new Dictionary<string, string>()));
 
-            var result = await _controller.GetTheme(CancellationToken.None);
+            var result = await _controller.GetThemeAsync(CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }
@@ -55,7 +55,7 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result.Ok());
 
-            var result = await _controller.SaveOverride(model, CancellationToken.None);
+            var result = await _controller.SaveOverrideAsync(model, CancellationToken.None);
 
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()), Times.Once);

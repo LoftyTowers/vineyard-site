@@ -24,7 +24,7 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet("{route}")]
-        public async Task<IActionResult> GetPage(string route, CancellationToken cancellationToken)
+        public async Task<IActionResult> GetPageAsync(string route, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -47,7 +47,7 @@ namespace VineyardApi.Controllers
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] PageOverride model, CancellationToken cancellationToken)
+        public async Task<IActionResult> SaveOverrideAsync([FromBody] PageOverride model, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>

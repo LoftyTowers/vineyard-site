@@ -25,10 +25,10 @@ namespace VineyardApi.Controllers
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> SaveImage([FromBody] Image img, CancellationToken cancellationToken)
+        public async Task<IActionResult> SaveImageAsync([FromBody] Image img, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
-            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            using var scope = _logger.BeginScope(new Dictionary<string, object?>
             {
                 ["CorrelationId"] = correlationId,
                 ["ImageId"] = img.Id == Guid.Empty ? null : img.Id,
