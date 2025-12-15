@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  db:
+    env_file:
+      - .env.staging
+  api:
+    env_file:
+      - .env.staging
+    image: vineyard-api:staging
+    build: null
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+  frontend:
+    env_file:
+      - .env.staging
+    image: vineyard-frontend:staging
+    build: null
+
