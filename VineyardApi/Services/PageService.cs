@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
@@ -19,12 +20,19 @@ namespace VineyardApi.Services
 
         public async Task<Result<PageContent>> GetPageContentAsync(string route, CancellationToken cancellationToken = default)
         {
+            const string operation = "GetPageWithOverrides";
+
             try
             {
-                using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageRoute", route}});
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"DbOperation", operation}
+                });
                 var page = await _repository.GetPageWithOverridesAsync(route, cancellationToken);
                 if (page == null)
                 {
+                    _logger.LogWarning("Page read failed: not found (Route: {Route})", route);
                     return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
                 }
 
@@ -32,31 +40,37 @@ namespace VineyardApi.Services
                     .OrderByDescending(o => o.UpdatedAt)
                     .FirstOrDefault();
 
+                _logger.LogInformation("Page read succeeded (Route: {Route})", route);
                 return Result<PageContent>.Ok(overrideContent?.OverrideContent ?? page.DefaultContent);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting page content for route {Route}", route);
-                return Result<PageContent>.Failure(ErrorCode.Unexpected);
+                _logger.LogError(ex, "Page read failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Unexpected, "PageReadFailed");
             }
         }
 
         public async Task<Result> SaveOverrideAsync(PageOverride model, CancellationToken cancellationToken = default)
         {
+            const string operation = "SavePageOverride";
             try
             {
-                using var scope = _logger.BeginScope(new Dictionary<string, object>{{"PageId", model.PageId}});
-            model.UpdatedAt = DateTime.UtcNow;
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageId", model.PageId},
+                    {"DbOperation", operation}
+                });
+                model.UpdatedAt = DateTime.UtcNow;
                 var existing = await _repository.GetPageOverrideByPageIdAsync(model.PageId, cancellationToken);
                 if (existing == null)
                 {
                     _logger.LogInformation("Creating override for page {PageId}", model.PageId);
-                _repository.AddPageOverride(model);
+                    _repository.AddPageOverride(model);
                 }
                 else
                 {
                     _logger.LogInformation("Updating override for page {PageId}", model.PageId);
-                existing.OverrideContent = model.OverrideContent;
+                    existing.OverrideContent = model.OverrideContent;
                     existing.UpdatedAt = model.UpdatedAt;
                     existing.UpdatedById = model.UpdatedById;
                 }
@@ -66,8 +80,8 @@ namespace VineyardApi.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving page override for page {PageId}", model.PageId);
-                return Result.Failure(ErrorCode.Unexpected);
+                _logger.LogError(ex, "Error saving page override for page {PageId} (Operation: {Operation})", model.PageId, operation);
+                return Result.Failure(ErrorCode.Unexpected, "PageOverrideSaveFailed");
             }
         }
     }
