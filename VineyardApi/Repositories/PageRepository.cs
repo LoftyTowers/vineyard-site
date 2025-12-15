@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using System;
+using Microsoft.EntityFrameworkCore;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -18,9 +18,10 @@ namespace VineyardApi.Repositories
         {
             try
             {
-                return await _context.Pages
+                var page = await _context.Pages
                     .Include(p => p.Overrides)
                     .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
+                return page;
             }
             catch (Exception)
             {

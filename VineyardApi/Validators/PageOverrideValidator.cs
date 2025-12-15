@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using FluentValidation;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
@@ -19,46 +20,24 @@ public class PageContentValidator : AbstractValidator<PageContent?>
 {
     public PageContentValidator()
     {
-        // Guard the root object itself
         RuleFor(x => x)
             .NotNull();
 
-        // Use x! when accessing members to tell the compiler it's non-null after the check
         RuleFor(x => x!.Blocks)
             .NotNull();
 
         RuleForEach(x => x!.Blocks)
-            .SetValidator(new ContentBlockValidator());
+            .SetValidator(new PageBlockValidator());
     }
 }
 
-public class ContentBlockValidator : AbstractValidator<ContentBlock>
+public class PageBlockValidator : AbstractValidator<PageBlock>
 {
-    public ContentBlockValidator()
+    public PageBlockValidator()
     {
         RuleFor(x => x.Type).NotEmpty();
-
-        When(x => x is RichTextBlock, () =>
-        {
-            RuleFor(x => ((RichTextBlock)x).Html)
-                .NotEmpty()
-                .MaximumLength(20000);
-        });
-
-        When(x => x is ImageBlock, () =>
-        {
-            RuleFor(x => ((ImageBlock)x).Url)
-                .NotEmpty()
-                .Must(BeValidUri)
-                .WithMessage("Url must be a valid absolute URI.");
-            RuleFor(x => ((ImageBlock)x).Alt)
-                .NotEmpty()
-                .MaximumLength(255);
-        });
-    }
-
-    private static bool BeValidUri(string url)
-    {
-        return Uri.TryCreate(url, UriKind.Absolute, out _);
+        RuleFor(x => x.Content.ValueKind)
+            .Must(kind => kind != JsonValueKind.Undefined)
+            .WithMessage("Content must be provided for each block.");
     }
 }
