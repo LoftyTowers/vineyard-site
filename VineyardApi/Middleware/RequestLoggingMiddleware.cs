@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System;
+using System.Runtime.ExceptionServices;
 
 namespace VineyardApi.Middleware
 {
@@ -19,48 +20,66 @@ namespace VineyardApi.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
+            var correlationId = ResolveCorrelationId(context);
+            context.Items[CorrelationHeader] = correlationId;
+            context.Response.Headers[CorrelationHeader] = correlationId;
+
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["RequestId"] = context.TraceIdentifier,
+                ["RequestPath"] = context.Request.Path,
+                ["RequestMethod"] = context.Request.Method
+            });
+
+            var stopwatch = Stopwatch.StartNew();
+            _logger.LogInformation("Starting {RequestMethod} {RequestPath}", context.Request.Method, context.Request.Path);
+
+            Exception? exception = null;
+            ExceptionDispatchInfo? dispatchInfo = null;
+
             try
             {
-                var correlationId = ResolveCorrelationId(context);
-                context.Items[CorrelationHeader] = correlationId;
-                context.Response.Headers[CorrelationHeader] = correlationId;
-
-                using var scope = _logger.BeginScope(new Dictionary<string, object>
-                {
-                    ["CorrelationId"] = correlationId,
-                    ["RequestId"] = context.TraceIdentifier,
-                    ["RequestPath"] = context.Request.Path,
-                    ["RequestMethod"] = context.Request.Method
-                });
-
-                var stopwatch = Stopwatch.StartNew();
-                _logger.LogInformation("Starting {RequestMethod} {RequestPath}", context.Request.Method, context.Request.Path);
-
-                try
-                {
-                    await _next(context);
-                    stopwatch.Stop();
-                    _logger.LogInformation("Completed {RequestMethod} {RequestPath} with {StatusCode} in {ElapsedMilliseconds} ms",
-                        context.Request.Method,
-                        context.Request.Path,
-                        context.Response.StatusCode,
-                        stopwatch.ElapsedMilliseconds);
-                }
-                catch (Exception ex)
-                {
-                    stopwatch.Stop();
-                    _logger.LogError(ex,
-                        "Unhandled exception during {RequestMethod} {RequestPath} after {ElapsedMilliseconds} ms",
-                        context.Request.Method,
-                        context.Request.Path,
-                        stopwatch.ElapsedMilliseconds);
-                    throw;
-                }
+                await _next(context);
             }
-            catch (Exception)
+            catch (BadHttpRequestException ex)
             {
-                throw;
+                exception = ex;
+                dispatchInfo = ExceptionDispatchInfo.Capture(ex);
+                context.Response.StatusCode = ex.StatusCode;
             }
+            catch (Exception ex)
+            {
+                exception = ex;
+                dispatchInfo = ExceptionDispatchInfo.Capture(ex);
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            }
+
+            stopwatch.Stop();
+
+            var statusCode = context.Response.StatusCode;
+            var logLevel = ResolveLogLevel(statusCode);
+
+            const string completionMessage = "Completed {RequestMethod} {RequestPath} with {StatusCode} in {ElapsedMilliseconds} ms";
+
+            if (logLevel == LogLevel.Error && exception is not null)
+            {
+                _logger.Log(logLevel, exception, completionMessage,
+                    context.Request.Method,
+                    context.Request.Path,
+                    statusCode,
+                    stopwatch.ElapsedMilliseconds);
+            }
+            else
+            {
+                _logger.Log(logLevel, completionMessage,
+                    context.Request.Method,
+                    context.Request.Path,
+                    statusCode,
+                    stopwatch.ElapsedMilliseconds);
+            }
+
+            dispatchInfo?.Throw();
         }
 
         private static string ResolveCorrelationId(HttpContext context)
@@ -78,6 +97,21 @@ namespace VineyardApi.Middleware
             {
                 throw;
             }
+        }
+
+        private static LogLevel ResolveLogLevel(int statusCode)
+        {
+            if (statusCode >= StatusCodes.Status500InternalServerError)
+            {
+                return LogLevel.Error;
+            }
+
+            if (statusCode >= StatusCodes.Status400BadRequest)
+            {
+                return LogLevel.Warning;
+            }
+
+            return LogLevel.Information;
         }
     }
 }
