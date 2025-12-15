@@ -23,6 +23,10 @@ namespace VineyardApi.Controllers
             _validator = validator;
         }
 
+        [HttpGet("")]
+        public Task<IActionResult> GetHomePageAsync(CancellationToken cancellationToken) =>
+            GetPageAsync(string.Empty, cancellationToken);
+
         [HttpGet("{route}")]
         public async Task<IActionResult> GetPageAsync(string route, CancellationToken cancellationToken)
         {

@@ -3,6 +3,8 @@ services:
   db:
     env_file:
       - .env.staging
+    volumes:
+      - db_data:/var/lib/postgresql/data
   api:
     env_file:
       - .env.staging
@@ -16,3 +18,5 @@ services:
     image: vineyard-frontend:staging
     build: null
 
+volumes:
+  db_data:
