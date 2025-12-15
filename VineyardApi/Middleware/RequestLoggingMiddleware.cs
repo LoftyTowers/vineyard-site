@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using System.Collections.Generic;
 using System;
 using System.Runtime.ExceptionServices;
+using Microsoft.AspNetCore.Routing;
+using System.Security.Claims;
 
 namespace VineyardApi.Middleware
 {
@@ -29,7 +31,11 @@ namespace VineyardApi.Middleware
                 ["CorrelationId"] = correlationId,
                 ["RequestId"] = context.TraceIdentifier,
                 ["RequestPath"] = context.Request.Path,
-                ["RequestMethod"] = context.Request.Method
+                ["RequestMethod"] = context.Request.Method,
+                ["QueryString"] = context.Request.QueryString.ToString(),
+                ["CorrelationHeader"] = context.Request.Headers[CorrelationHeader].ToString(),
+                ["IsAuthenticated"] = context.User?.Identity?.IsAuthenticated ?? false,
+                ["UserId"] = ResolveUserId(context.User)
             });
 
             var stopwatch = Stopwatch.StartNew();
@@ -59,8 +65,12 @@ namespace VineyardApi.Middleware
 
             var statusCode = context.Response.StatusCode;
             var logLevel = ResolveLogLevel(statusCode);
+            var routeValues = context.GetRouteData()?.Values ?? new RouteValueDictionary();
+            var correlationHeader = context.Request.Headers[CorrelationHeader].ToString();
+            var isAuthenticated = context.User?.Identity?.IsAuthenticated ?? false;
+            var userId = ResolveUserId(context.User);
 
-            const string completionMessage = "Completed {RequestMethod} {RequestPath} with {StatusCode} in {ElapsedMilliseconds} ms";
+            const string completionMessage = "Completed {RequestMethod} {RequestPath} with {StatusCode} in {ElapsedMilliseconds} ms (QueryString: {QueryString}, RouteValues: {RouteValues}, Authenticated: {IsAuthenticated}, UserId: {UserId}, CorrelationId: {CorrelationId})";
 
             if (logLevel == LogLevel.Error && exception is not null)
             {
@@ -68,7 +78,12 @@ namespace VineyardApi.Middleware
                     context.Request.Method,
                     context.Request.Path,
                     statusCode,
-                    stopwatch.ElapsedMilliseconds);
+                    stopwatch.ElapsedMilliseconds,
+                    context.Request.QueryString.ToString(),
+                    routeValues,
+                    isAuthenticated,
+                    userId,
+                    correlationHeader);
             }
             else
             {
@@ -76,7 +91,12 @@ namespace VineyardApi.Middleware
                     context.Request.Method,
                     context.Request.Path,
                     statusCode,
-                    stopwatch.ElapsedMilliseconds);
+                    stopwatch.ElapsedMilliseconds,
+                    context.Request.QueryString.ToString(),
+                    routeValues,
+                    isAuthenticated,
+                    userId,
+                    correlationHeader);
             }
 
             dispatchInfo?.Throw();
@@ -112,6 +132,12 @@ namespace VineyardApi.Middleware
             }
 
             return LogLevel.Information;
+        }
+
+        private static string? ResolveUserId(ClaimsPrincipal? user)
+        {
+            return user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? user?.Identity?.Name;
         }
     }
 }
