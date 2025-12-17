@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent } from '../../shared/components';
 import { AuthService } from '../../services/auth.service';
 import { PageService, PageData } from '../../services/page.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
@@ -10,8 +11,9 @@ import { PageService, PageData } from '../../services/page.service';
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent implements OnInit, OnDestroy {
   isAdmin = false;
+  private authSub?: Subscription;
   constructor(private pageService: PageService, private auth: AuthService) {}
 
   homeContentBlocks = [
@@ -22,11 +24,18 @@ export class HomeComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.authSub = this.auth.authState$.subscribe(() => {
+      this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
+    });
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.pageService.getPage('').subscribe((data: PageData) => {
       if (Array.isArray(data.blocks)) {
         this.homeContentBlocks = data.blocks as any[];
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.authSub?.unsubscribe();
   }
 }

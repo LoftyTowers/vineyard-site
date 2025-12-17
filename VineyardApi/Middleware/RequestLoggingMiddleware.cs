@@ -22,7 +22,7 @@ namespace VineyardApi.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            var correlationId = ResolveCorrelationId(context);
+            var correlationId = ResolveCorrelationId(context) ?? Guid.NewGuid().ToString();
             context.Items[CorrelationHeader] = correlationId;
             context.Response.Headers[CorrelationHeader] = correlationId;
 
