@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using VineyardApi.Data;
 using VineyardApi.Models;
@@ -15,22 +16,54 @@ namespace VineyardApi.Repositories
 
         public async Task<Page?> GetPageWithOverridesAsync(string route, CancellationToken cancellationToken = default)
         {
-            return await _context.Pages
-                .Include(p => p.Overrides)
-                .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
+            try
+            {
+                var page = await _context.Pages
+                    .Include(p => p.Overrides)
+                    .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
+                return page;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public async Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId, CancellationToken cancellationToken = default)
         {
-            return await _context.PageOverrides
-                .FirstOrDefaultAsync(p => p.PageId == pageId, cancellationToken);
+            try
+            {
+                return await _context.PageOverrides
+                    .FirstOrDefaultAsync(p => p.PageId == pageId, cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public void AddPageOverride(PageOverride model)
         {
-            _context.PageOverrides.Add(model);
+            try
+            {
+                _context.PageOverrides.Add(model);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

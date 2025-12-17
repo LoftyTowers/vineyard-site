@@ -13,7 +13,12 @@
       <a routerLink="/" class="hover:text-primary">Home</a>
       <a routerLink="/about" class="hover:text-primary">About</a>
       <a routerLink="/gallery" class="hover:text-primary">Gallery</a>
-      <a routerLink="/login" class="hover:text-primary">Login</a>
+      <ng-container *ngIf="isAuthenticated$ | async; else loginLink">
+        <button class="hover:text-primary" (click)="logout()">Logout</button>
+      </ng-container>
+      <ng-template #loginLink>
+        <a routerLink="/login" class="hover:text-primary">Login</a>
+      </ng-template>
     </div>
   </div>
   <div class="sm:hidden" [ngClass]="{ 'block': isMenuOpen, 'hidden': !isMenuOpen }">
@@ -21,7 +26,12 @@
       <a routerLink="/" class="block py-2 hover:text-primary">Home</a>
       <a routerLink="/about" class="block py-2 hover:text-primary">About</a>
       <a routerLink="/gallery" class="block py-2 hover:text-primary">Gallery</a>
-      <a routerLink="/login" class="block py-2 hover:text-primary">Login</a>
+      <ng-container *ngIf="isAuthenticated$ | async; else mobileLoginLink">
+        <button class="block py-2 hover:text-primary text-left w-full" (click)="logout()">Logout</button>
+      </ng-container>
+      <ng-template #mobileLoginLink>
+        <a routerLink="/login" class="block py-2 hover:text-primary">Login</a>
+      </ng-template>
     </div>
   </div>
 </nav>

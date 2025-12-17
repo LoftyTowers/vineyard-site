@@ -5,9 +5,9 @@
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
-    "build:test": "ng build --configuration test",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:staging": "ng build --configuration staging"
   },
   "private": true,
   "dependencies": {

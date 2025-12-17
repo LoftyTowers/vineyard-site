@@ -11,6 +11,7 @@ export class PageService {
   constructor(private http: HttpClient) {}
 
   getPage(route: string): Observable<PageData> {
-    return this.http.get<PageData>(`/api/pages/${route}`);
+    const suffix = route ? `/${route}` : '';
+    return this.http.get<PageData>(`/api/pages${suffix}`);
   }
 }

@@ -1,11 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Linq;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using System.Text.Json;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
@@ -34,7 +36,7 @@ namespace VineyardApi.Tests.Services
                 Route = "home",
                 DefaultContent = new PageContent
                 {
-                    Blocks = { new RichTextBlock { Type = "richText", Html = "hi" } }
+                    Blocks = { CreateTextBlock("hi") }
                 },
                 Overrides = new[]
                 {
@@ -42,7 +44,7 @@ namespace VineyardApi.Tests.Services
                     {
                         OverrideContent = new PageContent
                         {
-                            Blocks = { new RichTextBlock { Type = "richText", Html = "bye" } }
+                            Blocks = { CreateTextBlock("bye") }
                         },
                         UpdatedAt = DateTime.UtcNow
                     }
@@ -53,7 +55,7 @@ namespace VineyardApi.Tests.Services
             var result = await _service.GetPageContentAsync("home");
 
             result.IsSuccess.Should().BeTrue();
-            (result.Value!.Blocks.First() as RichTextBlock)!.Html.Should().Be("bye");
+            result.Value!.Blocks.First().Content.GetString().Should().Be("bye");
         }
 
         [Test]
@@ -90,7 +92,7 @@ namespace VineyardApi.Tests.Services
                 PageId = Guid.NewGuid(),
                 OverrideContent = new PageContent
                 {
-                    Blocks = { new RichTextBlock { Type = "richText", Html = "bar" } }
+                    Blocks = { CreateTextBlock("bar") }
                 }
             };
             var model = new PageOverride
@@ -98,7 +100,7 @@ namespace VineyardApi.Tests.Services
                 PageId = existing.PageId,
                 OverrideContent = new PageContent
                 {
-                    Blocks = { new RichTextBlock { Type = "richText", Html = "baz" } }
+                    Blocks = { CreateTextBlock("baz") }
                 },
                 UpdatedById = Guid.NewGuid()
             };
@@ -108,10 +110,19 @@ namespace VineyardApi.Tests.Services
             var result = await _service.SaveOverrideAsync(model);
 
             result.IsSuccess.Should().BeTrue();
-            (existing.OverrideContent!.Blocks.First() as RichTextBlock)!.Html.Should().Be("baz");
+            existing.OverrideContent!.Blocks.First().Content.GetString().Should().Be("baz");
             existing.UpdatedById.Should().Be(model.UpdatedById);
             _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             _repo.Verify(r => r.AddPageOverride(It.IsAny<PageOverride>()), Times.Never);
+        }
+
+        private static PageBlock CreateTextBlock(string text)
+        {
+            return new PageBlock
+            {
+                Type = "p",
+                Content = JsonDocument.Parse($"\"{text}\"").RootElement
+            };
         }
     }
 }

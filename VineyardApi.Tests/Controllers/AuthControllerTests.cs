@@ -19,7 +19,7 @@ namespace VineyardApi.Tests.Controllers
     public class AuthControllerTests
     {
         private Mock<IAuthService> _service = null!;
-        private Mock<IValidator<VineyardApi.Controllers.LoginRequest>> _validator = null!;
+        private Mock<IValidator<LoginRequest>> _validator = null!;
         private AuthController _controller = null!;
 
         [SetUp]
@@ -27,9 +27,9 @@ namespace VineyardApi.Tests.Controllers
         {
             _service = new Mock<IAuthService>();
 
-            _validator = new Mock<IValidator<VineyardApi.Controllers.LoginRequest>>();
+            _validator = new Mock<IValidator<LoginRequest>>();
             _validator
-                .Setup(v => v.ValidateAsync(It.IsAny<VineyardApi.Controllers.LoginRequest>(), It.IsAny<CancellationToken>()))
+                .Setup(v => v.ValidateAsync(It.IsAny<LoginRequest>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new ValidationResult());
 
             _controller = new AuthController(
@@ -45,11 +45,12 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.LoginAsync("user", "pass", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<string>.Ok("tok"));
 
-            var request = new VineyardApi.Controllers.LoginRequest("user", "pass");
+            var request = new LoginRequest("user", "pass");
 
-            var result = await _controller.Login(request, CancellationToken.None);
+            var result = await _controller.LoginAsync(request, CancellationToken.None);
 
-            result.Should().BeOfType<OkObjectResult>();
+            var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+            ok.Value.Should().BeEquivalentTo(new { token = "tok" });
             ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status200OK);
         }
 
@@ -59,9 +60,9 @@ namespace VineyardApi.Tests.Controllers
             _service.Setup(s => s.LoginAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<string>.Failure(ErrorCode.BadRequest, "Invalid username or password"));
 
-            var request = new VineyardApi.Controllers.LoginRequest("u", "p");
+            var request = new LoginRequest("u", "p");
 
-            var result = await _controller.Login(request, CancellationToken.None);
+            var result = await _controller.LoginAsync(request, CancellationToken.None);
 
             var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
             problem.Should().NotBeNull();

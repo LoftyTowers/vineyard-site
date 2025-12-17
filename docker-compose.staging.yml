@@ -2,21 +2,20 @@ version: '3.9'
 services:
   db:
     env_file:
-      - .env.production
+      - .env.staging
     volumes:
       - db_data:/var/lib/postgresql/data
-    ports: []
   api:
     env_file:
-      - .env.production
-    image: vineyard-api:latest
+      - .env.staging
+    image: vineyard-api:staging
     build: null
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: Staging
   frontend:
     env_file:
-      - .env.production
-    image: vineyard-frontend:latest
+      - .env.staging
+    image: vineyard-frontend:staging
     build: null
 
 volumes:
