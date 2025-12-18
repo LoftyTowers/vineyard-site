@@ -7,24 +7,12 @@
 </div>
 
 <div class="flex flex-col items-start gap-6 py-12 border-t border-gray-200">
-  <div class="w-full space-y-4 font-body">
-    <ng-container *ngFor="let block of homeContentBlocks; let i = index">
-      <p *ngIf="block.type === 'p'" class="text-contrast">
-        <app-editable-text-block
-          [(content)]="homeContentBlocks[i].content"
-          [editable]="isAdmin"></app-editable-text-block>
-      </p>
-      <h2 *ngIf="block.type === 'h2'" class="text-contrast">
-        <app-editable-text-block
-          [(content)]="homeContentBlocks[i].content"
-          [editable]="isAdmin"></app-editable-text-block>
-      </h2>
-      <h3 *ngIf="block.type === 'h3'" class="text-contrast">
-        <app-editable-text-block
-          [(content)]="homeContentBlocks[i].content"
-          [editable]="isAdmin"></app-editable-text-block>
-      </h3>
+  <div class="w-full space-y-4 font-body text-contrast">
+    <ng-container *ngIf="isAdmin; else viewMode">
+      <app-editable-text-block [(content)]="combinedContent" [editable]="true"></app-editable-text-block>
     </ng-container>
+    <ng-template #viewMode>
+      <div class="prose prose-neutral max-w-none" [innerHTML]="combinedContent"></div>
+    </ng-template>
   </div>
 </div>
-
