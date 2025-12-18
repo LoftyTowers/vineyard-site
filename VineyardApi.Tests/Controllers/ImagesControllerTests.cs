@@ -39,7 +39,7 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task SaveImage_ReturnsOk()
         {
-            var input = new Image { Url = "a" };
+            var input = new Image { StorageKey = "images/test.jpg", PublicUrl = "https://cdn.example.com/test.jpg" };
 
             _service
                 .Setup(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()))

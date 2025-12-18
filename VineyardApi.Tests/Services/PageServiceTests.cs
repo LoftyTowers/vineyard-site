@@ -18,13 +18,17 @@ namespace VineyardApi.Tests.Services
     public class PageServiceTests
     {
         private Mock<IPageRepository> _repo = null!;
+        private Mock<IImageRepository> _imageRepo = null!;
+        private Mock<IImageUsageRepository> _imageUsageRepo = null!;
         private PageService _service = null!;
 
         [SetUp]
         public void Setup()
         {
             _repo = new Mock<IPageRepository>();
-            _service = new PageService(_repo.Object, NullLogger<PageService>.Instance);
+            _imageRepo = new Mock<IImageRepository>();
+            _imageUsageRepo = new Mock<IImageUsageRepository>();
+            _service = new PageService(_repo.Object, _imageRepo.Object, _imageUsageRepo.Object, NullLogger<PageService>.Instance);
         }
 
         [Test]
@@ -74,6 +78,11 @@ namespace VineyardApi.Tests.Services
         {
             var model = new PageOverride { PageId = Guid.NewGuid() };
             _repo.Setup(r => r.GetPageOverrideByPageIdAsync(model.PageId, It.IsAny<CancellationToken>())).ReturnsAsync((PageOverride?)null);
+            _repo.Setup(r => r.GetPageByIdAsync(model.PageId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Page { Id = model.PageId, Route = "home", DefaultContent = new PageContent() });
+            _imageUsageRepo.Setup(r => r.DeletePageUsagesAsync("home", "Override", It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+            _imageUsageRepo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
             _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var result = await _service.SaveOverrideAsync(model);
@@ -105,6 +114,11 @@ namespace VineyardApi.Tests.Services
                 UpdatedById = Guid.NewGuid()
             };
             _repo.Setup(r => r.GetPageOverrideByPageIdAsync(existing.PageId, It.IsAny<CancellationToken>())).ReturnsAsync(existing);
+            _repo.Setup(r => r.GetPageByIdAsync(existing.PageId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Page { Id = existing.PageId, Route = "home", DefaultContent = new PageContent() });
+            _imageUsageRepo.Setup(r => r.DeletePageUsagesAsync("home", "Override", It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+            _imageUsageRepo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
             _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var result = await _service.SaveOverrideAsync(model);
@@ -123,6 +137,82 @@ namespace VineyardApi.Tests.Services
                 Type = "p",
                 Content = JsonDocument.Parse($"\"{text}\"").RootElement
             };
+        }
+
+        private static PageBlock CreateImageBlock(Guid imageId)
+        {
+            return new PageBlock
+            {
+                Type = "image",
+                Content = JsonDocument.Parse($"{{\"imageId\":\"{imageId}\"}}").RootElement
+            };
+        }
+
+        [Test]
+        public async Task GetPageContentAsync_HydratesImageBlocks_WhenImageIdPresent()
+        {
+            var imageId = Guid.NewGuid();
+            var page = new Page
+            {
+                Id = Guid.NewGuid(),
+                Route = "home",
+                DefaultContent = new PageContent
+                {
+                    Blocks = { CreateImageBlock(imageId) }
+                }
+            };
+            var image = new Image
+            {
+                Id = imageId,
+                StorageKey = "images/hero.jpg",
+                PublicUrl = "https://cdn.example.com/hero.jpg"
+            };
+            _repo.Setup(r => r.GetPageWithOverridesAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(page);
+            _imageRepo.Setup(r => r.GetActiveByIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<Guid, Image> { [imageId] = image });
+
+            var result = await _service.GetPageContentAsync("home");
+
+            result.IsSuccess.Should().BeTrue();
+            var block = result.Value!.Blocks.Single();
+            block.Content.GetProperty("url").GetString().Should().Be(image.PublicUrl);
+        }
+
+        [Test]
+        public async Task GetPageContentAsync_OverrideWins_AndHydrates()
+        {
+            var imageId = Guid.NewGuid();
+            var page = new Page
+            {
+                Id = Guid.NewGuid(),
+                Route = "home",
+                DefaultContent = new PageContent
+                {
+                    Blocks = { CreateTextBlock("default") }
+                },
+                Overrides = new[]
+                {
+                    new PageOverride
+                    {
+                        OverrideContent = new PageContent
+                        {
+                            Blocks = { CreateImageBlock(imageId) }
+                        },
+                        UpdatedAt = DateTime.UtcNow
+                    }
+                }
+            };
+            _repo.Setup(r => r.GetPageWithOverridesAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(page);
+            _imageRepo.Setup(r => r.GetActiveByIdsAsync(It.IsAny<IReadOnlyCollection<Guid>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<Guid, Image>
+                {
+                    [imageId] = new Image { Id = imageId, StorageKey = "images/override.jpg", PublicUrl = "https://cdn.example.com/override.jpg" }
+                });
+
+            var result = await _service.GetPageContentAsync("home");
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Blocks.Single().Content.GetProperty("url").GetString().Should().Be("https://cdn.example.com/override.jpg");
         }
     }
 }

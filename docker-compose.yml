@@ -7,6 +7,11 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   api:
     build:
       context: ./VineyardApi
@@ -17,9 +22,12 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_EnableDiagnostics: 1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "5212:5212"
+    volumes:
+      - ./VineyardApi/SeedScripts:/app/SeedScripts:ro
   frontend:
     build:
       context: ./vineyard-site

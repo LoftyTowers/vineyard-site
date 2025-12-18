@@ -131,19 +131,100 @@ namespace VineyardApi.Migrations
                     b.Property<string>("AltText")
                         .HasColumnType("text");
 
+                    b.Property<long?>("ByteSize")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Caption")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ContentType")
+                        .HasColumnType("text");
 
-                    b.Property<string>("Url")
+                    b.Property<DateTime>("CreatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now() at time zone 'utc'");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("OriginalFilename")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PublicUrl")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
                     b.ToTable("Images");
+                });
+
+            modelBuilder.Entity("VineyardApi.Models.ImageUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EntityKey")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("ImageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("JsonPath")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedUtc")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("now() at time zone 'utc'");
+
+                    b.Property<string>("UsageType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ImageId")
+                        .HasDatabaseName("IX_ImageUsages_ImageId");
+
+                    b.HasIndex("EntityType", "EntityKey")
+                        .HasDatabaseName("IX_ImageUsages_EntityType_EntityKey");
+
+                    b.HasIndex("ImageId", "EntityType", "EntityKey", "UsageType", "Source", "JsonPath")
+                        .IsUnique();
+
+                    b.ToTable("ImageUsages");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.Page", b =>
@@ -389,6 +470,17 @@ namespace VineyardApi.Migrations
                     b.Navigation("ChangedBy");
 
                     b.Navigation("Page");
+                });
+
+            modelBuilder.Entity("VineyardApi.Models.ImageUsage", b =>
+                {
+                    b.HasOne("VineyardApi.Models.Image", "Image")
+                        .WithMany()
+                        .HasForeignKey("ImageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Image");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.PageOverride", b =>
