@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
-import { EditableTextBlockComponent } from '../../shared/components';
+import { EditableTextBlockComponent, ImagePickerDialogComponent } from '../../shared/components';
 import { AuthService } from '../../services/auth.service';
 import { PageService, PageData } from '../../services/page.service';
 import { Subscription } from 'rxjs';
@@ -22,7 +22,7 @@ type HomeBlock =
 
 @Component({
   selector: 'app-home',
-  imports: [...SHARED_IMPORTS, EditableTextBlockComponent],
+  imports: [...SHARED_IMPORTS, EditableTextBlockComponent, ImagePickerDialogComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss'
 })
@@ -33,6 +33,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   heroTitle = '';
   heroImageUrl = '';
   heroSubtitle = '';
+  isImagePickerOpen = false;
   constructor(private pageService: PageService, private auth: AuthService) {}
 
   homeContentBlocks: HomeBlock[] = [];
@@ -105,6 +106,29 @@ export class HomeComponent implements OnInit, OnDestroy {
   onContentChange(html: string): void {
     this.combinedContent = html;
     this.applyRichTextToBlocks(html);
+  }
+
+  openImagePicker(): void {
+    this.isImagePickerOpen = true;
+  }
+
+  closeImagePicker(): void {
+    this.isImagePickerOpen = false;
+  }
+
+  applyHeroImage(imageId: string): void {
+    this.pageService.updateHeroImage('home', imageId).subscribe({
+      next: data => {
+        if (Array.isArray(data.blocks)) {
+          this.homeContentBlocks = data.blocks as HomeBlock[];
+          this.syncHomeContent();
+        }
+        this.isImagePickerOpen = false;
+      },
+      error: () => {
+        this.isImagePickerOpen = false;
+      }
+    });
   }
 
   private applyRichTextToBlocks(html: string): void {

@@ -14,4 +14,9 @@ export class PageService {
     const suffix = route ? `/${route}` : '';
     return this.http.get<PageData>(`/api/pages${suffix}`);
   }
+
+  updateHeroImage(route: string, imageId: string): Observable<PageData> {
+    const suffix = route ? `/${route}` : '';
+    return this.http.put<PageData>(`/api/pages${suffix}/hero-image`, { imageId });
+  }
 }
