@@ -15,6 +15,9 @@ public sealed class PageBlock
     [JsonPropertyName("type")]
     public string Type { get; init; } = string.Empty;
 
+    [JsonPropertyName("contentHtml")]
+    public string? ContentHtml { get; init; }
+
     // Holds the block payload (text, image object, people list, etc.)
     [JsonPropertyName("content")]
     public JsonElement Content { get; init; }

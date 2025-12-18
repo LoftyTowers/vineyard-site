@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 
 type HomeBlock =
   | { type: 'h1' | 'h2' | 'p'; content: string }
+  | { type: 'richText'; contentHtml: string }
   | {
       type: 'image';
       content: {
@@ -56,13 +57,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private syncHomeContent(): void {
-    const titleBlock = this.homeContentBlocks.find(block => block.type === 'h1');
-    if (titleBlock && typeof titleBlock.content === 'string') {
+    const isH1Block = (block: HomeBlock): block is { type: 'h1'; content: string } =>
+      block.type === 'h1';
+    const isH2Block = (block: HomeBlock): block is { type: 'h2'; content: string } =>
+      block.type === 'h2';
+
+    const titleBlock = this.homeContentBlocks.find(isH1Block);
+    if (titleBlock) {
       this.heroTitle = titleBlock.content;
     }
 
-    const subtitleBlock = this.homeContentBlocks.find(block => block.type === 'h2');
-    if (subtitleBlock && typeof subtitleBlock.content === 'string') {
+    const subtitleBlock = this.homeContentBlocks.find(isH2Block);
+    if (subtitleBlock) {
       this.heroSubtitle = subtitleBlock.content;
     }
 
@@ -78,14 +84,48 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.heroImageUrl = heroBlock.content.src || this.heroImageUrl;
     }
 
-    this.combinedContent = this.homeContentBlocks
-      .filter(block => block.type === 'p')
-      .map(block => `<p>${(block as { type: 'p'; content: string }).content}</p>`)
-      .join('');
+    const richTextBlock = this.homeContentBlocks.find(block => block.type === 'richText') as
+      | Extract<HomeBlock, { type: 'richText' }>
+      | undefined;
+    if (richTextBlock?.contentHtml) {
+      this.combinedContent = richTextBlock.contentHtml;
+    } else {
+      this.combinedContent = this.homeContentBlocks
+        .filter(block => block.type === 'p')
+        .map(block => `<p>${this.escapeHtml((block as { type: 'p'; content: string }).content)}</p>`)
+        .join('\n');
+    }
     console.debug('Home hero resolved:', {
       heroTitle: this.heroTitle,
       heroSubtitle: this.heroSubtitle,
       heroImageUrl: this.heroImageUrl
     });
+  }
+
+  onContentChange(html: string): void {
+    this.combinedContent = html;
+    this.applyRichTextToBlocks(html);
+  }
+
+  private applyRichTextToBlocks(html: string): void {
+    const preserved = this.homeContentBlocks.filter(
+      block => block.type !== 'p' && block.type !== 'richText'
+    );
+    this.homeContentBlocks = [
+      ...preserved,
+      {
+        type: 'richText',
+        contentHtml: html
+      }
+    ];
+  }
+
+  private escapeHtml(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }

@@ -49,7 +49,8 @@ namespace VineyardApi.Services
 
                 _logger.LogInformation("Page read succeeded (Route: {Route})", route);
                 var content = overrideContent?.OverrideContent ?? page.DefaultContent;
-                var hydrated = await HydrateImageBlocksAsync(content, cancellationToken);
+                var sanitized = SanitizeRichTextBlocks(content);
+                var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
             }
             catch (Exception ex)
@@ -70,6 +71,10 @@ namespace VineyardApi.Services
                     {"DbOperation", operation}
                 });
                 model.UpdatedAt = DateTime.UtcNow;
+                if (model.OverrideContent != null)
+                {
+                    model.OverrideContent = SanitizeRichTextBlocks(model.OverrideContent);
+                }
                 var existing = await _repository.GetPageOverrideByPageIdAsync(model.PageId, cancellationToken);
                 if (existing == null)
                 {
@@ -183,6 +188,7 @@ namespace VineyardApi.Services
                 hydratedBlocks.Add(new PageBlock
                 {
                     Type = block.Type,
+                    ContentHtml = block.ContentHtml,
                     Content = JsonSerializer.SerializeToElement(obj)
                 });
             }
@@ -190,6 +196,37 @@ namespace VineyardApi.Services
             return new PageContent
             {
                 Blocks = hydratedBlocks
+            };
+        }
+
+        private static PageContent SanitizeRichTextBlocks(PageContent content)
+        {
+            if (content.Blocks.Count == 0)
+            {
+                return content;
+            }
+
+            var updatedBlocks = new List<PageBlock>(content.Blocks.Count);
+            foreach (var block in content.Blocks)
+            {
+                if (!string.Equals(block.Type, "richText", StringComparison.OrdinalIgnoreCase))
+                {
+                    updatedBlocks.Add(block);
+                    continue;
+                }
+
+                var sanitized = RichTextSanitizer.Sanitize(block.ContentHtml ?? string.Empty);
+                updatedBlocks.Add(new PageBlock
+                {
+                    Type = block.Type,
+                    ContentHtml = sanitized,
+                    Content = block.Content
+                });
+            }
+
+            return new PageContent
+            {
+                Blocks = updatedBlocks
             };
         }
 
