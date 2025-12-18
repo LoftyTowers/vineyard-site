@@ -38,9 +38,12 @@ namespace VineyardApi.Tests.Services
             {
                 Id = Guid.NewGuid(),
                 Route = "home",
-                DefaultContent = new PageContent
+                CurrentVersion = new PageVersion
                 {
-                    Blocks = { CreateTextBlock("hi") }
+                    ContentJson = new PageContent
+                    {
+                        Blocks = { CreateTextBlock("hi") }
+                    }
                 },
                 Overrides = new[]
                 {
@@ -156,9 +159,12 @@ namespace VineyardApi.Tests.Services
             {
                 Id = Guid.NewGuid(),
                 Route = "home",
-                DefaultContent = new PageContent
+                CurrentVersion = new PageVersion
                 {
-                    Blocks = { CreateImageBlock(imageId) }
+                    ContentJson = new PageContent
+                    {
+                        Blocks = { CreateImageBlock(imageId) }
+                    }
                 }
             };
             var image = new Image
@@ -186,9 +192,12 @@ namespace VineyardApi.Tests.Services
             {
                 Id = Guid.NewGuid(),
                 Route = "home",
-                DefaultContent = new PageContent
+                CurrentVersion = new PageVersion
                 {
-                    Blocks = { CreateTextBlock("default") }
+                    ContentJson = new PageContent
+                    {
+                        Blocks = { CreateTextBlock("default") }
+                    }
                 },
                 Overrides = new[]
                 {

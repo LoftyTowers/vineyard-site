@@ -43,12 +43,18 @@ namespace VineyardApi.Services
                     return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
                 }
 
+                if (page.CurrentVersion == null)
+                {
+                    _logger.LogWarning("Page read failed: missing current version (Route: {Route})", route);
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' has no published version.");
+                }
+
                 var overrideContent = page.Overrides
                     .OrderByDescending(o => o.UpdatedAt)
                     .FirstOrDefault();
 
                 _logger.LogInformation("Page read succeeded (Route: {Route})", route);
-                var content = overrideContent?.OverrideContent ?? page.DefaultContent;
+                var content = overrideContent?.OverrideContent ?? page.CurrentVersion.ContentJson;
                 var sanitized = SanitizeRichTextBlocks(content);
                 var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
