@@ -100,6 +100,46 @@ namespace VineyardApi.Services
             }
         }
 
+        public async Task<Result<PageContent>> UpdateHeroImageAsync(string route, Guid imageId, CancellationToken cancellationToken = default)
+        {
+            const string operation = "UpdateHeroImage";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"ImageId", imageId},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithOverridesAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                var images = await _imageRepository.GetActiveByIdsAsync(new[] { imageId }, cancellationToken);
+                if (!images.ContainsKey(imageId))
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, "Image not found.");
+                }
+
+                var updatedContent = SetHeroImage(page.DefaultContent, imageId);
+                page.DefaultContent = updatedContent;
+                page.UpdatedAt = DateTime.UtcNow;
+                await _repository.SaveChangesAsync(cancellationToken);
+
+                var sanitized = SanitizeRichTextBlocks(updatedContent);
+                var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
+                return Result<PageContent>.Ok(hydrated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Hero image update failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Unexpected, "HeroImageUpdateFailed");
+            }
+        }
+
         private async Task UpdateOverrideImageUsagesAsync(PageOverride model, CancellationToken cancellationToken)
         {
             var page = await _repository.GetPageByIdAsync(model.PageId, cancellationToken);
@@ -312,6 +352,73 @@ namespace VineyardApi.Services
             }
 
             return usages;
+        }
+
+        private static PageContent SetHeroImage(PageContent content, Guid imageId)
+        {
+            var blocks = new List<PageBlock>(content.Blocks);
+            var heroIndex = -1;
+            for (var i = 0; i < blocks.Count; i++)
+            {
+                var block = blocks[i];
+                if (!IsImageBlock(block))
+                {
+                    continue;
+                }
+
+                if (!TryParseObject(block.Content, out var obj))
+                {
+                    continue;
+                }
+
+                var variant = obj["variant"]?.GetValue<string>();
+                if (!string.IsNullOrWhiteSpace(variant) &&
+                    string.Equals(variant, "hero", StringComparison.OrdinalIgnoreCase))
+                {
+                    heroIndex = i;
+                    break;
+                }
+            }
+
+            if (heroIndex < 0)
+            {
+                heroIndex = blocks.FindIndex(IsImageBlock);
+            }
+
+            if (heroIndex >= 0)
+            {
+                var existing = blocks[heroIndex];
+                if (!TryParseObject(existing.Content, out var obj))
+                {
+                    obj = new JsonObject();
+                }
+                obj["imageId"] = imageId;
+                obj["variant"] ??= "hero";
+                blocks[heroIndex] = new PageBlock
+                {
+                    Type = existing.Type,
+                    ContentHtml = existing.ContentHtml,
+                    Content = JsonSerializer.SerializeToElement(obj)
+                };
+            }
+            else
+            {
+                var obj = new JsonObject
+                {
+                    ["imageId"] = imageId,
+                    ["variant"] = "hero"
+                };
+                blocks.Insert(0, new PageBlock
+                {
+                    Type = "image",
+                    Content = JsonSerializer.SerializeToElement(obj)
+                });
+            }
+
+            return new PageContent
+            {
+                Blocks = blocks
+            };
         }
 
         private static bool IsImageBlock(PageBlock block) =>

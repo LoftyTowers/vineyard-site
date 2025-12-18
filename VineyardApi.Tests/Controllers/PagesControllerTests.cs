@@ -43,11 +43,16 @@ namespace VineyardApi.Tests.Controllers
         public async Task GetPage_ReturnsOk_WhenFound()
         {
             var content = new PageContent();
-            _service.Setup(s => s.GetPageContentAsync("home", It.IsAny<CancellationToken>())).ReturnsAsync(Result<PageContent>.Ok(content));
+            _service
+                .Setup(s => s.GetPageContentAsync(string.Empty, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result<PageContent>.Ok(content));
 
             var result = await _controller.GetPageAsync("home", CancellationToken.None);
 
-            result.Should().BeOfType<OkObjectResult>();
+            var ok = result.Should().BeAssignableTo<ObjectResult>().Subject;
+            ok.StatusCode.Should().Be(StatusCodes.Status200OK);
+            ok.Value.Should().BeSameAs(content);
+            _service.Verify(s => s.GetPageContentAsync(string.Empty, It.IsAny<CancellationToken>()), Times.Once);
         }
 
         [Test]

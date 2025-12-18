@@ -66,14 +66,19 @@ namespace VineyardApi.Controllers
                 }
 
                 var items = result.Value!
-                    .Select(img => new ImageListItem
+                    .Select(img =>
                     {
-                        Id = img.Id,
-                        PublicUrl = img.PublicUrl,
-                        AltText = img.AltText,
-                        Caption = img.Caption,
-                        Width = img.Width,
-                        Height = img.Height
+                        var mappedUrl = ResolveImageUrl(img);
+                        return new ImageListItem
+                        {
+                            Id = img.Id,
+                            Url = mappedUrl,
+                            ThumbnailUrl = mappedUrl,
+                            Alt = img.AltText,
+                            Caption = img.Caption,
+                            Width = img.Width,
+                            Height = img.Height
+                        };
                     })
                     .ToList();
 
@@ -84,6 +89,22 @@ namespace VineyardApi.Controllers
                 _logger.LogError(ex, "Failed to load images");
                 return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Failure(ErrorCode.Unknown, "Failed to load images"));
             }
+        }
+
+        private static string ResolveImageUrl(Image img)
+        {
+            if (!string.IsNullOrWhiteSpace(img.PublicUrl) &&
+                !img.PublicUrl.StartsWith("assets/", StringComparison.OrdinalIgnoreCase))
+            {
+                return img.PublicUrl;
+            }
+
+            if (!string.IsNullOrWhiteSpace(img.StorageKey))
+            {
+                return $"/images/{img.StorageKey}";
+            }
+
+            return img.PublicUrl ?? string.Empty;
         }
     }
 }

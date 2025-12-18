@@ -30,6 +30,7 @@ namespace VineyardApi.Controllers
         [HttpGet("{route}")]
         public async Task<IActionResult> GetPageAsync(string route, CancellationToken cancellationToken)
         {
+            route = NormalizeRoute(route);
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
             {
@@ -46,6 +47,36 @@ namespace VineyardApi.Controllers
             {
                 _logger.LogError(ex, "Failed to get page {Route}", route);
                 return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unknown, "Failed to load page"));
+            }
+        }
+
+        [Authorize]
+        [HttpPut("{route}/hero-image")]
+        public async Task<IActionResult> UpdateHeroImageAsync(string route, [FromBody] UpdateHeroImageRequest model, CancellationToken cancellationToken)
+        {
+            route = NormalizeRoute(route);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["Route"] = route,
+                ["ImageId"] = model.ImageId
+            });
+
+            try
+            {
+                if (model.ImageId == Guid.Empty)
+                {
+                    return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Validation, "ImageId is required."));
+                }
+
+                var result = await _service.UpdateHeroImageAsync(route, model.ImageId, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update hero image for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unknown, "Failed to update hero image"));
             }
         }
 
@@ -77,6 +108,16 @@ namespace VineyardApi.Controllers
                 _logger.LogError(ex, "Failed to save page override for page {PageId}", model.PageId);
                 return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save override"));
             }
+        }
+
+        private static string NormalizeRoute(string route)
+        {
+            if (string.Equals(route, "home", StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            return route ?? string.Empty;
         }
     }
 }
