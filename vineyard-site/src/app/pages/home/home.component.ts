@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 export class HomeComponent implements OnInit, OnDestroy {
   isAdmin = false;
   private authSub?: Subscription;
+  combinedContent = '';
   constructor(private pageService: PageService, private auth: AuthService) {}
 
   homeContentBlocks = [
@@ -32,10 +33,21 @@ export class HomeComponent implements OnInit, OnDestroy {
       if (Array.isArray(data.blocks)) {
         this.homeContentBlocks = data.blocks as any[];
       }
+      this.updateCombinedContent();
     });
+    this.updateCombinedContent();
   }
 
   ngOnDestroy(): void {
     this.authSub?.unsubscribe();
+  }
+
+  private updateCombinedContent(): void {
+    this.combinedContent = (this.homeContentBlocks || [])
+      .map(block => {
+        const text = (block as any)?.content ?? '';
+        return `<p>${text}</p>`;
+      })
+      .join('');
   }
 }
