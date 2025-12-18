@@ -1,3 +1,6 @@
 :host {
   display: block;
 }
+:host ::ng-deep .home-richtext p {
+  margin: 1rem 0;
+}

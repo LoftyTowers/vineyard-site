@@ -1,9 +1,17 @@
 <div class="relative bg-cover bg-center bg-no-repeat text-white py-24 px-4" [style.background-image]="heroImageUrl ? 'url(' + heroImageUrl + ')' : null">
   <div class="bg-black/50 p-8 rounded-md max-w-3xl mx-auto text-center">
     <h1 class="text-4xl md:text-6xl font-heading font-normal">
-      <app-editable-text-block [(content)]="heroTitle" [editable]="isAdmin"></app-editable-text-block>
+      <ng-container *ngIf="isAdmin; else heroTitleView">
+        <textarea rows="1" class="w-full bg-transparent text-center outline-none resize-none" [(ngModel)]="heroTitle"></textarea>
+      </ng-container>
+      <ng-template #heroTitleView>{{ heroTitle }}</ng-template>
     </h1>
-    <p class="text-xl md:text-2xl mt-4 mb-6 font-body">{{ heroSubtitle }}</p>
+    <p class="text-xl md:text-2xl mt-4 mb-6 font-body">
+      <ng-container *ngIf="isAdmin; else heroSubtitleView">
+        <textarea rows="1" class="w-full bg-transparent text-center outline-none resize-none" [(ngModel)]="heroSubtitle"></textarea>
+      </ng-container>
+      <ng-template #heroSubtitleView>{{ heroSubtitle }}</ng-template>
+    </p>
     <button class="bg-primary hover:bg-[#2E4D2F] text-white px-6 py-3 rounded-md shadow uppercase tracking-wider text-sm transition duration-200">Explore Our Wines</button>
   </div>
 </div>
@@ -11,10 +19,10 @@
 <div class="flex flex-col items-start gap-6 py-12 border-t border-gray-200">
   <div class="w-full space-y-4 font-body text-contrast">
     <ng-container *ngIf="isAdmin; else viewMode">
-      <app-editable-text-block [(content)]="combinedContent" [editable]="true"></app-editable-text-block>
+      <app-editable-text-block [(content)]="combinedContent" (contentChange)="onContentChange($event)" [editable]="true"></app-editable-text-block>
     </ng-container>
     <ng-template #viewMode>
-      <div class="prose prose-neutral max-w-none" [innerHTML]="combinedContent"></div>
+      <div class="prose prose-neutral max-w-none home-richtext" [innerHTML]="combinedContent"></div>
     </ng-template>
   </div>
 </div>
