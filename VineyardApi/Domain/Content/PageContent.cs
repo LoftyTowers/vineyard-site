@@ -20,5 +20,6 @@ public sealed class PageBlock
 
     // Holds the block payload (text, image object, people list, etc.)
     [JsonPropertyName("content")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public JsonElement Content { get; init; }
 }
