@@ -19,6 +19,7 @@ namespace VineyardApi.Repositories
             try
             {
                 var page = await _context.Pages
+                    .Include(p => p.CurrentVersion)
                     .Include(p => p.Overrides)
                     .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
                 return page;

@@ -36,6 +36,7 @@ namespace VineyardApi.Tests.Data
                 base.OnModelCreating(modelBuilder);
                 modelBuilder.Entity<Page>().Ignore(p => p.DefaultContent);
                 modelBuilder.Entity<PageOverride>().Ignore(p => p.OverrideContent);
+                modelBuilder.Entity<PageVersion>().Ignore(pv => pv.ContentJson);
             }
         }
 

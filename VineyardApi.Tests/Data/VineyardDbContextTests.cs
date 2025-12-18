@@ -20,6 +20,7 @@ namespace VineyardApi.Tests.Data
                 // Ignore content types not supported by the in-memory provider
                 modelBuilder.Entity<Page>().Ignore(p => p.DefaultContent);
                 modelBuilder.Entity<PageOverride>().Ignore(p => p.OverrideContent);
+                modelBuilder.Entity<PageVersion>().Ignore(pv => pv.ContentJson);
             }
         }
 

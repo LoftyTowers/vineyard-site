@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using VineyardApi.Data;
@@ -12,9 +13,11 @@ using VineyardApi.Domain.Content;
 namespace VineyardApi.Migrations
 {
     [DbContext(typeof(VineyardDbContext))]
-    partial class VineyardDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251212123035_MakePageDefaultContentRequired")]
+    partial class MakePageDefaultContentRequired
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -131,112 +134,25 @@ namespace VineyardApi.Migrations
                     b.Property<string>("AltText")
                         .HasColumnType("text");
 
-                    b.Property<long?>("ByteSize")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Caption")
                         .HasColumnType("text");
 
-                    b.Property<string>("ContentType")
-                        .HasColumnType("text");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("CreatedUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("now() at time zone 'utc'");
-
-                    b.Property<int?>("Height")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("OriginalFilename")
-                        .HasColumnType("text");
-
-                    b.Property<string>("PublicUrl")
+                    b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<string>("StorageKey")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("Width")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("StorageKey")
-                        .IsUnique();
 
                     b.ToTable("Images");
-                });
-
-            modelBuilder.Entity("VineyardApi.Models.ImageUsage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("EntityKey")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("EntityType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<Guid>("ImageId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("JsonPath")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.Property<DateTime>("UpdatedUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("now() at time zone 'utc'");
-
-                    b.Property<string>("UsageType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ImageId")
-                        .HasDatabaseName("IX_ImageUsages_ImageId");
-
-                    b.HasIndex("EntityType", "EntityKey")
-                        .HasDatabaseName("IX_ImageUsages_EntityType_EntityKey");
-
-                    b.HasIndex("ImageId", "EntityType", "EntityKey", "UsageType", "Source", "JsonPath")
-                        .IsUnique();
-
-                    b.ToTable("ImageUsages");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.Page", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CurrentVersionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid?>("DraftVersionId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -256,69 +172,10 @@ namespace VineyardApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrentVersionId");
-
-                    b.HasIndex("DraftVersionId");
-
                     b.HasIndex("Route")
                         .IsUnique();
 
                     b.ToTable("Pages");
-                });
-
-            modelBuilder.Entity("VineyardApi.Models.PageVersion", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ChangeNote")
-                        .HasColumnType("text");
-
-                    b.Property<PageContent>("ContentJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<string>("ContentHash")
-                        .HasColumnType("text");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedUtc")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("now()");
-
-                    b.Property<DateTime?>("PublishedUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("PageId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasDefaultValue("Published");
-
-                    b.Property<DateTime?>("UpdatedUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("VersionNo")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PageId", "VersionNo")
-                        .IsUnique()
-                        .HasDatabaseName("IX_PageVersions_PageId_VersionNo");
-
-                    b.HasIndex("PageId")
-                        .IsUnique()
-                        .HasFilter("\"Status\" = 'Draft'")
-                        .HasDatabaseName("IX_PageVersions_PageId_Draft");
-
-                    b.ToTable("PageVersions");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.PageOverride", b =>
@@ -537,35 +394,6 @@ namespace VineyardApi.Migrations
                     b.Navigation("Page");
                 });
 
-            modelBuilder.Entity("VineyardApi.Models.ImageUsage", b =>
-                {
-                    b.HasOne("VineyardApi.Models.Image", "Image")
-                        .WithMany()
-                        .HasForeignKey("ImageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Image");
-                });
-
-            modelBuilder.Entity("VineyardApi.Models.Page", b =>
-                {
-                    b.HasOne("VineyardApi.Models.PageVersion", "CurrentVersion")
-                        .WithMany()
-                        .HasForeignKey("CurrentVersionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("VineyardApi.Models.PageVersion", "DraftVersion")
-                        .WithMany()
-                        .HasForeignKey("DraftVersionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("CurrentVersion");
-
-                    b.Navigation("DraftVersion");
-                });
-
             modelBuilder.Entity("VineyardApi.Models.PageOverride", b =>
                 {
                     b.HasOne("VineyardApi.Models.Page", "Page")
@@ -583,17 +411,6 @@ namespace VineyardApi.Migrations
                     b.Navigation("Page");
 
                     b.Navigation("UpdatedBy");
-                });
-
-            modelBuilder.Entity("VineyardApi.Models.PageVersion", b =>
-                {
-                    b.HasOne("VineyardApi.Models.Page", "Page")
-                        .WithMany("Versions")
-                        .HasForeignKey("PageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Page");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.RolePermission", b =>
@@ -660,10 +477,7 @@ namespace VineyardApi.Migrations
 
             modelBuilder.Entity("VineyardApi.Models.Page", b =>
                 {
-                    b.Navigation("CurrentVersion");
-                    b.Navigation("DraftVersion");
                     b.Navigation("Overrides");
-                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("VineyardApi.Models.Permission", b =>

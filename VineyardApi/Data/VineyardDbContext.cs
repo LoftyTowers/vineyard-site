@@ -11,6 +11,7 @@ namespace VineyardApi.Data
         public VineyardDbContext(DbContextOptions<VineyardDbContext> options) : base(options) { }
 
         public DbSet<Page> Pages => Set<Page>();
+        public DbSet<PageVersion> PageVersions => Set<PageVersion>();
         public DbSet<PageOverride> PageOverrides => Set<PageOverride>();
         public DbSet<ContentOverride> ContentOverrides => Set<ContentOverride>();
         public DbSet<ThemeDefault> ThemeDefaults => Set<ThemeDefault>();
@@ -36,6 +37,36 @@ namespace VineyardApi.Data
                     e.Property(p => p.DefaultContent)
                      .HasColumnType("jsonb");
                     e.HasIndex(p => p.Route).IsUnique();
+                    e.HasOne(p => p.CurrentVersion)
+                        .WithMany()
+                        .HasForeignKey(p => p.CurrentVersionId)
+                        .OnDelete(DeleteBehavior.Restrict);
+                    e.HasOne(p => p.DraftVersion)
+                        .WithMany()
+                        .HasForeignKey(p => p.DraftVersionId)
+                        .OnDelete(DeleteBehavior.Restrict);
+                    e.HasMany(p => p.Versions)
+                        .WithOne(v => v.Page)
+                        .HasForeignKey(v => v.PageId)
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+                modelBuilder.Entity<PageVersion>(e =>
+                {
+                    e.Property(pv => pv.ContentJson)
+                        .HasColumnType("jsonb");
+                    e.Property(pv => pv.Status)
+                        .HasConversion<string>()
+                        .HasDefaultValue(PageVersionStatus.Published);
+                    e.HasIndex(pv => new { pv.PageId, pv.VersionNo })
+                        .IsUnique()
+                        .HasDatabaseName("IX_PageVersions_PageId_VersionNo");
+                    e.HasIndex(pv => pv.PageId)
+                        .IsUnique()
+                        .HasDatabaseName("IX_PageVersions_PageId_Draft")
+                        .HasFilter("\"Status\" = 'Draft'");
+                    e.Property(pv => pv.CreatedUtc)
+                        .HasDefaultValueSql("now()");
                 });
 
                 modelBuilder.Entity<PageOverride>(e =>
