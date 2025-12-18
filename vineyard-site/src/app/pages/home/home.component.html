@@ -1,7 +1,9 @@
-<div class="relative bg-cover bg-center bg-no-repeat text-white py-24 px-4" style="background-image: url('assets/temp-images/ASunriseAtTheVineyard.jpg')">
+<div class="relative bg-cover bg-center bg-no-repeat text-white py-24 px-4" [style.background-image]="heroImageUrl ? 'url(' + heroImageUrl + ')' : null">
   <div class="bg-black/50 p-8 rounded-md max-w-3xl mx-auto text-center">
-    <h1 class="text-4xl md:text-6xl font-heading font-normal">Welcome to Hollywood Farm Vineyard</h1>
-    <p class="text-xl md:text-2xl mt-4 mb-6 font-body">Experience the beauty of our vines</p>
+    <h1 class="text-4xl md:text-6xl font-heading font-normal">
+      <app-editable-text-block [(content)]="heroTitle" [editable]="isAdmin"></app-editable-text-block>
+    </h1>
+    <p class="text-xl md:text-2xl mt-4 mb-6 font-body">{{ heroSubtitle }}</p>
     <button class="bg-primary hover:bg-[#2E4D2F] text-white px-6 py-3 rounded-md shadow uppercase tracking-wider text-sm transition duration-200">Explore Our Wines</button>
   </div>
 </div>

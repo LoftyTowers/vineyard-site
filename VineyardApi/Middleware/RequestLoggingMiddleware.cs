@@ -35,7 +35,7 @@ namespace VineyardApi.Middleware
                 ["QueryString"] = context.Request.QueryString.ToString(),
                 ["CorrelationHeader"] = context.Request.Headers[CorrelationHeader].ToString(),
                 ["IsAuthenticated"] = context.User?.Identity?.IsAuthenticated ?? false,
-                ["UserId"] = ResolveUserId(context.User)
+                ["UserId"] = ResolveUserId(context.User) ?? string.Empty
             });
 
             var stopwatch = Stopwatch.StartNew();

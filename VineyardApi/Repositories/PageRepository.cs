@@ -42,6 +42,19 @@ namespace VineyardApi.Repositories
             }
         }
 
+        public async Task<Page?> GetPageByIdAsync(Guid pageId, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return await _context.Pages
+                    .FirstOrDefaultAsync(p => p.Id == pageId, cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public void AddPageOverride(PageOverride model)
         {
             try

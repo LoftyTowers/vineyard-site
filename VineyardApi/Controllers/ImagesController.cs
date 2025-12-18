@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 using VineyardApi.Models;
 using VineyardApi.Services;
 
@@ -32,7 +33,7 @@ namespace VineyardApi.Controllers
             {
                 ["CorrelationId"] = correlationId,
                 ["ImageId"] = img.Id == Guid.Empty ? null : img.Id,
-                ["ImageUrl"] = img.Url ?? string.Empty
+                ["ImageUrl"] = img.PublicUrl ?? string.Empty
             });
 
             try
@@ -48,8 +49,40 @@ namespace VineyardApi.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to save image {ImageUrl}", img.Url);
+                _logger.LogError(ex, "Failed to save image {ImageUrl}", img.PublicUrl);
                 return ResultMapper.ToActionResult(this, Result<Image>.Failure(ErrorCode.Unknown, "Failed to save image"));
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetImagesAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                var result = await _service.GetActiveImagesAsync(cancellationToken);
+                if (result.IsFailure)
+                {
+                    return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Failure(result.Error, result.Message));
+                }
+
+                var items = result.Value!
+                    .Select(img => new ImageListItem
+                    {
+                        Id = img.Id,
+                        PublicUrl = img.PublicUrl,
+                        AltText = img.AltText,
+                        Caption = img.Caption,
+                        Width = img.Width,
+                        Height = img.Height
+                    })
+                    .ToList();
+
+                return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Ok(items));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load images");
+                return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Failure(ErrorCode.Unknown, "Failed to load images"));
             }
         }
     }

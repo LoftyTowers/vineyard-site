@@ -5,6 +5,20 @@ import { AuthService } from '../../services/auth.service';
 import { PageService, PageData } from '../../services/page.service';
 import { Subscription } from 'rxjs';
 
+type HomeBlock =
+  | { type: 'h1' | 'h2' | 'p'; content: string }
+  | {
+      type: 'image';
+      content: {
+        imageId?: string;
+        src?: string;
+        url?: string;
+        alt?: string;
+        caption?: string;
+        variant?: string;
+      };
+    };
+
 @Component({
   selector: 'app-home',
   imports: [...SHARED_IMPORTS, EditableTextBlockComponent],
@@ -15,14 +29,12 @@ export class HomeComponent implements OnInit, OnDestroy {
   isAdmin = false;
   private authSub?: Subscription;
   combinedContent = '';
+  heroTitle = '';
+  heroImageUrl = '';
+  heroSubtitle = '';
   constructor(private pageService: PageService, private auth: AuthService) {}
 
-  homeContentBlocks = [
-    { type: 'p', content: 'Tucked away in the quiet countryside of North Essex, Hollywood Farm Vineyard is a small family project rooted in passion, tradition, and legacy.' },
-    { type: 'p', content: 'Our family has farmed this land for over a century. Through five generations, it has been passed down, worked on, and cared for each adding something new to the story. When Charles retired, he decided it was time for a different kind of planting: a vineyard.' },
-    { type: 'p', content: 'That one decision brought the whole family together. Aunts, uncles, cousins, and kids all got involved. Today, three generations pitch in with planting, pruning, and picking.' },
-    { type: 'p', content: 'We have had one hand-picked harvest so far and while we are just getting started, the roots run deep.' },
-  ];
+  homeContentBlocks: HomeBlock[] = [];
 
   ngOnInit(): void {
     this.authSub = this.auth.authState$.subscribe(() => {
@@ -30,24 +42,50 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.pageService.getPage('').subscribe((data: PageData) => {
+      console.debug('Home page blocks from API:', data?.blocks);
       if (Array.isArray(data.blocks)) {
-        this.homeContentBlocks = data.blocks as any[];
+        this.homeContentBlocks = data.blocks as HomeBlock[];
       }
-      this.updateCombinedContent();
+      this.syncHomeContent();
     });
-    this.updateCombinedContent();
+    this.syncHomeContent();
   }
 
   ngOnDestroy(): void {
     this.authSub?.unsubscribe();
   }
 
-  private updateCombinedContent(): void {
-    this.combinedContent = (this.homeContentBlocks || [])
-      .map(block => {
-        const text = (block as any)?.content ?? '';
-        return `<p>${text}</p>`;
-      })
+  private syncHomeContent(): void {
+    const titleBlock = this.homeContentBlocks.find(block => block.type === 'h1');
+    if (titleBlock && typeof titleBlock.content === 'string') {
+      this.heroTitle = titleBlock.content;
+    }
+
+    const subtitleBlock = this.homeContentBlocks.find(block => block.type === 'h2');
+    if (subtitleBlock && typeof subtitleBlock.content === 'string') {
+      this.heroSubtitle = subtitleBlock.content;
+    }
+
+    const imageBlocks = this.homeContentBlocks.filter(block => block.type === 'image') as Array<
+      Extract<HomeBlock, { type: 'image' }>
+    >;
+    const heroBlock =
+      imageBlocks.find(block => (block.content.variant || '').toLowerCase() === 'hero') ?? imageBlocks[0];
+    if (heroBlock) {
+      if (!heroBlock.content.src && heroBlock.content.url) {
+        heroBlock.content.src = heroBlock.content.url;
+      }
+      this.heroImageUrl = heroBlock.content.src || this.heroImageUrl;
+    }
+
+    this.combinedContent = this.homeContentBlocks
+      .filter(block => block.type === 'p')
+      .map(block => `<p>${(block as { type: 'p'; content: string }).content}</p>`)
       .join('');
+    console.debug('Home hero resolved:', {
+      heroTitle: this.heroTitle,
+      heroSubtitle: this.heroSubtitle,
+      heroImageUrl: this.heroImageUrl
+    });
   }
 }
