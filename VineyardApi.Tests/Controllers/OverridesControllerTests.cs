@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using FluentValidation;
@@ -155,6 +156,37 @@ namespace VineyardApi.Tests.Controllers
 
             attr.Should().NotBeNull();
             attr!.Roles.Should().Be("Admin,Editor");
+        }
+
+        [Test]
+        public async Task GetOverridesAsync_ReturnsCancelled_WhenTokenCancelled()
+        {
+            _service.Setup(s => s.GetPublishedOverridesAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new OperationCanceledException());
+
+            var result = await _controller.GetOverridesAsync("home", new CancellationToken(true));
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(499);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Cancelled.ToString());
+        }
+
+        [Test]
+        public async Task PublishDraft_ReturnsServerError_OnUnexpectedException()
+        {
+            var request = new IdRequest(Guid.NewGuid());
+            _idValidator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+            _service.Setup(s => s.PublishDraftAsync(request.Id, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("boom"));
+
+            var result = await _controller.PublishDraftAsync(request, CancellationToken.None);
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status500InternalServerError);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Unexpected.ToString());
         }
     }
 }

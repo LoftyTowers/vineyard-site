@@ -15,19 +15,12 @@ namespace VineyardApi.Repositories
 
         public async Task<List<AuditLog>> GetRecentAsync(int count, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return await _context.AuditLogs
-                    .Include(l => l.User)
-                    .Include(l => l.History)
-                    .OrderByDescending(l => l.Timestamp)
-                    .Take(count)
-                    .ToListAsync(cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _context.AuditLogs
+                .Include(l => l.User)
+                .Include(l => l.History)
+                .OrderByDescending(l => l.Timestamp)
+                .Take(count)
+                .ToListAsync(cancellationToken);
         }
     }
 }

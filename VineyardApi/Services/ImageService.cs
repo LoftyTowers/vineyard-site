@@ -31,6 +31,11 @@ namespace VineyardApi.Services
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result<Image>.Ok(img);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Image save cancelled for {ImageUrl}", img.PublicUrl);
+                return Result<Image>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving image {ImageUrl}", img.PublicUrl);
@@ -44,6 +49,11 @@ namespace VineyardApi.Services
             {
                 var images = await _repository.GetActiveAsync(cancellationToken);
                 return Result<List<Image>>.Ok(images);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Image list retrieval cancelled");
+                return Result<List<Image>>.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {

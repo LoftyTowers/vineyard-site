@@ -15,55 +15,27 @@ namespace VineyardApi.Repositories
 
         public void AddImage(Image image)
         {
-            try
-            {
-                _context.Images.Add(image);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _context.Images.Add(image);
         }
 
         public async Task<List<Image>> GetActiveAsync(CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return await _context.Images
-                    .Where(i => i.IsActive)
-                    .OrderBy(i => i.CreatedUtc)
-                    .ToListAsync(cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _context.Images
+                .Where(i => i.IsActive)
+                .OrderBy(i => i.CreatedUtc)
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<Dictionary<Guid, Image>> GetActiveByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return await _context.Images
-                    .Where(i => ids.Contains(i.Id) && i.IsActive)
-                    .ToDictionaryAsync(i => i.Id, cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _context.Images
+                .Where(i => ids.Contains(i.Id) && i.IsActive)
+                .ToDictionaryAsync(i => i.Id, cancellationToken);
         }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return _context.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return _context.SaveChangesAsync(cancellationToken);
         }
     }
 }
