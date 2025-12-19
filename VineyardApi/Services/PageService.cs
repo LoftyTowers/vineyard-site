@@ -66,6 +66,40 @@ namespace VineyardApi.Services
             }
         }
 
+        public async Task<Result<PageContent>> GetDraftContentAsync(string route, CancellationToken cancellationToken = default)
+        {
+            const string operation = "GetDraft";
+
+            try
+            {
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                if (!page.DraftVersionId.HasValue)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, "Draft not found.");
+                }
+
+                var draft = page.Versions.FirstOrDefault(v => v.Id == page.DraftVersionId && v.Status == PageVersionStatus.Draft);
+                if (draft == null)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, "Draft not found.");
+                }
+
+                var sanitized = SanitizeRichTextBlocks(draft.ContentJson);
+                var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
+                return Result<PageContent>.Ok(hydrated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Draft read failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Unexpected, "DraftReadFailed");
+            }
+        }
+
         public async Task<Result> SaveOverrideAsync(PageOverride model, CancellationToken cancellationToken = default)
         {
             const string operation = "SavePageOverride";
@@ -143,6 +177,179 @@ namespace VineyardApi.Services
             {
                 _logger.LogError(ex, "Hero image update failed (Route: {Route}, Operation: {Operation})", route, operation);
                 return Result<PageContent>.Failure(ErrorCode.Unexpected, "HeroImageUpdateFailed");
+            }
+        }
+
+        public async Task<Result> AutosaveDraftAsync(string route, PageContent content, CancellationToken cancellationToken = default)
+        {
+            const string operation = "AutosaveDraft";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    _logger.LogWarning("Autosave failed: page not found (Route: {Route})", route);
+                    return Result.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                var sanitized = SanitizeRichTextBlocks(content);
+                var now = DateTime.UtcNow;
+
+                if (page.DraftVersionId.HasValue)
+                {
+                    var draftCandidate = page.Versions.FirstOrDefault(v => v.Id == page.DraftVersionId);
+                    if (draftCandidate != null && draftCandidate.Status != PageVersionStatus.Draft)
+                    {
+                        return Result.Failure(ErrorCode.Conflict, "Draft version id points to a non-draft version.");
+                    }
+
+                    if (draftCandidate != null)
+                    {
+                        draftCandidate.ContentJson = sanitized;
+                        draftCandidate.UpdatedUtc = now;
+                        await _repository.SaveChangesAsync(cancellationToken);
+                        return Result.Ok();
+                    }
+
+                    _logger.LogWarning("DraftVersionId set but draft not found; creating new draft (Route: {Route})", route);
+                }
+
+                var nextVersionNo = page.Versions.Count == 0
+                    ? 1
+                    : page.Versions.Max(v => v.VersionNo) + 1;
+
+                var newDraft = new PageVersion
+                {
+                    Id = Guid.NewGuid(),
+                    PageId = page.Id,
+                    VersionNo = nextVersionNo,
+                    ContentJson = sanitized,
+                    Status = PageVersionStatus.Draft,
+                    CreatedUtc = now,
+                    UpdatedUtc = now
+                };
+
+                _repository.AddPageVersion(newDraft);
+                page.Versions.Add(newDraft);
+                page.DraftVersionId = newDraft.Id;
+
+                await _repository.SaveChangesAsync(cancellationToken);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Autosave failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result.Failure(ErrorCode.Unexpected, "AutosaveFailed");
+            }
+        }
+
+        public async Task<Result<PageContent>> PublishDraftAsync(string route, CancellationToken cancellationToken = default)
+        {
+            const string operation = "PublishDraft";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                if (!page.DraftVersionId.HasValue)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.Validation, "No draft exists to publish.");
+                }
+
+                var draft = page.Versions.FirstOrDefault(v => v.Id == page.DraftVersionId && v.Status == PageVersionStatus.Draft);
+                if (draft == null)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.Validation, "Draft version is missing or invalid.");
+                }
+
+                var now = DateTime.UtcNow;
+                var nextPublishedNo = page.Versions
+                    .Where(v => v.Status == PageVersionStatus.Published)
+                    .Select(v => v.VersionNo)
+                    .DefaultIfEmpty(0)
+                    .Max() + 1;
+
+                var publishedContent = SanitizeRichTextBlocks(draft.ContentJson);
+                var newPublished = new PageVersion
+                {
+                    Id = Guid.NewGuid(),
+                    PageId = page.Id,
+                    VersionNo = nextPublishedNo,
+                    ContentJson = publishedContent,
+                    Status = PageVersionStatus.Published,
+                    CreatedUtc = now,
+                    PublishedUtc = now
+                };
+
+                _repository.AddPageVersion(newPublished);
+                page.CurrentVersionId = newPublished.Id;
+                page.DraftVersionId = null;
+
+                _repository.RemovePageVersion(draft);
+
+                await _repository.SaveChangesAsync(cancellationToken);
+
+                var hydrated = await HydrateImageBlocksAsync(publishedContent, cancellationToken);
+                return Result<PageContent>.Ok(hydrated);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Publish draft failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Unexpected, "PublishDraftFailed");
+            }
+        }
+
+        public async Task<Result> DiscardDraftAsync(string route, CancellationToken cancellationToken = default)
+        {
+            const string operation = "DiscardDraft";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                if (!page.DraftVersionId.HasValue)
+                {
+                    return Result.Failure(ErrorCode.NotFound, "No draft to discard.");
+                }
+
+                var draft = page.Versions.FirstOrDefault(v => v.Id == page.DraftVersionId && v.Status == PageVersionStatus.Draft);
+                if (draft != null)
+                {
+                    _repository.RemovePageVersion(draft);
+                }
+
+                page.DraftVersionId = null;
+                await _repository.SaveChangesAsync(cancellationToken);
+                return Result.Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Discard draft failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result.Failure(ErrorCode.Unexpected, "DiscardDraftFailed");
             }
         }
 

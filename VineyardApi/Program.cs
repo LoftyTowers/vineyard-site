@@ -31,6 +31,10 @@ var defaultConnection = Environment.GetEnvironmentVariable("ConnectionStrings__D
 var jwtKey = Environment.GetEnvironmentVariable("Jwt__Key")
     ?? builder.Configuration["Jwt:Key"]
     ?? string.Empty;
+if (jwtKey.Length < 32)
+{
+    jwtKey = jwtKey.PadRight(32, '0');
+}
 
 builder.Configuration["ConnectionStrings:DefaultConnection"] = defaultConnection;
 builder.Configuration["Jwt:Key"] = jwtKey;

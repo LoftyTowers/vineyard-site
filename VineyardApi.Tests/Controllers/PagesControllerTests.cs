@@ -80,5 +80,30 @@ namespace VineyardApi.Tests.Controllers
             result.Should().BeOfType<OkResult>();
             _service.Verify(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()), Times.Once);
         }
+
+        [Test]
+        public async Task Autosave_ReturnsOk_WhenServiceSucceeds()
+        {
+            var content = new PageContent();
+            var model = new AutosaveDraftRequest { Content = content };
+            _service.Setup(s => s.AutosaveDraftAsync(string.Empty, content, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Result.Ok());
+
+            var result = await _controller.AutosaveAsync("home", model, CancellationToken.None);
+
+            result.Should().BeOfType<OkResult>();
+            _service.Verify(s => s.AutosaveDraftAsync(string.Empty, content, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task Autosave_ReturnsBadRequest_WhenContentMissing()
+        {
+            var model = new AutosaveDraftRequest { Content = null };
+
+            var result = await _controller.AutosaveAsync("home", model, CancellationToken.None);
+
+            var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+            badRequest.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        }
     }
 }
