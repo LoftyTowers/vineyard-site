@@ -30,6 +30,20 @@ namespace VineyardApi.Repositories
             }
         }
 
+        public async Task<Page?> GetPageWithVersionsAsync(string route, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return await _context.Pages
+                    .Include(p => p.Versions)
+                    .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public async Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId, CancellationToken cancellationToken = default)
         {
             try
@@ -61,6 +75,30 @@ namespace VineyardApi.Repositories
             try
             {
                 _context.PageOverrides.Add(model);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public void AddPageVersion(PageVersion version)
+        {
+            try
+            {
+                _context.PageVersions.Add(version);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public void RemovePageVersion(PageVersion version)
+        {
+            try
+            {
+                _context.PageVersions.Remove(version);
             }
             catch (Exception)
             {

@@ -13,13 +13,21 @@
   <div class="bg-black/50 p-8 rounded-md max-w-3xl mx-auto text-center">
     <h1 class="text-4xl md:text-6xl font-heading font-normal">
       <ng-container *ngIf="isAdmin; else heroTitleView">
-        <textarea rows="1" class="w-full bg-transparent text-center outline-none resize-none" [(ngModel)]="heroTitle"></textarea>
+        <textarea
+          rows="1"
+          class="w-full bg-transparent text-center outline-none resize-none"
+          [(ngModel)]="heroTitle"
+          (ngModelChange)="onHeadingChange('h1', $event)"></textarea>
       </ng-container>
       <ng-template #heroTitleView>{{ heroTitle }}</ng-template>
     </h1>
     <p class="text-xl md:text-2xl mt-4 mb-6 font-body">
       <ng-container *ngIf="isAdmin; else heroSubtitleView">
-        <textarea rows="1" class="w-full bg-transparent text-center outline-none resize-none" [(ngModel)]="heroSubtitle"></textarea>
+        <textarea
+          rows="1"
+          class="w-full bg-transparent text-center outline-none resize-none"
+          [(ngModel)]="heroSubtitle"
+          (ngModelChange)="onHeadingChange('h2', $event)"></textarea>
       </ng-container>
       <ng-template #heroSubtitleView>{{ heroSubtitle }}</ng-template>
     </p>
@@ -37,6 +45,38 @@
     </ng-template>
   </div>
 </div>
+
+<ng-container *ngIf="isAdmin">
+  <div class="w-full mt-10 border-t border-gray-200 pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div class="text-xs text-gray-600">
+      <ng-container *ngIf="autosaveState$ | async as autosave">
+        <span *ngIf="autosave.status === 'dirty'">Unsaved changes</span>
+        <span *ngIf="autosave.status === 'saving'">Saving…</span>
+        <span *ngIf="autosave.status === 'saved'">
+          Draft saved<span *ngIf="autosave.lastSavedUtc"> at {{ autosave.lastSavedUtc | date: 'HH:mm' }}</span>
+        </span>
+        <span *ngIf="autosave.status === 'error'">Autosave failed</span>
+      </ng-container>
+      <span *ngIf="hasDraft" class="ml-2 text-gray-500">Draft loaded</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded disabled:opacity-50"
+        [disabled]="!hasDraft || isPublishing"
+        (click)="publishDraft()">
+        {{ isPublishing ? 'Publishing…' : 'Publish draft' }}
+      </button>
+      <button
+        type="button"
+        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded disabled:opacity-50"
+        [disabled]="!hasDraft || isPublishing"
+        (click)="discardDraft()">
+        Discard draft
+      </button>
+    </div>
+  </div>
+</ng-container>
 
 <app-image-picker-dialog
   [isOpen]="isImagePickerOpen"

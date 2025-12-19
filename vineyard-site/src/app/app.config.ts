@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { ThemeService } from './services/theme.service';
 import { ErrorInterceptor } from './services/interceptors/error.interceptor';
 import { ApiLoggingInterceptor } from './services/interceptors/api-logging.interceptor';
+import { AuthInterceptor } from './services/interceptors/auth.interceptor';
 import { GlobalErrorHandler } from './services/global-error.handler';
 
 export const appConfig: ApplicationConfig = {
@@ -28,6 +29,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: ApiLoggingInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
       multi: true
     },
     {
