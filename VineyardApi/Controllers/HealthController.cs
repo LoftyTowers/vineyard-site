@@ -29,10 +29,15 @@ namespace VineyardApi.Controllers
                 cancellationToken.ThrowIfCancellationRequested();
                 return Ok(new { status = "Healthy", checkedAt = DateTime.UtcNow });
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Health check cancelled");
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Health check failed");
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Health check failed"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Health check failed"));
             }
         }
     }

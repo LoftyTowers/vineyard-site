@@ -59,6 +59,11 @@ namespace VineyardApi.Services
                 var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Page read cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Page read failed (Route: {Route}, Operation: {Operation})", route, operation);
@@ -69,7 +74,6 @@ namespace VineyardApi.Services
         public async Task<Result<PageContent>> GetDraftContentAsync(string route, CancellationToken cancellationToken = default)
         {
             const string operation = "GetDraft";
-
             try
             {
                 var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
@@ -92,6 +96,11 @@ namespace VineyardApi.Services
                 var sanitized = SanitizeRichTextBlocks(draft.ContentJson);
                 var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Draft read cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {
@@ -133,6 +142,11 @@ namespace VineyardApi.Services
                 await UpdateOverrideImageUsagesAsync(model, cancellationToken);
                 return Result.Ok();
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Saving page override cancelled for page {PageId} (Operation: {Operation})", model.PageId, operation);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving page override for page {PageId} (Operation: {Operation})", model.PageId, operation);
@@ -172,6 +186,11 @@ namespace VineyardApi.Services
                 var sanitized = SanitizeRichTextBlocks(updatedContent);
                 var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Hero image update cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {
@@ -242,6 +261,11 @@ namespace VineyardApi.Services
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Autosave cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Autosave failed (Route: {Route}, Operation: {Operation})", route, operation);
@@ -307,6 +331,11 @@ namespace VineyardApi.Services
                 var hydrated = await HydrateImageBlocksAsync(publishedContent, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Publish draft cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Publish draft failed (Route: {Route}, Operation: {Operation})", route, operation);
@@ -345,6 +374,11 @@ namespace VineyardApi.Services
                 page.DraftVersionId = null;
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Discard draft cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {

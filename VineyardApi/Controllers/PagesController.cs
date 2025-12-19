@@ -43,10 +43,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.GetPageContentAsync(route, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while getting page {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get page {Route}", route);
-                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unknown, "Failed to load page"));
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unexpected, "Failed to load page"));
             }
         }
 
@@ -67,10 +72,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.GetDraftContentAsync(route, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while getting draft for page {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to get draft for page {Route}", route);
-                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unknown, "Failed to load draft"));
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unexpected, "Failed to load draft"));
             }
         }
 
@@ -97,10 +107,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.UpdateHeroImageAsync(route, model.ImageId, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while updating hero image for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to update hero image for route {Route}", route);
-                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unknown, "Failed to update hero image"));
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unexpected, "Failed to update hero image"));
             }
         }
 
@@ -127,10 +142,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.SaveOverrideAsync(model, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while saving page override for page {PageId}", model.PageId);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save page override for page {PageId}", model.PageId);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save override"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to save override"));
             }
         }
 
@@ -156,10 +176,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.AutosaveDraftAsync(route, model.Content, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while autosaving draft for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to autosave draft for route {Route}", route);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to autosave draft"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to autosave draft"));
             }
         }
 
@@ -180,10 +205,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.PublishDraftAsync(route, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while publishing draft for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to publish draft for route {Route}", route);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to publish draft"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to publish draft"));
             }
         }
 
@@ -204,10 +234,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.DiscardDraftAsync(route, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while discarding draft for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to discard draft for route {Route}", route);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to discard draft"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to discard draft"));
             }
         }
 

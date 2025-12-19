@@ -105,5 +105,36 @@ namespace VineyardApi.Tests.Controllers
             var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
             badRequest.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         }
+
+        [Test]
+        public async Task GetPage_ReturnsCancelled_WhenTokenCancelled()
+        {
+            var cts = new CancellationTokenSource();
+            _service
+                .Setup(s => s.GetPageContentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new OperationCanceledException());
+
+            var result = await _controller.GetPageAsync("home", cts.Token);
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(499);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Cancelled.ToString());
+        }
+
+        [Test]
+        public async Task SaveOverride_ReturnsServerError_OnUnexpectedException()
+        {
+            var model = new PageOverride();
+            _service.Setup(s => s.SaveOverrideAsync(model, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("boom"));
+
+            var result = await _controller.SaveOverrideAsync(model, CancellationToken.None);
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status500InternalServerError);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Unexpected.ToString());
+        }
     }
 }

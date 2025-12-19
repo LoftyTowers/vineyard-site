@@ -47,10 +47,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.GetPublishedOverridesAsync(page, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while fetching overrides for page {Page}", page);
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch overrides for page {Page}", page);
-                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unknown, "Failed to fetch overrides"));
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unexpected, "Failed to fetch overrides"));
             }
         }
 
@@ -77,10 +82,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.SaveDraftAsync(model, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while saving draft override for page {PageId}", model.PageId);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save draft override for page {PageId} block {BlockKey}", model.PageId, model.BlockKey);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save draft"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to save draft"));
             }
         }
 
@@ -106,10 +116,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.PublishDraftAsync(request.Id, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while publishing draft override {Id}", request.Id);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to publish draft override {Id}", request.Id);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to publish draft"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to publish draft"));
             }
         }
 
@@ -130,10 +145,15 @@ namespace VineyardApi.Controllers
                 var history = await _service.GetHistoryAsync(page, blockKey, cancellationToken);
                 return ResultMapper.ToActionResult(this, history);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while loading history for page {Page} block {BlockKey}", page, blockKey);
+                return ResultMapper.ToActionResult(this, Result<List<ContentOverride>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load history for page {Page} block {BlockKey}", page, blockKey);
-                return ResultMapper.ToActionResult(this, Result<List<ContentOverride>>.Failure(ErrorCode.Unknown, "Failed to load history"));
+                return ResultMapper.ToActionResult(this, Result<List<ContentOverride>>.Failure(ErrorCode.Unexpected, "Failed to load history"));
             }
         }
 
@@ -160,10 +180,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.RevertAsync(request.Id, request.ChangedById, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while reverting override {Id}", request.Id);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to revert override {Id}", request.Id);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to revert override"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to revert override"));
             }
         }
     }

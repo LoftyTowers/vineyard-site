@@ -72,7 +72,10 @@ namespace VineyardApi.Tests.Controllers
             var result = await _controller.GetRecentAsync(new CancellationToken(true));
 
             var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
-            objectResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+            objectResult.StatusCode.Should().Be(499);
+            var problem = objectResult.Value.Should().BeAssignableTo<ProblemDetails>().Subject;
+            problem.Status.Should().Be(499);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Cancelled.ToString());
         }
 
         [Test]

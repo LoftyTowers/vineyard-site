@@ -48,10 +48,15 @@ namespace VineyardApi.Controllers
 
                 return Ok(new { token = result.Value });
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Login cancelled for user {Username}", request.Username);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to login user {Username}", request.Username);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Login failed"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Login failed"));
             }
         }
     }

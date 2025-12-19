@@ -69,5 +69,39 @@ namespace VineyardApi.Tests.Controllers
             problem!.Status.Should().Be(StatusCodes.Status400BadRequest);
             problem.Extensions["errorCode"].Should().Be(ErrorCode.BadRequest.ToString());
         }
+
+        [Test]
+        public async Task Login_ReturnsCancelled_WhenTokenCancelled()
+        {
+            var request = new LoginRequest("user", "pass");
+            _validator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+            _service.Setup(s => s.LoginAsync(request.Username, request.Password, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new OperationCanceledException());
+
+            var result = await _controller.LoginAsync(request, new CancellationToken(true));
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(499);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Cancelled.ToString());
+        }
+
+        [Test]
+        public async Task Login_ReturnsServerError_OnUnexpectedException()
+        {
+            var request = new LoginRequest("user", "pass");
+            _validator.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+            _service.Setup(s => s.LoginAsync(request.Username, request.Password, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("boom"));
+
+            var result = await _controller.LoginAsync(request, CancellationToken.None);
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status500InternalServerError);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Unexpected.ToString());
+        }
     }
 }

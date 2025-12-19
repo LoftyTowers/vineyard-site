@@ -34,6 +34,11 @@ namespace VineyardApi.Controllers
                 var logs = await _service.GetRecentAsync(100, cancellationToken);
                 return ResultMapper.ToActionResult(this, logs);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while fetching audit logs");
+                return ResultMapper.ToActionResult(this, Result<List<Models.AuditLog>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to fetch audit logs");

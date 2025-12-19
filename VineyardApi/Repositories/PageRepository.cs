@@ -16,106 +16,50 @@ namespace VineyardApi.Repositories
 
         public async Task<Page?> GetPageWithOverridesAsync(string route, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                var page = await _context.Pages
-                    .Include(p => p.CurrentVersion)
-                    .Include(p => p.Overrides)
-                    .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
-                return page;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            var page = await _context.Pages
+                .Include(p => p.CurrentVersion)
+                .Include(p => p.Overrides)
+                .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
+            return page;
         }
 
         public async Task<Page?> GetPageWithVersionsAsync(string route, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return await _context.Pages
-                    .Include(p => p.Versions)
-                    .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _context.Pages
+                .Include(p => p.Versions)
+                .FirstOrDefaultAsync(p => p.Route == route, cancellationToken);
         }
 
         public async Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return await _context.PageOverrides
-                    .FirstOrDefaultAsync(p => p.PageId == pageId, cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _context.PageOverrides
+                .FirstOrDefaultAsync(p => p.PageId == pageId, cancellationToken);
         }
 
         public async Task<Page?> GetPageByIdAsync(Guid pageId, CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return await _context.Pages
-                    .FirstOrDefaultAsync(p => p.Id == pageId, cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return await _context.Pages
+                .FirstOrDefaultAsync(p => p.Id == pageId, cancellationToken);
         }
 
         public void AddPageOverride(PageOverride model)
         {
-            try
-            {
-                _context.PageOverrides.Add(model);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _context.PageOverrides.Add(model);
         }
 
         public void AddPageVersion(PageVersion version)
         {
-            try
-            {
-                _context.PageVersions.Add(version);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _context.PageVersions.Add(version);
         }
 
         public void RemovePageVersion(PageVersion version)
         {
-            try
-            {
-                _context.PageVersions.Remove(version);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _context.PageVersions.Remove(version);
         }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            try
-            {
-                return _context.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return _context.SaveChangesAsync(cancellationToken);
         }
     }
 }
