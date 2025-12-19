@@ -31,6 +31,7 @@ type HomeBlock =
 export class HomeComponent implements OnInit, OnDestroy {
   isAdmin = false;
   private authSub?: Subscription;
+  private previousIsAdmin?: boolean;
   combinedContent = '';
   heroTitle = '';
   heroImageUrl = '';
@@ -54,9 +55,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.autosave.reset();
     this.autosaveState$ = this.autosave.state$;
     this.authSub = this.auth.authState$.subscribe(() => {
-      this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
+      this.handleAuthChange();
     });
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
+    this.previousIsAdmin = this.isAdmin;
     this.loadContent();
   }
 
@@ -204,6 +206,7 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     const payload = this.buildPayload();
+    this.hasDraft = true;
     this.autosave.queueChange(this.homeRoute, payload);
   }
 
@@ -297,6 +300,34 @@ export class HomeComponent implements OnInit, OnDestroy {
         this.loadPublished();
       }
     });
+  }
+
+  private handleAuthChange(): void {
+    const newIsAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
+    if (this.previousIsAdmin === undefined) {
+      this.previousIsAdmin = newIsAdmin;
+      this.isAdmin = newIsAdmin;
+      return;
+    }
+
+    if (newIsAdmin === this.previousIsAdmin) {
+      return;
+    }
+
+    this.isAdmin = newIsAdmin;
+    this.previousIsAdmin = newIsAdmin;
+
+    if (newIsAdmin) {
+      this.isAutosaveReady = false;
+      this.loadContent();
+      return;
+    }
+
+    // On logout: clear draft state and reload published content
+    this.autosave.reset();
+    this.hasDraft = false;
+    this.isAutosaveReady = false;
+    this.loadPublished();
   }
 
   private buildPayload(): PageData {
