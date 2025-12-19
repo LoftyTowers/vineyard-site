@@ -47,10 +47,15 @@ namespace VineyardApi.Controllers
                 var saved = await _service.SaveImageAsync(img, cancellationToken);
                 return ResultMapper.ToActionResult(this, saved);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Image save cancelled for {ImageUrl}", img.PublicUrl);
+                return ResultMapper.ToActionResult(this, Result<Image>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save image {ImageUrl}", img.PublicUrl);
-                return ResultMapper.ToActionResult(this, Result<Image>.Failure(ErrorCode.Unknown, "Failed to save image"));
+                return ResultMapper.ToActionResult(this, Result<Image>.Failure(ErrorCode.Unexpected, "Failed to save image"));
             }
         }
 
@@ -59,6 +64,11 @@ namespace VineyardApi.Controllers
         {
             try
             {
+                var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+                using var scope = _logger.BeginScope(new Dictionary<string, object?>
+                {
+                    ["CorrelationId"] = correlationId
+                });
                 var result = await _service.GetActiveImagesAsync(cancellationToken);
                 if (result.IsFailure)
                 {
@@ -84,10 +94,15 @@ namespace VineyardApi.Controllers
 
                 return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Ok(items));
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Image list request cancelled");
+                return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load images");
-                return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Failure(ErrorCode.Unknown, "Failed to load images"));
+                return ResultMapper.ToActionResult(this, Result<List<ImageListItem>>.Failure(ErrorCode.Unexpected, "Failed to load images"));
             }
         }
 

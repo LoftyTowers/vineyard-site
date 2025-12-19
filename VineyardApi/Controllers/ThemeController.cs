@@ -36,10 +36,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.GetThemeAsync(cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while loading theme");
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load theme");
-                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unknown, "Failed to load theme"));
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unexpected, "Failed to load theme"));
             }
         }
 
@@ -66,10 +71,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.SaveOverrideAsync(model, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while saving theme override for default {ThemeDefaultId}", model.ThemeDefaultId);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save theme override for default {ThemeDefaultId}", model.ThemeDefaultId);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save theme override"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to save theme override"));
             }
         }
     }
