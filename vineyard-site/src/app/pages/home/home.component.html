@@ -1,6 +1,6 @@
 <div class="relative bg-cover bg-center bg-no-repeat text-white py-24 px-4" [style.background-image]="heroImageUrl ? 'url(' + heroImageUrl + ')' : null">
   <button
-    *ngIf="isAdmin"
+    *ngIf="isEditMode"
     type="button"
     class="absolute top-4 right-4 bg-black/50 text-white rounded-full p-2 hover:bg-black/70 transition"
     aria-label="Edit hero image"
@@ -12,7 +12,7 @@
   </button>
   <div class="bg-black/50 p-8 rounded-md max-w-3xl mx-auto text-center">
     <h1 class="text-4xl md:text-6xl font-heading font-normal">
-      <ng-container *ngIf="isAdmin; else heroTitleView">
+      <ng-container *ngIf="isEditMode; else heroTitleView">
         <textarea
           rows="1"
           class="w-full bg-transparent text-center outline-none resize-none"
@@ -22,7 +22,7 @@
       <ng-template #heroTitleView>{{ heroTitle }}</ng-template>
     </h1>
     <p class="text-xl md:text-2xl mt-4 mb-6 font-body">
-      <ng-container *ngIf="isAdmin; else heroSubtitleView">
+      <ng-container *ngIf="isEditMode; else heroSubtitleView">
         <textarea
           rows="1"
           class="w-full bg-transparent text-center outline-none resize-none"
@@ -37,7 +37,7 @@
 
 <div class="flex flex-col items-start gap-6 py-12 border-t border-gray-200">
   <div class="w-full space-y-4 font-body text-contrast">
-    <ng-container *ngIf="isAdmin; else viewMode">
+    <ng-container *ngIf="isEditMode; else viewMode">
       <app-editable-text-block [(content)]="combinedContent" (contentChange)="onContentChange($event)" [editable]="true"></app-editable-text-block>
     </ng-container>
     <ng-template #viewMode>
@@ -60,6 +60,12 @@
       <span *ngIf="hasDraft" class="ml-2 text-gray-500">Draft loaded</span>
     </div>
     <div class="flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
+        (click)="togglePreview()">
+        {{ isPreviewing ? 'Edit' : 'Preview' }}
+      </button>
       <button
         type="button"
         class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded disabled:opacity-50"
