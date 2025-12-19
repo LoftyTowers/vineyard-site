@@ -32,6 +32,11 @@ namespace VineyardApi.Controllers
                 LogProblem(problem, null);
                 return StatusCode(problem.Status ?? code, problem);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while handling status code {StatusCode}", code);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed while handling status code {StatusCode}", code);
@@ -55,6 +60,11 @@ namespace VineyardApi.Controllers
                 var problem = BuildProblemDetails(StatusCodes.Status500InternalServerError, "An unexpected error occurred");
                 LogProblem(problem, exception);
                 return StatusCode(problem.Status ?? StatusCodes.Status500InternalServerError, problem);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while handling exception");
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
             }
             catch (Exception ex)
             {

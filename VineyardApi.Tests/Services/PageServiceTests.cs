@@ -77,6 +77,66 @@ namespace VineyardApi.Tests.Services
         }
 
         [Test]
+        public async Task GetDraftContentAsync_FallsBackToPublished_WhenNoDraftExists()
+        {
+            var page = new Page
+            {
+                Id = Guid.NewGuid(),
+                Route = "home",
+                CurrentVersion = new PageVersion
+                {
+                    Id = Guid.NewGuid(),
+                    Status = PageVersionStatus.Published,
+                    ContentJson = new PageContent { Blocks = { CreateTextBlock("live") } }
+                },
+                Versions = new List<PageVersion>()
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+
+            var result = await _service.GetDraftContentAsync("home");
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value!.Blocks.First().Content.GetString().Should().Be("live");
+        }
+
+        [Test]
+        public async Task PublishDraftAsync_PersistsPublishedThenRemovesDraft()
+        {
+            var route = "home";
+            var draftId = Guid.NewGuid();
+            var pageId = Guid.NewGuid();
+            var draft = new PageVersion
+            {
+                Id = draftId,
+                PageId = pageId,
+                ContentJson = new PageContent { Blocks = { CreateTextBlock("draft") } },
+                Status = PageVersionStatus.Draft,
+                VersionNo = 1
+            };
+            var page = new Page
+            {
+                Id = pageId,
+                Route = route,
+                DraftVersionId = draftId,
+                Versions = new List<PageVersion> { draft }
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync(route, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+
+            var result = await _service.PublishDraftAsync(route);
+
+            result.IsSuccess.Should().BeTrue();
+            _repo.Verify(r => r.AddPageVersion(It.IsAny<PageVersion>()), Times.Never);
+            _repo.Verify(r => r.RemovePageVersion(It.IsAny<PageVersion>()), Times.Never);
+            page.DraftVersionId.Should().BeNull();
+            page.CurrentVersionId.Should().Be(draftId);
+            draft.Status.Should().Be(PageVersionStatus.Published);
+        }
+
+        [Test]
         public async Task SaveOverrideAsync_Inserts_WhenNoExisting()
         {
             var model = new PageOverride { PageId = Guid.NewGuid() };

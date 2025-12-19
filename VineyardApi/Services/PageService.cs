@@ -82,15 +82,18 @@ namespace VineyardApi.Services
                     return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
                 }
 
-                if (!page.DraftVersionId.HasValue)
-                {
-                    return Result<PageContent>.Failure(ErrorCode.NotFound, "Draft not found.");
-                }
+                var draft = page.DraftVersionId.HasValue
+                    ? page.Versions.FirstOrDefault(v => v.Id == page.DraftVersionId && v.Status == PageVersionStatus.Draft)
+                    : null;
 
-                var draft = page.Versions.FirstOrDefault(v => v.Id == page.DraftVersionId && v.Status == PageVersionStatus.Draft);
                 if (draft == null)
                 {
-                    return Result<PageContent>.Failure(ErrorCode.NotFound, "Draft not found.");
+                    if (page.CurrentVersion == null)
+                    {
+                        return Result<PageContent>.Failure(ErrorCode.NotFound, "Draft not found.");
+                    }
+
+                    draft = page.CurrentVersion;
                 }
 
                 var sanitized = SanitizeRichTextBlocks(draft.ContentJson);
@@ -302,33 +305,18 @@ namespace VineyardApi.Services
                 }
 
                 var now = DateTime.UtcNow;
-                var nextPublishedNo = page.Versions
-                    .Where(v => v.Status == PageVersionStatus.Published)
-                    .Select(v => v.VersionNo)
-                    .DefaultIfEmpty(0)
-                    .Max() + 1;
 
-                var publishedContent = SanitizeRichTextBlocks(draft.ContentJson);
-                var newPublished = new PageVersion
-                {
-                    Id = Guid.NewGuid(),
-                    PageId = page.Id,
-                    VersionNo = nextPublishedNo,
-                    ContentJson = publishedContent,
-                    Status = PageVersionStatus.Published,
-                    CreatedUtc = now,
-                    PublishedUtc = now
-                };
+                draft.ContentJson = SanitizeRichTextBlocks(draft.ContentJson);
+                draft.Status = PageVersionStatus.Published;
+                draft.PublishedUtc = now;
+                draft.UpdatedUtc = now;
 
-                _repository.AddPageVersion(newPublished);
-                page.CurrentVersionId = newPublished.Id;
+                page.CurrentVersionId = draft.Id;
                 page.DraftVersionId = null;
-
-                _repository.RemovePageVersion(draft);
 
                 await _repository.SaveChangesAsync(cancellationToken);
 
-                var hydrated = await HydrateImageBlocksAsync(publishedContent, cancellationToken);
+                var hydrated = await HydrateImageBlocksAsync(draft.ContentJson, cancellationToken);
                 return Result<PageContent>.Ok(hydrated);
             }
             catch (OperationCanceledException ex)
