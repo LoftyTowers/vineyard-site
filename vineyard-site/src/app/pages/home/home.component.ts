@@ -32,6 +32,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   isAdmin = false;
   private authSub?: Subscription;
   private previousIsAdmin?: boolean;
+  isPreviewing = false;
   combinedContent = '';
   heroTitle = '';
   heroImageUrl = '';
@@ -64,6 +65,10 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.authSub?.unsubscribe();
+  }
+
+  get isEditMode(): boolean {
+    return this.isAdmin && !this.isPreviewing;
   }
 
   private syncHomeContent(): void {
@@ -119,6 +124,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   openImagePicker(): void {
+    if (!this.isEditMode) {
+      return;
+    }
     this.isImagePickerOpen = true;
   }
 
@@ -201,7 +209,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private queueAutosave(): void {
     const token = this.auth.token;
-    if (!this.isAdmin || !this.isAutosaveReady || !token) {
+    if (!this.isEditMode || !this.isAutosaveReady || !token) {
       return;
     }
 
@@ -258,7 +266,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private loadContent(): void {
-    if (this.isAdmin) {
+    if (this.isEditMode) {
       this.pageService.getDraft(this.homeRoute).subscribe({
         next: data => {
           if (Array.isArray(data.blocks)) {
@@ -328,9 +336,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.hasDraft = false;
     this.isAutosaveReady = false;
     this.loadPublished();
+    this.isPreviewing = false;
   }
 
   private buildPayload(): PageData {
     return { blocks: this.homeContentBlocks };
+  }
+
+  togglePreview(): void {
+    if (!this.isAdmin) {
+      return;
+    }
+    this.isPreviewing = !this.isPreviewing;
+    if (!this.isPreviewing && !this.isAutosaveReady) {
+      // ensure edit mode has latest draft/published content
+      this.loadContent();
+    }
   }
 }
