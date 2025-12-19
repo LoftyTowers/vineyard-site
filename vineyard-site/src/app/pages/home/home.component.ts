@@ -3,7 +3,9 @@ import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent, ImagePickerDialogComponent } from '../../shared/components';
 import { AuthService } from '../../services/auth.service';
 import { PageService, PageData } from '../../services/page.service';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
+import { PageAutosaveService, AutosaveState } from '../../services/page-autosave.service';
+import { ImageListItem } from '../../services/images.service';
 
 type HomeBlock =
   | { type: 'h1' | 'h2' | 'p'; content: string }
@@ -34,23 +36,28 @@ export class HomeComponent implements OnInit, OnDestroy {
   heroImageUrl = '';
   heroSubtitle = '';
   isImagePickerOpen = false;
-  constructor(private pageService: PageService, private auth: AuthService) {}
+  hasDraft = false;
+  isPublishing = false;
+  isSavingDraft = false;
+  private readonly homeRoute = 'home';
+  autosaveState$!: Observable<AutosaveState>;
+  private isAutosaveReady = false;
+  constructor(
+    private pageService: PageService,
+    private auth: AuthService,
+    private autosave: PageAutosaveService
+  ) {}
 
   homeContentBlocks: HomeBlock[] = [];
 
   ngOnInit(): void {
+    this.autosave.reset();
+    this.autosaveState$ = this.autosave.state$;
     this.authSub = this.auth.authState$.subscribe(() => {
       this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     });
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
-    this.pageService.getPage('').subscribe((data: PageData) => {
-      console.debug('Home page blocks from API:', data?.blocks);
-      if (Array.isArray(data.blocks)) {
-        this.homeContentBlocks = data.blocks as HomeBlock[];
-      }
-      this.syncHomeContent();
-    });
-    this.syncHomeContent();
+    this.loadContent();
   }
 
   ngOnDestroy(): void {
@@ -106,6 +113,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   onContentChange(html: string): void {
     this.combinedContent = html;
     this.applyRichTextToBlocks(html);
+    this.queueAutosave();
   }
 
   openImagePicker(): void {
@@ -116,19 +124,55 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.isImagePickerOpen = false;
   }
 
-  applyHeroImage(imageId: string): void {
-    this.pageService.updateHeroImage('home', imageId).subscribe({
-      next: data => {
-        if (Array.isArray(data.blocks)) {
-          this.homeContentBlocks = data.blocks as HomeBlock[];
-          this.syncHomeContent();
+  applyHeroImage(image: ImageListItem): void {
+    const imageBlocks = this.homeContentBlocks.filter(block => block.type === 'image') as Array<
+      Extract<HomeBlock, { type: 'image' }>
+    >;
+    const heroBlock =
+      imageBlocks.find(block => (block.content.variant || '').toLowerCase() === 'hero') ?? imageBlocks[0];
+
+    if (heroBlock) {
+      heroBlock.content.imageId = image.id;
+      heroBlock.content.url = image.url;
+      heroBlock.content.src = image.url;
+    } else {
+      this.homeContentBlocks.unshift({
+        type: 'image',
+        content: {
+          imageId: image.id,
+          url: image.url,
+          src: image.url,
+          variant: 'hero'
         }
-        this.isImagePickerOpen = false;
-      },
-      error: () => {
-        this.isImagePickerOpen = false;
-      }
-    });
+      });
+    }
+
+    this.heroImageUrl = image.url;
+    this.isImagePickerOpen = false;
+    this.queueAutosave();
+  }
+
+  onHeadingChange(type: 'h1' | 'h2', value: string): void {
+    if (!this.isAutosaveReady) {
+      return;
+    }
+
+    if (type === 'h1') {
+      this.heroTitle = value;
+    } else {
+      this.heroSubtitle = value;
+    }
+
+    const existing = this.homeContentBlocks.find(block => block.type === type) as
+      | { type: 'h1' | 'h2'; content: string }
+      | undefined;
+    if (existing) {
+      existing.content = value;
+    } else {
+      this.homeContentBlocks.unshift({ type, content: value });
+    }
+
+    this.queueAutosave();
   }
 
   private applyRichTextToBlocks(html: string): void {
@@ -151,5 +195,111 @@ export class HomeComponent implements OnInit, OnDestroy {
       .replace(/>/g, '&gt;')
       .replace(/\"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  private queueAutosave(): void {
+    const token = this.auth.token;
+    if (!this.isAdmin || !this.isAutosaveReady || !token) {
+      return;
+    }
+
+    const payload = this.buildPayload();
+    this.autosave.queueChange(this.homeRoute, payload);
+  }
+
+  publishDraft(): void {
+    if (!this.hasDraft) {
+      return;
+    }
+    this.isPublishing = true;
+    const payload = this.buildPayload();
+    this.autosave.saveNow(this.homeRoute, payload).subscribe({
+      next: () => {
+        this.pageService.publishDraft(this.homeRoute).subscribe({
+          next: data => {
+            if (Array.isArray(data.blocks)) {
+              this.homeContentBlocks = data.blocks as HomeBlock[];
+              this.hasDraft = false;
+              this.isAutosaveReady = true;
+              this.syncHomeContent();
+              this.autosave.reset();
+            }
+            this.isPublishing = false;
+          },
+          error: () => {
+            this.isPublishing = false;
+          }
+        });
+      },
+      error: () => {
+        this.isPublishing = false;
+      }
+    });
+  }
+
+  saveDraft(): void {
+    if (!this.isAdmin || !this.isAutosaveReady) {
+      return;
+    }
+    this.isSavingDraft = true;
+    const payload = this.buildPayload();
+    this.autosave.saveNow(this.homeRoute, payload).subscribe({
+      next: () => {
+        this.hasDraft = true;
+        this.isSavingDraft = false;
+      },
+      error: () => {
+        this.isSavingDraft = false;
+      }
+    });
+  }
+
+  private loadContent(): void {
+    if (this.isAdmin) {
+      this.pageService.getDraft(this.homeRoute).subscribe({
+        next: data => {
+          if (Array.isArray(data.blocks)) {
+            this.homeContentBlocks = data.blocks as HomeBlock[];
+            this.hasDraft = true;
+          }
+          this.syncHomeContent();
+          this.isAutosaveReady = true;
+        },
+        error: () => {
+          this.loadPublished();
+        }
+      });
+    } else {
+      this.loadPublished();
+    }
+  }
+
+  private loadPublished(): void {
+    this.pageService.getPage('').subscribe((data: PageData) => {
+      if (Array.isArray(data.blocks)) {
+        this.homeContentBlocks = data.blocks as HomeBlock[];
+      }
+      this.hasDraft = false;
+      this.isPublishing = false;
+      this.syncHomeContent();
+      this.isAutosaveReady = true;
+    });
+  }
+
+  discardDraft(): void {
+    if (!this.hasDraft) {
+      return;
+    }
+    this.pageService.discardDraft(this.homeRoute).subscribe({
+      next: () => {
+        this.hasDraft = false;
+        this.autosave.reset();
+        this.loadPublished();
+      }
+    });
+  }
+
+  private buildPayload(): PageData {
+    return { blocks: this.homeContentBlocks };
   }
 }

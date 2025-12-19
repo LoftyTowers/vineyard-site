@@ -223,5 +223,143 @@ namespace VineyardApi.Tests.Services
             result.IsSuccess.Should().BeTrue();
             result.Value!.Blocks.Single().Content.GetProperty("url").GetString().Should().Be("https://cdn.example.com/override.jpg");
         }
+
+        [Test]
+        public async Task AutosaveDraftAsync_CreatesDraft_WhenMissing()
+        {
+            var pageId = Guid.NewGuid();
+            var page = new Page
+            {
+                Id = pageId,
+                Route = "home",
+                Versions = new List<PageVersion>
+                {
+                    new PageVersion
+                    {
+                        Id = Guid.NewGuid(),
+                        PageId = pageId,
+                        VersionNo = 1,
+                        Status = PageVersionStatus.Published,
+                        ContentJson = new PageContent
+                        {
+                            Blocks = { CreateTextBlock("published") }
+                        }
+                    }
+                }
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+            var content = new PageContent
+            {
+                Blocks = { CreateTextBlock("draft") }
+            };
+
+            var result = await _service.AutosaveDraftAsync("home", content);
+
+            result.IsSuccess.Should().BeTrue();
+            page.DraftVersionId.Should().NotBeNull();
+            var draft = page.Versions.Single(v => v.Id == page.DraftVersionId);
+            draft.Status.Should().Be(PageVersionStatus.Draft);
+            draft.VersionNo.Should().Be(2);
+            draft.ContentJson.Blocks.Single().Content.GetString().Should().Be("draft");
+            draft.UpdatedUtc.Should().NotBeNull();
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task AutosaveDraftAsync_UpdatesDraft_WhenExists()
+        {
+            var pageId = Guid.NewGuid();
+            var draftId = Guid.NewGuid();
+            var draft = new PageVersion
+            {
+                Id = draftId,
+                PageId = pageId,
+                VersionNo = 2,
+                Status = PageVersionStatus.Draft,
+                UpdatedUtc = DateTime.UtcNow.AddMinutes(-10),
+                ContentJson = new PageContent
+                {
+                    Blocks = { CreateTextBlock("old") }
+                }
+            };
+            var page = new Page
+            {
+                Id = pageId,
+                Route = "home",
+                DraftVersionId = draftId,
+                Versions = new List<PageVersion>
+                {
+                    new PageVersion
+                    {
+                        Id = Guid.NewGuid(),
+                        PageId = pageId,
+                        VersionNo = 1,
+                        Status = PageVersionStatus.Published,
+                        ContentJson = new PageContent
+                        {
+                            Blocks = { CreateTextBlock("published") }
+                        }
+                    },
+                    draft
+                }
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+            var content = new PageContent
+            {
+                Blocks = { CreateTextBlock("new") }
+            };
+            var previousUpdated = draft.UpdatedUtc;
+
+            var result = await _service.AutosaveDraftAsync("home", content);
+
+            result.IsSuccess.Should().BeTrue();
+            draft.ContentJson.Blocks.Single().Content.GetString().Should().Be("new");
+            draft.UpdatedUtc.Should().NotBeNull();
+            draft.UpdatedUtc.Should().NotBe(previousUpdated);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task AutosaveDraftAsync_ReturnsConflict_WhenDraftIsNotDraft()
+        {
+            var pageId = Guid.NewGuid();
+            var versionId = Guid.NewGuid();
+            var page = new Page
+            {
+                Id = pageId,
+                Route = "home",
+                DraftVersionId = versionId,
+                Versions = new List<PageVersion>
+                {
+                    new PageVersion
+                    {
+                        Id = versionId,
+                        PageId = pageId,
+                        VersionNo = 1,
+                        Status = PageVersionStatus.Published,
+                        ContentJson = new PageContent()
+                    }
+                }
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+
+            var content = new PageContent
+            {
+                Blocks = { CreateTextBlock("draft") }
+            };
+
+            var result = await _service.AutosaveDraftAsync("home", content);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(ErrorCode.Conflict);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
     }
 }

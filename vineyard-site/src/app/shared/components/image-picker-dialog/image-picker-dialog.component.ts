@@ -12,7 +12,7 @@ import { ImagesService, ImageListItem } from '../../../services/images.service';
 export class ImagePickerDialogComponent implements OnChanges {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
-  @Output() confirmed = new EventEmitter<string>();
+  @Output() confirmed = new EventEmitter<ImageListItem>();
 
   images: ImageListItem[] = [];
   selectedId = '';
@@ -43,8 +43,9 @@ export class ImagePickerDialogComponent implements OnChanges {
   }
 
   confirm(): void {
-    if (this.selectedId) {
-      this.confirmed.emit(this.selectedId);
+    const selected = this.images.find(image => image.id === this.selectedId);
+    if (selected) {
+      this.confirmed.emit(selected);
     }
   }
 
