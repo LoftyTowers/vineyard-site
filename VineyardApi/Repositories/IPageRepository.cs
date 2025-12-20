@@ -8,6 +8,8 @@ namespace VineyardApi.Repositories
         Task<Page?> GetPageWithVersionsAsync(string route, CancellationToken cancellationToken = default);
         Task<Page?> GetPageByIdAsync(Guid pageId, CancellationToken cancellationToken = default);
         Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId, CancellationToken cancellationToken = default);
+        Task<List<PageVersion>> GetPublishedVersionsAsync(Guid pageId, CancellationToken cancellationToken = default);
+        Task<PageVersion?> GetVersionByIdAsync(Guid versionId, CancellationToken cancellationToken = default);
         void AddPageOverride(PageOverride model);
         void AddPageVersion(PageVersion version);
         void RemovePageVersion(PageVersion version);

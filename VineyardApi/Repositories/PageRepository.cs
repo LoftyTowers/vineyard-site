@@ -42,6 +42,20 @@ namespace VineyardApi.Repositories
                 .FirstOrDefaultAsync(p => p.Id == pageId, cancellationToken);
         }
 
+        public async Task<List<PageVersion>> GetPublishedVersionsAsync(Guid pageId, CancellationToken cancellationToken = default)
+        {
+            return await _context.PageVersions
+                .Where(v => v.PageId == pageId && (v.Status == PageVersionStatus.Published || v.Status == PageVersionStatus.Archived))
+                .OrderByDescending(v => v.VersionNo)
+                .ToListAsync(cancellationToken);
+        }
+
+        public Task<PageVersion?> GetVersionByIdAsync(Guid versionId, CancellationToken cancellationToken = default)
+        {
+            return _context.PageVersions
+                .FirstOrDefaultAsync(v => v.Id == versionId, cancellationToken);
+        }
+
         public void AddPageOverride(PageOverride model)
         {
             _context.PageOverrides.Add(model);

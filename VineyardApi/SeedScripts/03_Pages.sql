@@ -4,7 +4,7 @@ WITH seed_pages AS (
   VALUES
     (
       '75f1dc70-6120-42c0-9c5e-8138fb755bbe'::uuid,
-      '',
+      'home',
       '{
         "blocks": [
           { "type": "h1", "content": "Welcome to Hollywood Farm Vineyard" },

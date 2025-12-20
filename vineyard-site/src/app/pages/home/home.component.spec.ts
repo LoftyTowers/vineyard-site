@@ -40,7 +40,9 @@ describe('HomeComponent', () => {
       'updateHeroImage',
       'autosaveDraft',
       'publishDraft',
-      'discardDraft'
+      'discardDraft',
+      'getVersions',
+      'getVersionContent'
     ]);
     autosaveSpy = jasmine.createSpyObj<PageAutosaveService>('PageAutosaveService', [
       'reset',
@@ -55,6 +57,8 @@ describe('HomeComponent', () => {
 
     pageServiceSpy.getPage.and.returnValue(of({ blocks: [] }));
     pageServiceSpy.getDraft.and.returnValue(of({ blocks: [] }));
+    pageServiceSpy.getVersions.and.returnValue(of([]));
+    pageServiceSpy.getVersionContent.and.returnValue(of({ contentJson: { blocks: [] }, versionNo: 1 }));
     autosaveSpy.saveNow.and.returnValue(of(void 0));
 
     await TestBed.configureTestingModule({

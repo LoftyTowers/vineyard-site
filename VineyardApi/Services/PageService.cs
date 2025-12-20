@@ -306,6 +306,12 @@ namespace VineyardApi.Services
 
                 var now = DateTime.UtcNow;
 
+                if (page.CurrentVersion != null && page.CurrentVersion.Status == PageVersionStatus.Published)
+                {
+                    page.CurrentVersion.Status = PageVersionStatus.Archived;
+                    page.CurrentVersion.UpdatedUtc = now;
+                }
+
                 draft.ContentJson = SanitizeRichTextBlocks(draft.ContentJson);
                 draft.Status = PageVersionStatus.Published;
                 draft.PublishedUtc = now;
@@ -686,6 +692,146 @@ namespace VineyardApi.Services
             }
 
             return Guid.TryParse(imageIdNode.ToString(), out imageId);
+        }
+
+        public async Task<Result<List<PageVersionSummary>>> GetPublishedVersionsAsync(string route, CancellationToken cancellationToken = default)
+        {
+            const string operation = "ListPublishedVersions";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result<List<PageVersionSummary>>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                var versions = await _repository.GetPublishedVersionsAsync(page.Id, cancellationToken);
+                var summaries = versions
+                    .Select(v => new PageVersionSummary(v.Id, v.VersionNo, v.PublishedUtc, v.ChangeNote))
+                    .ToList();
+
+                return Result<List<PageVersionSummary>>.Ok(summaries);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "List published versions cancelled (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<List<PageVersionSummary>>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "List published versions failed (Route: {Route}, Operation: {Operation})", route, operation);
+                return Result<List<PageVersionSummary>>.Failure(ErrorCode.Unexpected, "PublishedVersionsReadFailed");
+            }
+        }
+
+        public async Task<Result<PageVersionContentResponse>> GetPublishedVersionContentAsync(string route, Guid versionId, CancellationToken cancellationToken = default)
+        {
+            const string operation = "GetPublishedVersionContent";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"VersionId", versionId},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result<PageVersionContentResponse>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                var version = await _repository.GetVersionByIdAsync(versionId, cancellationToken);
+                if (version == null || version.PageId != page.Id)
+                {
+                    return Result<PageVersionContentResponse>.Failure(ErrorCode.NotFound, "Version not found.");
+                }
+
+                if (version.Status != PageVersionStatus.Published && version.Status != PageVersionStatus.Archived)
+                {
+                    return Result<PageVersionContentResponse>.Failure(ErrorCode.Validation, "Version is not published.");
+                }
+
+                var sanitized = SanitizeRichTextBlocks(version.ContentJson);
+                var response = new PageVersionContentResponse(sanitized, version.VersionNo);
+                return Result<PageVersionContentResponse>.Ok(response);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Get published version content cancelled (Route: {Route}, VersionId: {VersionId}, Operation: {Operation})", route, versionId, operation);
+                return Result<PageVersionContentResponse>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Get published version content failed (Route: {Route}, VersionId: {VersionId}, Operation: {Operation})", route, versionId, operation);
+                return Result<PageVersionContentResponse>.Failure(ErrorCode.Unexpected, "PublishedVersionReadFailed");
+            }
+        }
+
+        public async Task<Result<PageContent>> RollbackToVersionAsync(string route, Guid versionId, CancellationToken cancellationToken = default)
+        {
+            const string operation = "RollbackPublishedVersion";
+            try
+            {
+                using var scope = _logger.BeginScope(new Dictionary<string, object>
+                {
+                    {"PageRoute", route},
+                    {"VersionId", versionId},
+                    {"DbOperation", operation}
+                });
+
+                var page = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (page == null)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, $"Page '{route}' not found.");
+                }
+
+                var version = await _repository.GetVersionByIdAsync(versionId, cancellationToken);
+                if (version == null || version.PageId != page.Id)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.NotFound, "Version not found.");
+                }
+
+                if (version.Status != PageVersionStatus.Published && version.Status != PageVersionStatus.Archived)
+                {
+                    return Result<PageContent>.Failure(ErrorCode.BadRequest, "Version must be published to rollback.");
+                }
+
+                var now = DateTime.UtcNow;
+                if (page.CurrentVersion != null && page.CurrentVersion.Id != version.Id && page.CurrentVersion.Status == PageVersionStatus.Published)
+                {
+                    page.CurrentVersion.Status = PageVersionStatus.Archived;
+                    page.CurrentVersion.UpdatedUtc = now;
+                }
+
+                version.Status = PageVersionStatus.Published;
+                version.UpdatedUtc = now;
+                version.PublishedUtc ??= now;
+
+                page.CurrentVersionId = version.Id;
+                await _repository.SaveChangesAsync(cancellationToken);
+
+                var sanitized = SanitizeRichTextBlocks(version.ContentJson);
+                var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
+                return Result<PageContent>.Ok(hydrated);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Rollback cancelled (Route: {Route}, VersionId: {VersionId}, Operation: {Operation})", route, versionId, operation);
+                return Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Rollback failed (Route: {Route}, VersionId: {VersionId}, Operation: {Operation})", route, versionId, operation);
+                return Result<PageContent>.Failure(ErrorCode.Unexpected, "RollbackFailed");
+            }
         }
     }
 }

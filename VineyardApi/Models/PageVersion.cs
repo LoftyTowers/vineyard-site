@@ -8,7 +8,8 @@ namespace VineyardApi.Models
     public enum PageVersionStatus
     {
         Published = 0,
-        Draft = 1
+        Draft = 1,
+        Archived = 2
     }
 
     public class PageVersion

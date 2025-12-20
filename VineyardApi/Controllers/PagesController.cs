@@ -25,7 +25,7 @@ namespace VineyardApi.Controllers
 
         [HttpGet("")]
         public Task<IActionResult> GetHomePageAsync(CancellationToken cancellationToken) =>
-            GetPageAsync(string.Empty, cancellationToken);
+            GetPageAsync("home", cancellationToken);
 
         [HttpGet("{route}")]
         public async Task<IActionResult> GetPageAsync(string route, CancellationToken cancellationToken)
@@ -246,14 +246,101 @@ namespace VineyardApi.Controllers
             }
         }
 
+        [HttpGet("{route}/versions")]
+        public async Task<IActionResult> GetPublishedVersionsAsync(string route, CancellationToken cancellationToken)
+        {
+            route = NormalizeRoute(route);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["Route"] = route
+            });
+
+            try
+            {
+                var result = await _service.GetPublishedVersionsAsync(route, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while listing published versions for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<List<PageVersionSummary>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to list published versions for route {Route}", route);
+                return ResultMapper.ToActionResult(this, Result<List<PageVersionSummary>>.Failure(ErrorCode.Unexpected, "Failed to load versions"));
+            }
+        }
+
+        [HttpGet("{route}/versions/{versionId:guid}")]
+        public async Task<IActionResult> GetPublishedVersionContentAsync(string route, Guid versionId, CancellationToken cancellationToken)
+        {
+            route = NormalizeRoute(route);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["Route"] = route,
+                ["VersionId"] = versionId
+            });
+
+            try
+            {
+                var result = await _service.GetPublishedVersionContentAsync(route, versionId, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while fetching version {VersionId} for route {Route}", versionId, route);
+                return ResultMapper.ToActionResult(this, Result<PageVersionContentResponse>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch published version {VersionId} for route {Route}", versionId, route);
+                return ResultMapper.ToActionResult(this, Result<PageVersionContentResponse>.Failure(ErrorCode.Unexpected, "Failed to load version"));
+            }
+        }
+
+        [Authorize(Roles = "Admin,Editor")]
+        [HttpPost("{route}/versions/{versionId:guid}/rollback")]
+        public async Task<IActionResult> RollbackToVersionAsync(string route, Guid versionId, CancellationToken cancellationToken)
+        {
+            route = NormalizeRoute(route);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["Route"] = route,
+                ["VersionId"] = versionId
+            });
+
+            try
+            {
+                var result = await _service.RollbackToVersionAsync(route, versionId, cancellationToken);
+                return ResultMapper.ToActionResult(this, result);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while rolling back version {VersionId} for route {Route}", versionId, route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to rollback version {VersionId} for route {Route}", versionId, route);
+                return ResultMapper.ToActionResult(this, Result<PageContent>.Failure(ErrorCode.Unexpected, "Rollback failed"));
+            }
+        }
+
         private static string NormalizeRoute(string route)
         {
-            if (string.Equals(route, "home", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(route))
             {
-                return string.Empty;
+                return "home";
             }
 
-            return route ?? string.Empty;
+            return route;
         }
     }
 }
