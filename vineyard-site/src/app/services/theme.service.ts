@@ -9,7 +9,7 @@ export class ThemeService {
   async loadTheme(): Promise<void> {
     try {
       const theme = await firstValueFrom(
-        this.http.get<Record<string, string>>('/theme')
+        this.http.get<Record<string, string>>('/api/theme')
       );
       this.applyTheme(theme);
     } catch (err) {

@@ -1,7 +1,10 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 using VineyardApi.Models;
 using VineyardApi.Repositories;
@@ -18,21 +21,22 @@ namespace VineyardApi.Tests.Services
         public void Setup()
         {
             _repo = new Mock<IImageRepository>();
-            _service = new ImageService(_repo.Object);
+            _service = new ImageService(_repo.Object, NullLogger<ImageService>.Instance);
         }
 
         [Test]
-        public async Task SaveImageAsync_SetsIdAndCreatedAt_AndPersists()
+        public async Task SaveImageAsync_SetsIdAndCreatedUtc_AndPersists()
         {
-            var image = new Image { Url = "test" };
-            _repo.Setup(r => r.SaveChangesAsync()).ReturnsAsync(1);
+            var image = new Image { StorageKey = "images/test.jpg", PublicUrl = "https://cdn.example.com/test.jpg" };
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var saved = await _service.SaveImageAsync(image);
 
-            saved.Id.Should().NotBeEmpty();
-            saved.CreatedAt.Should().NotBe(default);
+            saved.IsSuccess.Should().BeTrue();
+            saved.Value!.Id.Should().NotBeEmpty();
+            saved.Value.CreatedUtc.Should().NotBe(default);
             _repo.Verify(r => r.AddImage(image), Times.Once);
-            _repo.Verify(r => r.SaveChangesAsync(), Times.Once);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
