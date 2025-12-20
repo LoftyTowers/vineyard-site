@@ -1,5 +1,8 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using VineyardApi.Models;
+using VineyardApi.Models.Requests;
 using VineyardApi.Services;
 
 namespace VineyardApi.Controllers
@@ -9,20 +12,52 @@ namespace VineyardApi.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _service;
+        private readonly ILogger<AuthController> _logger;
+        private readonly IValidator<LoginRequest> _validator;
 
-        public AuthController(IAuthService service)
+        public AuthController(IAuthService service, ILogger<AuthController> logger, IValidator<LoginRequest> validator)
         {
             _service = service;
+            _logger = logger;
+            _validator = validator;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
-            var token = await _service.LoginAsync(request.Username, request.Password);
-            if (token == null) return Unauthorized();
-            return Ok(new { token });
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId,
+                ["Username"] = request.Username
+            });
+
+            try
+            {
+                var validation = await _validator.ValidateAsync(request, cancellationToken);
+                if (!validation.IsValid)
+                {
+                    return ResultMapper.FromValidationResult(this, validation);
+                }
+
+                var result = await _service.LoginAsync(request.Username, request.Password, cancellationToken);
+                if (!result.Success)
+                {
+                    return ResultMapper.ToActionResult(this, result);
+                }
+
+                return Ok(new { token = result.Value });
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Login cancelled for user {Username}", request.Username);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to login user {Username}", request.Username);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Login failed"));
+            }
         }
     }
-
-    public record LoginRequest(string Username, string Password);
 }

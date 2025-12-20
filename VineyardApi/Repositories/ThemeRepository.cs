@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -12,19 +13,19 @@ namespace VineyardApi.Repositories
             _context = context;
         }
 
-        public Task<List<ThemeDefault>> GetDefaultsAsync()
+        public Task<List<ThemeDefault>> GetDefaultsAsync(CancellationToken cancellationToken = default)
         {
-            return _context.ThemeDefaults.ToListAsync();
+            return _context.ThemeDefaults.ToListAsync(cancellationToken);
         }
 
-        public Task<List<ThemeOverride>> GetOverridesAsync()
+        public Task<List<ThemeOverride>> GetOverridesAsync(CancellationToken cancellationToken = default)
         {
-            return _context.ThemeOverrides.ToListAsync();
+            return _context.ThemeOverrides.ToListAsync(cancellationToken);
         }
 
-        public Task<ThemeOverride?> GetOverrideAsync(int defaultId)
+        public Task<ThemeOverride?> GetOverrideAsync(int defaultId, CancellationToken cancellationToken = default)
         {
-            return _context.ThemeOverrides.FirstOrDefaultAsync(t => t.ThemeDefaultId == defaultId);
+            return _context.ThemeOverrides.FirstOrDefaultAsync(t => t.ThemeDefaultId == defaultId, cancellationToken);
         }
 
         public void AddThemeOverride(ThemeOverride model)
@@ -32,6 +33,9 @@ namespace VineyardApi.Repositories
             _context.ThemeOverrides.Add(model);
         }
 
-        public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

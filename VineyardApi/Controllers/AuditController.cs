@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VineyardApi.Models;
 using VineyardApi.Services;
 
 namespace VineyardApi.Controllers
@@ -10,16 +12,38 @@ namespace VineyardApi.Controllers
     public class AuditController : ControllerBase
     {
         private readonly IAuditService _service;
-        public AuditController(IAuditService service)
+        private readonly ILogger<AuditController> _logger;
+
+        public AuditController(IAuditService service, ILogger<AuditController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetRecent()
+        public async Task<IActionResult> GetRecentAsync(CancellationToken cancellationToken)
         {
-            var logs = await _service.GetRecentAsync();
-            return Ok(logs);
+            var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
+            using var scope = _logger.BeginScope(new Dictionary<string, object>
+            {
+                ["CorrelationId"] = correlationId
+            });
+
+            try
+            {
+                var logs = await _service.GetRecentAsync(100, cancellationToken);
+                return ResultMapper.ToActionResult(this, logs);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while fetching audit logs");
+                return ResultMapper.ToActionResult(this, Result<List<Models.AuditLog>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to fetch audit logs");
+                return ResultMapper.ToActionResult(this, Result<List<Models.AuditLog>>.Failure(ErrorCode.Unknown, "Failed to load logs"));
+            }
         }
     }
 }

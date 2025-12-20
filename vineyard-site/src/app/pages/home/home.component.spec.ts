@@ -1,37 +1,115 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { BehaviorSubject, of } from 'rxjs';
 
 import { HomeComponent } from './home.component';
+import { AuthService } from '../../services/auth.service';
+import { PageService } from '../../services/page.service';
+import { PageAutosaveService } from '../../services/page-autosave.service';
+import { ImagesService } from '../../services/images.service';
+
+class AuthServiceStub {
+  authState$ = new BehaviorSubject<string | null>(null);
+  token: string | null = null;
+
+  setAdmin(isAdmin: boolean) {
+    this.token = isAdmin ? 'token' : null;
+    this.authState$.next(this.token);
+  }
+
+  hasRole(role: string): boolean {
+    if (!this.token) {
+      return false;
+    }
+    return role === 'Admin' || role === 'Editor';
+  }
+}
 
 describe('HomeComponent', () => {
   let component: HomeComponent;
   let fixture: ComponentFixture<HomeComponent>;
-  let httpMock: HttpTestingController;
+  let authStub: AuthServiceStub;
+  let pageServiceSpy: jasmine.SpyObj<PageService>;
+  let autosaveSpy: jasmine.SpyObj<PageAutosaveService>;
+  let imagesServiceSpy: jasmine.SpyObj<ImagesService>;
 
   beforeEach(async () => {
+    authStub = new AuthServiceStub();
+    pageServiceSpy = jasmine.createSpyObj<PageService>('PageService', [
+      'getPage',
+      'getDraft',
+      'updateHeroImage',
+      'autosaveDraft',
+      'publishDraft',
+      'discardDraft',
+      'getVersions',
+      'getVersionContent'
+    ]);
+    autosaveSpy = jasmine.createSpyObj<PageAutosaveService>('PageAutosaveService', [
+      'reset',
+      'queueChange',
+      'saveNow',
+      'destroy'
+    ], {
+      state$: new BehaviorSubject({ status: 'idle' })
+    });
+    imagesServiceSpy = jasmine.createSpyObj<ImagesService>('ImagesService', ['getImages']);
+    imagesServiceSpy.getImages.and.returnValue(of([]));
+
+    pageServiceSpy.getPage.and.returnValue(of({ blocks: [] }));
+    pageServiceSpy.getDraft.and.returnValue(of({ blocks: [] }));
+    pageServiceSpy.getVersions.and.returnValue(of([]));
+    pageServiceSpy.getVersionContent.and.returnValue(of({ contentJson: { blocks: [] }, versionNo: 1 }));
+    autosaveSpy.saveNow.and.returnValue(of(void 0));
+
     await TestBed.configureTestingModule({
-      imports: [HomeComponent, HttpClientTestingModule]
+      imports: [HomeComponent],
+      providers: [
+        { provide: AuthService, useValue: authStub },
+        { provide: PageService, useValue: pageServiceSpy },
+        { provide: PageAutosaveService, useValue: autosaveSpy },
+        { provide: ImagesService, useValue: imagesServiceSpy }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HomeComponent);
     component = fixture.componentInstance;
-    httpMock = TestBed.inject(HttpTestingController);
-  });
-
-  afterEach(() => {
-    httpMock.verify();
   });
 
   it('should create', () => {
     fixture.detectChanges();
-    httpMock.expectOne('/api/pages/').flush({ blocks: [] });
     expect(component).toBeTruthy();
   });
 
   it('renders merged block content', () => {
-    fixture.detectChanges();
-    httpMock.expectOne('/api/pages/').flush({ blocks: [{ type: 'p', content: 'override text' }] });
+    pageServiceSpy.getPage.and.returnValue(of({ blocks: [{ type: 'p', content: 'override text' }] }));
+
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('override text');
+  });
+
+  it('reloads published content when logging out', () => {
+    pageServiceSpy.getDraft.and.returnValue(of({ blocks: [{ type: 'p', content: 'draft text' }] }));
+    pageServiceSpy.getPage.and.returnValue(of({ blocks: [{ type: 'p', content: 'live text' }] }));
+
+    authStub.setAdmin(true);
+    fixture.detectChanges();
+    expect(component['homeContentBlocks'].some(b => (b as any).content === 'draft text')).toBeTrue();
+
+    authStub.setAdmin(false);
+    expect(pageServiceSpy.getPage).toHaveBeenCalled();
+    expect(component['homeContentBlocks'].some(b => (b as any).content === 'live text')).toBeTrue();
+  });
+
+  it('re-enables draft actions after discard and new edits', () => {
+    authStub.setAdmin(true);
+    component['isAdmin'] = true;
+    component['isAutosaveReady'] = true;
+    component['hasDraft'] = false;
+    component['combinedContent'] = 'initial';
+
+    component.onContentChange('updated');
+
+    expect(component['hasDraft']).toBeTrue();
+    expect(autosaveSpy.queueChange).toHaveBeenCalledWith('home', { blocks: jasmine.any(Array) });
   });
 });
