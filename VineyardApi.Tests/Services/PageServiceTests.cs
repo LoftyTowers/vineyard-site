@@ -20,6 +20,7 @@ namespace VineyardApi.Tests.Services
         private Mock<IPageRepository> _repo = null!;
         private Mock<IImageRepository> _imageRepo = null!;
         private Mock<IImageUsageRepository> _imageUsageRepo = null!;
+        private Mock<IPeopleRepository> _peopleRepo = null!;
         private PageService _service = null!;
 
         [SetUp]
@@ -28,7 +29,8 @@ namespace VineyardApi.Tests.Services
             _repo = new Mock<IPageRepository>();
             _imageRepo = new Mock<IImageRepository>();
             _imageUsageRepo = new Mock<IImageUsageRepository>();
-            _service = new PageService(_repo.Object, _imageRepo.Object, _imageUsageRepo.Object, NullLogger<PageService>.Instance);
+            _peopleRepo = new Mock<IPeopleRepository>();
+            _service = new PageService(_repo.Object, _imageRepo.Object, _imageUsageRepo.Object, _peopleRepo.Object, NullLogger<PageService>.Instance);
         }
 
         [Test]
@@ -282,6 +284,15 @@ namespace VineyardApi.Tests.Services
             };
         }
 
+        private static PageBlock CreatePeopleBlock(string json)
+        {
+            return new PageBlock
+            {
+                Type = "people",
+                Content = JsonDocument.Parse(json).RootElement
+            };
+        }
+
         [Test]
         public async Task GetPageContentAsync_HydratesImageBlocks_WhenImageIdPresent()
         {
@@ -490,6 +501,48 @@ namespace VineyardApi.Tests.Services
 
             result.IsFailure.Should().BeTrue();
             result.ErrorCode.Should().Be(ErrorCode.Conflict);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Test]
+        public async Task AutosaveDraftAsync_ReturnsValidation_WhenAboutPeopleInvalid()
+        {
+            var pageId = Guid.NewGuid();
+            var page = new Page
+            {
+                Id = pageId,
+                Route = "about",
+                Versions = new List<PageVersion>
+                {
+                    new PageVersion
+                    {
+                        Id = Guid.NewGuid(),
+                        PageId = pageId,
+                        VersionNo = 1,
+                        Status = PageVersionStatus.Published,
+                        ContentJson = new PageContent
+                        {
+                            Blocks = { CreateTextBlock("published") }
+                        }
+                    }
+                }
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("about", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+
+            var content = new PageContent
+            {
+                Blocks =
+                {
+                    CreatePeopleBlock("[{\"name\":\"\",\"text\":\"Some blurb\",\"sortOrder\":1}]")
+                }
+            };
+
+            var result = await _service.AutosaveDraftAsync("about", content);
+
+            result.IsFailure.Should().BeTrue();
+            result.ErrorCode.Should().Be(ErrorCode.Validation);
+            result.ValidationErrors.Should().NotBeEmpty();
             _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
     }
