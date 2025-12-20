@@ -2,11 +2,17 @@
   <ng-container *ngFor="let block of galleryContentBlocks">
 
     <h1 *ngIf="block.type === 'h1'" class="text-4xl md:text-5xl font-heading font-normal text-brown-900">
-      <app-editable-text-block [(content)]="block.content" [editable]="isAdmin"></app-editable-text-block>
+      <ng-container *ngIf="isAdmin; else galleryH1View">
+        <textarea rows="1" class="w-full bg-transparent outline-none resize-none" [(ngModel)]="block.content"></textarea>
+      </ng-container>
+      <ng-template #galleryH1View>{{ block.content }}</ng-template>
     </h1>
 
     <h2 *ngIf="block.type === 'h2'" class="text-2xl md:text-3xl font-heading font-normal text-brown-800">
-      <app-editable-text-block [(content)]="block.content" [editable]="isAdmin"></app-editable-text-block>
+      <ng-container *ngIf="isAdmin; else galleryH2View">
+        <textarea rows="1" class="w-full bg-transparent outline-none resize-none" [(ngModel)]="block.content"></textarea>
+      </ng-container>
+      <ng-template #galleryH2View>{{ block.content }}</ng-template>
     </h2>
 
     <p *ngIf="block.type === 'p'" class="font-body text-contrast leading-relaxed">
