@@ -10,6 +10,7 @@ namespace VineyardApi.Repositories
         Task<PageOverride?> GetPageOverrideByPageIdAsync(Guid pageId, CancellationToken cancellationToken = default);
         Task<List<PageVersion>> GetPublishedVersionsAsync(Guid pageId, CancellationToken cancellationToken = default);
         Task<PageVersion?> GetVersionByIdAsync(Guid versionId, CancellationToken cancellationToken = default);
+        Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
         void AddPageOverride(PageOverride model);
         void AddPageVersion(PageVersion version);
         void RemovePageVersion(PageVersion version);
