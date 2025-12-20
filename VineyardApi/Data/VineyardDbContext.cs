@@ -18,6 +18,7 @@ namespace VineyardApi.Data
         public DbSet<ThemeOverride> ThemeOverrides => Set<ThemeOverride>();
         public DbSet<Image> Images => Set<Image>();
         public DbSet<ImageUsage> ImageUsages => Set<ImageUsage>();
+        public DbSet<Person> People => Set<Person>();
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserRole> UserRoles => Set<UserRole>();
@@ -106,6 +107,22 @@ namespace VineyardApi.Data
                 e.HasIndex(iu => new { iu.ImageId, iu.EntityType, iu.EntityKey, iu.UsageType, iu.Source, iu.JsonPath })
                     .IsUnique();
                 e.Property(iu => iu.UpdatedUtc)
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+            });
+
+            modelBuilder.Entity<Person>(e =>
+            {
+                e.HasOne(p => p.Page)
+                    .WithMany()
+                    .HasForeignKey(p => p.PageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(p => new { p.PageId, p.SortOrder });
+                e.HasIndex(p => new { p.PageId, p.IsActive });
+                e.Property(p => p.IsActive)
+                    .HasDefaultValue(true);
+                e.Property(p => p.CreatedUtc)
+                    .HasDefaultValueSql("now() at time zone 'utc'");
+                e.Property(p => p.UpdatedUtc)
                     .HasDefaultValueSql("now() at time zone 'utc'");
             });
 
