@@ -1,3 +1,63 @@
+<ng-container *ngIf="isAdmin">
+  <div class="w-full mt-5 border-b border-gray-200 pb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div class="text-xs text-gray-600">
+      <ng-container *ngIf="autosaveState$ | async as autosave">
+        <span *ngIf="autosave.status === 'dirty'">Unsaved changes</span>
+        <span *ngIf="autosave.status === 'saving'">Saving…</span>
+        <span *ngIf="autosave.status === 'saved'">
+          Draft saved<span *ngIf="autosave.lastSavedUtc"> at {{ autosave.lastSavedUtc | date: 'HH:mm' }}</span>
+        </span>
+        <span *ngIf="autosave.status === 'error'">Autosave failed</span>
+      </ng-container>
+      <span *ngIf="hasDraft" class="ml-2 text-gray-500">Draft loaded</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <label class="text-sm text-gray-700 flex items-center gap-2">
+        <span class="text-xs uppercase tracking-wide text-gray-500">Version</span>
+        <select
+          class="border border-gray-300 rounded px-2 py-1 text-sm"
+          [ngModel]="selectedVersionId || ''"
+          (ngModelChange)="onVersionChange($event)">
+          <option *ngIf="hasDraft" value="draft">Draft</option>
+          <option value="">
+            Current (Live<ng-container *ngIf="liveVersionNo"> v{{ liveVersionNo }}</ng-container>)
+          </option>
+          <option *ngFor="let v of versions" [value]="v.id">
+            v{{ v.versionNo }}<ng-container *ngIf="v.versionNo === liveVersionNo"> (live)</ng-container> • {{ v.publishedUtc | date: 'dd/MM/yyyy HH:mm' }}<ng-container *ngIf="v.changeNote"> • {{ v.changeNote }}</ng-container>
+          </option>
+        </select>
+      </label>
+      <ng-container *ngIf="isPreviewing && selectedVersionId; else liveActions">
+        <button
+          type="button"
+          class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded disabled:opacity-50"
+          [disabled]="isReverting"
+          (click)="revertToSelectedVersion()">
+          {{ isReverting ? 'Reverting…' : ('Revert to v' + (previewVersionNo ?? '?')) }}
+        </button>
+      </ng-container>
+      <ng-template #liveActions>
+        <button
+          type="button"
+          class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
+          (click)="togglePreview()">
+          {{ isPreviewing ? 'Edit' : 'Preview' }}
+        </button>
+      </ng-template>
+    </div>
+  </div>
+</ng-container>
+
+<div *ngIf="isPreviewing && selectedVersionId" class="mt-4 p-3 border border-amber-300 bg-amber-50 text-amber-800 text-sm rounded">
+  Previewing v{{ previewVersionNo }} — changes will not be saved
+</div>
+
+<app-image-picker-dialog
+  [isOpen]="isImagePickerOpen"
+  (closed)="closeImagePicker()"
+  (confirmed)="applyHeroImage($event)">
+</app-image-picker-dialog>
+
 <div class="relative bg-cover bg-center bg-no-repeat text-white py-24 px-4" [style.background-image]="heroImageUrl ? 'url(' + heroImageUrl + ')' : null">
   <button
     *ngIf="isEditMode"
@@ -45,47 +105,3 @@
     </ng-template>
   </div>
 </div>
-
-<ng-container *ngIf="isAdmin">
-  <div class="w-full mt-10 border-t border-gray-200 pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-    <div class="text-xs text-gray-600">
-      <ng-container *ngIf="autosaveState$ | async as autosave">
-        <span *ngIf="autosave.status === 'dirty'">Unsaved changes</span>
-        <span *ngIf="autosave.status === 'saving'">Saving…</span>
-        <span *ngIf="autosave.status === 'saved'">
-          Draft saved<span *ngIf="autosave.lastSavedUtc"> at {{ autosave.lastSavedUtc | date: 'HH:mm' }}</span>
-        </span>
-        <span *ngIf="autosave.status === 'error'">Autosave failed</span>
-      </ng-container>
-      <span *ngIf="hasDraft" class="ml-2 text-gray-500">Draft loaded</span>
-    </div>
-    <div class="flex flex-wrap items-center gap-3">
-      <button
-        type="button"
-        class="bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition"
-        (click)="togglePreview()">
-        {{ isPreviewing ? 'Edit' : 'Preview' }}
-      </button>
-      <button
-        type="button"
-        class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded disabled:opacity-50"
-        [disabled]="!hasDraft || isPublishing"
-        (click)="publishDraft()">
-        {{ isPublishing ? 'Publishing…' : 'Publish draft' }}
-      </button>
-      <button
-        type="button"
-        class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded disabled:opacity-50"
-        [disabled]="!hasDraft || isPublishing"
-        (click)="discardDraft()">
-        Discard draft
-      </button>
-    </div>
-  </div>
-</ng-container>
-
-<app-image-picker-dialog
-  [isOpen]="isImagePickerOpen"
-  (closed)="closeImagePicker()"
-  (confirmed)="applyHeroImage($event)">
-</app-image-picker-dialog>

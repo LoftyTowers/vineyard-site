@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent, ImagePickerDialogComponent } from '../../shared/components';
 import { AuthService } from '../../services/auth.service';
-import { PageService, PageData } from '../../services/page.service';
+import { PageService, PageData, PageVersionContent, PageVersionSummary } from '../../services/page.service';
 import { Observable, Subscription } from 'rxjs';
 import { PageAutosaveService, AutosaveState } from '../../services/page-autosave.service';
 import { ImageListItem } from '../../services/images.service';
@@ -41,9 +41,14 @@ export class HomeComponent implements OnInit, OnDestroy {
   hasDraft = false;
   isPublishing = false;
   isSavingDraft = false;
+  isReverting = false;
   private readonly homeRoute = 'home';
   autosaveState$!: Observable<AutosaveState>;
   private isAutosaveReady = false;
+  versions: PageVersionSummary[] = [];
+  selectedVersionId: string | null = null;
+  previewVersionNo?: number;
+  liveVersionNo?: number;
   constructor(
     private pageService: PageService,
     private auth: AuthService,
@@ -60,6 +65,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.previousIsAdmin = this.isAdmin;
+    if (this.isAdmin) {
+      this.loadVersions();
+    }
     this.loadContent();
   }
 
@@ -215,6 +223,9 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const payload = this.buildPayload();
     this.hasDraft = true;
+    if (!this.isPreviewing) {
+      this.selectedVersionId = 'draft';
+    }
     this.autosave.queueChange(this.homeRoute, payload);
   }
 
@@ -234,6 +245,9 @@ export class HomeComponent implements OnInit, OnDestroy {
               this.isAutosaveReady = true;
               this.syncHomeContent();
               this.autosave.reset();
+              this.loadVersions();
+              this.selectedVersionId = null;
+              this.previewVersionNo = this.liveVersionNo;
             }
             this.isPublishing = false;
           },
@@ -272,6 +286,7 @@ export class HomeComponent implements OnInit, OnDestroy {
           if (Array.isArray(data.blocks)) {
             this.homeContentBlocks = data.blocks as HomeBlock[];
             this.hasDraft = true;
+            this.selectedVersionId = 'draft';
           }
           this.syncHomeContent();
           this.isAutosaveReady = true;
@@ -285,12 +300,13 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadPublished(): void {
+  private loadPublished(preserveDraft: boolean = false): void {
+    const hadDraft = this.hasDraft;
     this.pageService.getPage('').subscribe((data: PageData) => {
       if (Array.isArray(data.blocks)) {
         this.homeContentBlocks = data.blocks as HomeBlock[];
       }
-      this.hasDraft = false;
+      this.hasDraft = preserveDraft ? hadDraft : false;
       this.isPublishing = false;
       this.syncHomeContent();
       this.isAutosaveReady = true;
@@ -327,6 +343,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     if (newIsAdmin) {
       this.isAutosaveReady = false;
+      this.loadVersions();
       this.loadContent();
       return;
     }
@@ -337,6 +354,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.isAutosaveReady = false;
     this.loadPublished();
     this.isPreviewing = false;
+    this.selectedVersionId = null;
+    this.previewVersionNo = undefined;
+    this.isReverting = false;
   }
 
   private buildPayload(): PageData {
@@ -352,5 +372,89 @@ export class HomeComponent implements OnInit, OnDestroy {
       // ensure edit mode has latest draft/published content
       this.loadContent();
     }
+  }
+
+  onVersionChange(versionId: string): void {
+    if (!this.isAdmin) {
+      return;
+    }
+
+    if (!versionId) {
+      this.selectedVersionId = null;
+      this.previewVersionNo = undefined;
+      this.isPreviewing = false;
+      this.autosave.reset();
+      this.isAutosaveReady = false;
+      this.loadPublished(true);
+      return;
+    }
+
+    if (versionId === 'draft') {
+      this.selectedVersionId = 'draft';
+      this.isPreviewing = false;
+      this.isAutosaveReady = false;
+      this.autosave.reset();
+      this.loadContent();
+      return;
+    }
+
+    this.selectedVersionId = versionId;
+    this.autosave.reset();
+    this.isPreviewing = true;
+    this.isAutosaveReady = false;
+    this.isReverting = false;
+
+    this.pageService.getVersionContent(this.homeRoute, versionId).subscribe({
+      next: (data: PageVersionContent) => {
+        if (Array.isArray(data.contentJson.blocks)) {
+          this.homeContentBlocks = data.contentJson.blocks as HomeBlock[];
+        }
+        this.previewVersionNo = data.versionNo;
+        this.syncHomeContent();
+      },
+      error: () => {
+        this.selectedVersionId = null;
+        this.previewVersionNo = undefined;
+        this.isPreviewing = false;
+        this.loadContent();
+      }
+    });
+  }
+
+  revertToSelectedVersion(): void {
+    if (!this.isAdmin || !this.selectedVersionId) {
+      return;
+    }
+
+    const hadDraft = this.hasDraft;
+    this.isReverting = true;
+    this.autosave.reset();
+    this.pageService.rollbackVersion(this.homeRoute, this.selectedVersionId).subscribe({
+      next: data => {
+        if (Array.isArray(data.blocks)) {
+          this.homeContentBlocks = data.blocks as HomeBlock[];
+        }
+        this.selectedVersionId = null;
+        this.previewVersionNo = undefined;
+        this.isPreviewing = false;
+        this.isReverting = false;
+        this.isAutosaveReady = true;
+        this.hasDraft = hadDraft;
+        this.syncHomeContent();
+        this.loadVersions();
+      },
+      error: () => {
+        this.isReverting = false;
+      }
+    });
+  }
+
+  private loadVersions(): void {
+    this.pageService.getVersions(this.homeRoute).subscribe({
+      next: data => {
+        this.versions = data;
+        this.liveVersionNo = data.length > 0 ? data[0].versionNo : undefined;
+      }
+    });
   }
 }

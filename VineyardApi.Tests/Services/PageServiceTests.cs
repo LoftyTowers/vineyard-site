@@ -157,6 +157,77 @@ namespace VineyardApi.Tests.Services
         }
 
         [Test]
+        public async Task GetPublishedVersionsAsync_ReturnsSummaries()
+        {
+            var pageId = Guid.NewGuid();
+            var page = new Page { Id = pageId, Route = "home" };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+            _repo.Setup(r => r.GetPublishedVersionsAsync(pageId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new List<PageVersion>
+                {
+                    new PageVersion { Id = Guid.NewGuid(), PageId = pageId, VersionNo = 2, Status = PageVersionStatus.Published, PublishedUtc = DateTime.UtcNow }
+                });
+
+            var result = await _service.GetPublishedVersionsAsync("home");
+
+            result.IsSuccess.Should().BeTrue();
+            result.Value.Should().HaveCount(1);
+            result.Value!.First().VersionNo.Should().Be(2);
+        }
+
+        [Test]
+        public async Task GetPublishedVersionContentAsync_ReturnsValidation_WhenNotPublished()
+        {
+            var pageId = Guid.NewGuid();
+            var versionId = Guid.NewGuid();
+            var page = new Page { Id = pageId, Route = "home" };
+            var version = new PageVersion
+            {
+                Id = versionId,
+                PageId = pageId,
+                Status = PageVersionStatus.Draft,
+                ContentJson = new PageContent()
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+            _repo.Setup(r => r.GetVersionByIdAsync(versionId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(version);
+
+            var result = await _service.GetPublishedVersionContentAsync("home", versionId);
+
+            result.IsFailure.Should().BeTrue();
+            result.Error.Should().Be(ErrorCode.Validation);
+        }
+
+        [Test]
+        public async Task RollbackToVersionAsync_Succeeds_WhenPublishedVersion()
+        {
+            var pageId = Guid.NewGuid();
+            var versionId = Guid.NewGuid();
+            var page = new Page { Id = pageId, Route = "home" };
+            var version = new PageVersion
+            {
+                Id = versionId,
+                PageId = pageId,
+                Status = PageVersionStatus.Published,
+                ContentJson = new PageContent()
+            };
+            _repo.Setup(r => r.GetPageWithVersionsAsync("home", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(page);
+            _repo.Setup(r => r.GetVersionByIdAsync(versionId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(version);
+            _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1);
+
+            var result = await _service.RollbackToVersionAsync("home", versionId);
+
+            result.IsSuccess.Should().BeTrue();
+            page.CurrentVersionId.Should().Be(versionId);
+            _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
         public async Task SaveOverrideAsync_Updates_WhenExisting()
         {
             var existing = new PageOverride
