@@ -22,10 +22,15 @@ namespace VineyardApi.Services
                 var logs = await _repository.GetRecentAsync(count, cancellationToken);
                 return Result<List<AuditLog>>.Ok(logs);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Audit log retrieval cancelled with count {Count}", count);
+                return Result<List<AuditLog>>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving recent audit logs with count {Count}", count);
-                return Result<List<AuditLog>>.Failure(ErrorCode.Unexpected);
+                return Result<List<AuditLog>>.Failure(ErrorCode.Unexpected, "Failed to load audit logs");
             }
         }
     }

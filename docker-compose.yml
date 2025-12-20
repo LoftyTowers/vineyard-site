@@ -1,32 +1,38 @@
-version: '3.9'
 services:
   db:
     image: postgres:15
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - .env.development
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   api:
     build:
       context: ./VineyardApi
+    env_file:
+      - .env.development
     environment:
       ASPNETCORE_URLS: http://+:5212
-      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
-      Jwt__Key: ${Jwt__Key}
-      SUPERADMIN_EMAIL: ${SUPERADMIN_EMAIL}
-      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD}
+      ASPNETCORE_ENVIRONMENT: Development
       DOTNET_EnableDiagnostics: 1
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "5212:5212"
+    volumes:
+      - ./VineyardApi/SeedScripts:/app/SeedScripts:ro
   frontend:
     build:
       context: ./vineyard-site
+    env_file:
+      - .env.development
     depends_on:
       - api
     ports:

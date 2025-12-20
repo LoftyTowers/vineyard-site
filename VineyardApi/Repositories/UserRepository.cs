@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -20,6 +21,9 @@ namespace VineyardApi.Repositories
                 .FirstOrDefaultAsync(u => u.Username == username && u.IsActive, cancellationToken);
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

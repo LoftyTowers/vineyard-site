@@ -1,15 +1,17 @@
 <ng-container *ngFor="let block of aboutContentBlocks">
 
   <h1 *ngIf="block.type === 'h1'" class="text-4xl md:text-5xl font-heading font-normal text-brown-900 mb-6">
-    <app-editable-text-block
-      [(content)]="block.content"
-      [editable]="isAdmin"></app-editable-text-block>
+    <ng-container *ngIf="isAdmin; else aboutH1View">
+      <textarea rows="1" class="w-full bg-transparent outline-none resize-none" [(ngModel)]="block.content"></textarea>
+    </ng-container>
+    <ng-template #aboutH1View>{{ block.content }}</ng-template>
   </h1>
 
   <h2 *ngIf="block.type === 'h2'" class="text-3xl font-heading font-normal text-brown-800 pt-8 mb-4">
-    <app-editable-text-block
-      [(content)]="block.content"
-      [editable]="isAdmin"></app-editable-text-block>
+    <ng-container *ngIf="isAdmin; else aboutH2View">
+      <textarea rows="1" class="w-full bg-transparent outline-none resize-none" [(ngModel)]="block.content"></textarea>
+    </ng-container>
+    <ng-template #aboutH2View>{{ block.content }}</ng-template>
   </h2>
 
   <div *ngIf="block.type === 'image'" class="my-6 text-center space-y-2">
@@ -44,6 +46,13 @@
       <hr class="mt-10 border-t border-brown-200" />
     </ng-container>
   </ng-container>
+
+  <h3 *ngIf="block.type === 'h3'" class="text-2xl font-heading font-normal text-brown-800 pt-6 mb-3">
+    <ng-container *ngIf="isAdmin; else aboutH3View">
+      <textarea rows="1" class="w-full bg-transparent outline-none resize-none" [(ngModel)]="block.content"></textarea>
+    </ng-container>
+    <ng-template #aboutH3View>{{ block.content }}</ng-template>
+  </h3>
 
   <p *ngIf="block.type === 'p'" class="font-body text-contrast leading-relaxed mt-6">
     <app-editable-text-block

@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using FluentValidation;
@@ -39,16 +40,45 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public async Task SaveImage_ReturnsOk()
         {
-            var input = new Image { Url = "a" };
+            var input = new Image { StorageKey = "images/test.jpg", PublicUrl = "https://cdn.example.com/test.jpg" };
 
             _service
                 .Setup(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Result<Image>.Ok(input));
 
-            var result = await _controller.SaveImage(input, CancellationToken.None);
+            var result = await _controller.SaveImageAsync(input, CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
             _service.Verify(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public async Task GetImages_ReturnsCancelled_WhenTokenCancelled()
+        {
+            _service.Setup(s => s.GetActiveImagesAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new OperationCanceledException());
+
+            var result = await _controller.GetImagesAsync(new CancellationToken(true));
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(499);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Cancelled.ToString());
+        }
+
+        [Test]
+        public async Task SaveImage_ReturnsServerError_OnUnexpectedException()
+        {
+            var input = new Image { StorageKey = "images/test.jpg" };
+            _service.Setup(s => s.SaveImageAsync(input, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("boom"));
+
+            var result = await _controller.SaveImageAsync(input, CancellationToken.None);
+
+            var problem = result.Should().BeOfType<ObjectResult>().Subject.Value as ProblemDetails;
+            problem.Should().NotBeNull();
+            problem!.Status.Should().Be(StatusCodes.Status500InternalServerError);
+            problem.Extensions["errorCode"].Should().Be(ErrorCode.Unexpected.ToString());
         }
     }
 }
