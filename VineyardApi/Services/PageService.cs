@@ -15,13 +15,19 @@ namespace VineyardApi.Services
         private readonly IPageRepository _repository;
         private readonly IImageRepository _imageRepository;
         private readonly IImageUsageRepository _imageUsageRepository;
+        private readonly IPeopleRepository _peopleRepository;
         private readonly ILogger<PageService> _logger;
+        private static readonly JsonSerializerOptions PeoplePayloadSerializerOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
-        public PageService(IPageRepository repository, IImageRepository imageRepository, IImageUsageRepository imageUsageRepository, ILogger<PageService> logger)
+        public PageService(IPageRepository repository, IImageRepository imageRepository, IImageUsageRepository imageUsageRepository, IPeopleRepository peopleRepository, ILogger<PageService> logger)
         {
             _repository = repository;
             _imageRepository = imageRepository;
             _imageUsageRepository = imageUsageRepository;
+            _peopleRepository = peopleRepository;
             _logger = logger;
         }
 
@@ -57,6 +63,12 @@ namespace VineyardApi.Services
                 var content = overrideContent?.OverrideContent ?? page.CurrentVersion.ContentJson;
                 var sanitized = SanitizeRichTextBlocks(content);
                 var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
+                if (IsAboutRoute(route))
+                {
+                    var composed = await ComposePeopleBlocksAsync(hydrated, page.Id, cancellationToken);
+                    return Result<PageContent>.Ok(composed);
+                }
+
                 return Result<PageContent>.Ok(hydrated);
             }
             catch (OperationCanceledException ex)
@@ -98,6 +110,12 @@ namespace VineyardApi.Services
 
                 var sanitized = SanitizeRichTextBlocks(draft.ContentJson);
                 var hydrated = await HydrateImageBlocksAsync(sanitized, cancellationToken);
+                if (IsAboutRoute(route))
+                {
+                    var composed = await ComposePeopleBlocksAsync(hydrated, page.Id, cancellationToken);
+                    return Result<PageContent>.Ok(composed);
+                }
+
                 return Result<PageContent>.Ok(hydrated);
             }
             catch (OperationCanceledException ex)
@@ -184,6 +202,20 @@ namespace VineyardApi.Services
                 var updatedContent = SetHeroImage(page.DefaultContent, imageId);
                 page.DefaultContent = updatedContent;
                 page.UpdatedAt = DateTime.UtcNow;
+
+                var pageWithVersions = await _repository.GetPageWithVersionsAsync(route, cancellationToken);
+                if (pageWithVersions != null)
+                {
+                    var targetVersion = pageWithVersions.DraftVersionId.HasValue
+                        ? pageWithVersions.Versions.FirstOrDefault(v => v.Id == pageWithVersions.DraftVersionId)
+                        : pageWithVersions.Versions.FirstOrDefault(v => v.Id == pageWithVersions.CurrentVersionId);
+                    if (targetVersion != null)
+                    {
+                        targetVersion.ContentJson = updatedContent;
+                        targetVersion.UpdatedUtc = DateTime.UtcNow;
+                    }
+                }
+
                 await _repository.SaveChangesAsync(cancellationToken);
 
                 var sanitized = SanitizeRichTextBlocks(updatedContent);
@@ -221,6 +253,21 @@ namespace VineyardApi.Services
                 }
 
                 var sanitized = SanitizeRichTextBlocks(content);
+                var isAbout = IsAboutRoute(route);
+                var peoplePayloads = new List<PersonPayload>();
+                if (isAbout)
+                {
+                    (sanitized, peoplePayloads) = ExtractAndStripPeopleBlocks(sanitized);
+                    var validationErrors = ValidatePeoplePayloads(peoplePayloads);
+                    if (validationErrors.Count > 0)
+                    {
+                        return Result.Failure(ErrorCode.Validation, "Validation failed", validationErrors);
+                    }
+                }
+
+                await using var transaction = isAbout && peoplePayloads.Count > 0
+                    ? await _repository.BeginTransactionAsync(cancellationToken)
+                    : null;
                 var now = DateTime.UtcNow;
 
                 if (page.DraftVersionId.HasValue)
@@ -236,6 +283,14 @@ namespace VineyardApi.Services
                         draftCandidate.ContentJson = sanitized;
                         draftCandidate.UpdatedUtc = now;
                         await _repository.SaveChangesAsync(cancellationToken);
+                        if (peoplePayloads.Count > 0)
+                        {
+                            await UpsertPeopleAsync(page.Id, peoplePayloads, cancellationToken);
+                        }
+                        if (transaction != null)
+                        {
+                            await transaction.CommitAsync(cancellationToken);
+                        }
                         return Result.Ok();
                     }
 
@@ -262,6 +317,14 @@ namespace VineyardApi.Services
                 page.DraftVersionId = newDraft.Id;
 
                 await _repository.SaveChangesAsync(cancellationToken);
+                if (peoplePayloads.Count > 0)
+                {
+                    await UpsertPeopleAsync(page.Id, peoplePayloads, cancellationToken);
+                }
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
+                }
                 return Result.Ok();
             }
             catch (OperationCanceledException ex)
@@ -304,6 +367,22 @@ namespace VineyardApi.Services
                     return Result<PageContent>.Failure(ErrorCode.Validation, "Draft version is missing or invalid.");
                 }
 
+                var isAbout = IsAboutRoute(route);
+                var peoplePayloads = new List<PersonPayload>();
+                var sanitizedDraft = SanitizeRichTextBlocks(draft.ContentJson);
+                if (isAbout)
+                {
+                    (sanitizedDraft, peoplePayloads) = ExtractAndStripPeopleBlocks(sanitizedDraft);
+                    var validationErrors = ValidatePeoplePayloads(peoplePayloads);
+                    if (validationErrors.Count > 0)
+                    {
+                        return Result<PageContent>.Failure(ErrorCode.Validation, "Validation failed", validationErrors);
+                    }
+                }
+                draft.ContentJson = sanitizedDraft;
+                await using var transaction = isAbout && peoplePayloads.Count > 0
+                    ? await _repository.BeginTransactionAsync(cancellationToken)
+                    : null;
                 var now = DateTime.UtcNow;
 
                 if (page.CurrentVersion != null && page.CurrentVersion.Status == PageVersionStatus.Published)
@@ -312,7 +391,6 @@ namespace VineyardApi.Services
                     page.CurrentVersion.UpdatedUtc = now;
                 }
 
-                draft.ContentJson = SanitizeRichTextBlocks(draft.ContentJson);
                 draft.Status = PageVersionStatus.Published;
                 draft.PublishedUtc = now;
                 draft.UpdatedUtc = now;
@@ -321,8 +399,22 @@ namespace VineyardApi.Services
                 page.DraftVersionId = null;
 
                 await _repository.SaveChangesAsync(cancellationToken);
+                if (peoplePayloads.Count > 0)
+                {
+                    await UpsertPeopleAsync(page.Id, peoplePayloads, cancellationToken);
+                }
+                if (transaction != null)
+                {
+                    await transaction.CommitAsync(cancellationToken);
+                }
 
                 var hydrated = await HydrateImageBlocksAsync(draft.ContentJson, cancellationToken);
+                if (isAbout)
+                {
+                    var composed = await ComposePeopleBlocksAsync(hydrated, page.Id, cancellationToken);
+                    return Result<PageContent>.Ok(composed);
+                }
+
                 return Result<PageContent>.Ok(hydrated);
             }
             catch (OperationCanceledException ex)
@@ -438,10 +530,11 @@ namespace VineyardApi.Services
 
                 if (images.TryGetValue(imageId, out var image))
                 {
-                    obj["url"] = image.PublicUrl;
+                    var resolvedUrl = ResolvePublicUrl(image);
+                    obj["url"] = resolvedUrl;
                     if (!obj.ContainsKey("src"))
                     {
-                        obj["src"] = image.PublicUrl;
+                        obj["src"] = resolvedUrl;
                     }
                     obj["storageKey"] = image.StorageKey;
                     if (image.Width.HasValue)
@@ -665,6 +758,12 @@ namespace VineyardApi.Services
         private static bool IsImageBlock(PageBlock block) =>
             string.Equals(block.Type, "image", StringComparison.OrdinalIgnoreCase);
 
+        private static bool IsPeopleBlock(PageBlock block) =>
+            string.Equals(block.Type, "people", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsAboutRoute(string route) =>
+            string.Equals(route, "about", StringComparison.OrdinalIgnoreCase);
+
         private static bool TryParseObject(JsonElement element, out JsonObject obj)
         {
             obj = null!;
@@ -692,6 +791,194 @@ namespace VineyardApi.Services
             }
 
             return Guid.TryParse(imageIdNode.ToString(), out imageId);
+        }
+
+        private static string ResolvePublicUrl(Image image)
+        {
+            if (!string.IsNullOrWhiteSpace(image.PublicUrl))
+            {
+                if (image.PublicUrl.StartsWith("assets/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "/" + image.PublicUrl;
+                }
+
+                return image.PublicUrl;
+            }
+
+            if (!string.IsNullOrWhiteSpace(image.StorageKey))
+            {
+                return $"/images/{image.StorageKey}";
+            }
+
+            return string.Empty;
+        }
+
+        private static (PageContent Stripped, List<PersonPayload> Payloads) ExtractAndStripPeopleBlocks(PageContent content)
+        {
+            if (!content.Blocks.Any(IsPeopleBlock))
+            {
+                return (content, new List<PersonPayload>());
+            }
+
+            var payloads = new List<PersonPayload>();
+            var blocks = new List<PageBlock>(content.Blocks.Count);
+            var placeholder = JsonSerializer.SerializeToElement(new { source = "table" });
+
+            foreach (var block in content.Blocks)
+            {
+                if (!IsPeopleBlock(block))
+                {
+                    blocks.Add(block);
+                    continue;
+                }
+
+                if (block.Content.ValueKind == JsonValueKind.Array)
+                {
+                    var people = JsonSerializer.Deserialize<List<PersonPayload>>(block.Content.GetRawText(), PeoplePayloadSerializerOptions)
+                                 ?? new List<PersonPayload>();
+                    payloads.AddRange(people);
+                }
+
+                blocks.Add(new PageBlock
+                {
+                    Type = block.Type,
+                    ContentHtml = block.ContentHtml,
+                    Content = placeholder
+                });
+            }
+
+            return (new PageContent { Blocks = blocks }, payloads);
+        }
+
+        private async Task UpsertPeopleAsync(Guid pageId, IReadOnlyList<PersonPayload> payloads, CancellationToken cancellationToken)
+        {
+            if (payloads.Count == 0)
+            {
+                return;
+            }
+
+            var existing = await _peopleRepository.GetByPageIdAsync(pageId, cancellationToken);
+            var now = DateTimeOffset.UtcNow;
+
+            for (var i = 0; i < payloads.Count; i++)
+            {
+                var payload = payloads[i];
+                var person = payload.Id.HasValue
+                    ? existing.FirstOrDefault(p => p.Id == payload.Id.Value)
+                    : null;
+
+                if (person == null)
+                {
+                    person = new Person
+                    {
+                        Id = payload.Id ?? Guid.NewGuid(),
+                        PageId = pageId,
+                        CreatedUtc = now
+                    };
+                    _peopleRepository.Add(person);
+                    existing.Add(person);
+                }
+
+                person.Name = payload.Name?.Trim() ?? string.Empty;
+                person.Blurb = payload.Text?.Trim() ?? string.Empty;
+                person.ImageUrl = payload.ImageUrl;
+                person.ImageStorageKey = payload.StorageKey;
+                person.SortOrder = payload.SortOrder.GetValueOrDefault(i + 1);
+                person.IsActive = payload.IsActive ?? true;
+                person.UpdatedUtc = now;
+            }
+
+            await _peopleRepository.SaveChangesAsync(cancellationToken);
+        }
+
+        private static List<ValidationError> ValidatePeoplePayloads(IReadOnlyList<PersonPayload> payloads)
+        {
+            var errors = new List<ValidationError>();
+            for (var i = 0; i < payloads.Count; i++)
+            {
+                var payload = payloads[i];
+                var name = payload.Name?.Trim();
+                var text = payload.Text?.Trim();
+
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    errors.Add(new ValidationError($"people[{i}].name", "Name is required."));
+                }
+                else if (name.Length > 200)
+                {
+                    errors.Add(new ValidationError($"people[{i}].name", "Name must be 200 characters or fewer."));
+                }
+
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    errors.Add(new ValidationError($"people[{i}].text", "Text is required."));
+                }
+
+                if (!payload.SortOrder.HasValue)
+                {
+                    errors.Add(new ValidationError($"people[{i}].sortOrder", "Sort order is required."));
+                }
+                else if (payload.SortOrder.Value < 1)
+                {
+                    errors.Add(new ValidationError($"people[{i}].sortOrder", "Sort order must be at least 1."));
+                }
+            }
+
+            return errors;
+        }
+
+        private sealed class PersonPayload
+        {
+            public Guid? Id { get; init; }
+            public string? Name { get; init; }
+            public string? Text { get; init; }
+            public string? ImageUrl { get; init; }
+            public string? StorageKey { get; init; }
+            public int? SortOrder { get; init; }
+            public bool? IsActive { get; init; }
+        }
+
+        private async Task<PageContent> ComposePeopleBlocksAsync(PageContent content, Guid pageId, CancellationToken cancellationToken)
+        {
+            if (!content.Blocks.Any(IsPeopleBlock))
+            {
+                return content;
+            }
+
+            var people = await _peopleRepository.GetActiveByPageIdAsync(pageId, cancellationToken);
+            var payload = people.Select(person => new
+            {
+                id = person.Id,
+                name = person.Name,
+                text = person.Blurb,
+                imageUrl = person.ImageUrl,
+                storageKey = person.ImageStorageKey,
+                sortOrder = person.SortOrder,
+                isActive = person.IsActive
+            }).ToList();
+            var peopleElement = JsonSerializer.SerializeToElement(payload);
+            var blocks = new List<PageBlock>(content.Blocks.Count);
+
+            foreach (var block in content.Blocks)
+            {
+                if (!IsPeopleBlock(block))
+                {
+                    blocks.Add(block);
+                    continue;
+                }
+
+                blocks.Add(new PageBlock
+                {
+                    Type = block.Type,
+                    ContentHtml = block.ContentHtml,
+                    Content = peopleElement
+                });
+            }
+
+            return new PageContent
+            {
+                Blocks = blocks
+            };
         }
 
         public async Task<Result<List<PageVersionSummary>>> GetPublishedVersionsAsync(string route, CancellationToken cancellationToken = default)
@@ -760,7 +1047,12 @@ namespace VineyardApi.Services
                 }
 
                 var sanitized = SanitizeRichTextBlocks(version.ContentJson);
-                var response = new PageVersionContentResponse(sanitized, version.VersionNo);
+                var content = sanitized;
+                if (IsAboutRoute(route))
+                {
+                    content = await ComposePeopleBlocksAsync(sanitized, page.Id, cancellationToken);
+                }
+                var response = new PageVersionContentResponse(content, version.VersionNo);
                 return Result<PageVersionContentResponse>.Ok(response);
             }
             catch (OperationCanceledException ex)
