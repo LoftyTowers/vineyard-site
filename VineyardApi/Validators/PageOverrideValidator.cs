@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using FluentValidation;
 using VineyardApi.Domain.Content;
 using VineyardApi.Models;
@@ -19,46 +20,44 @@ public class PageContentValidator : AbstractValidator<PageContent?>
 {
     public PageContentValidator()
     {
-        // Guard the root object itself
         RuleFor(x => x)
             .NotNull();
 
-        // Use x! when accessing members to tell the compiler it's non-null after the check
         RuleFor(x => x!.Blocks)
             .NotNull();
 
         RuleForEach(x => x!.Blocks)
-            .SetValidator(new ContentBlockValidator());
+            .SetValidator(new PageBlockValidator());
     }
 }
 
-public class ContentBlockValidator : AbstractValidator<ContentBlock>
+public class PageBlockValidator : AbstractValidator<PageBlock>
 {
-    public ContentBlockValidator()
+    public PageBlockValidator()
     {
         RuleFor(x => x.Type).NotEmpty();
-
-        When(x => x is RichTextBlock, () =>
+        RuleFor(x => x).Custom((block, context) =>
         {
-            RuleFor(x => ((RichTextBlock)x).Html)
-                .NotEmpty()
-                .MaximumLength(20000);
-        });
+            if (string.Equals(block.Type, "richText", StringComparison.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(block.ContentHtml))
+                {
+                    context.AddFailure("contentHtml", "ContentHtml must be provided for richText blocks.");
+                    return;
+                }
 
-        When(x => x is ImageBlock, () =>
-        {
-            RuleFor(x => ((ImageBlock)x).Url)
-                .NotEmpty()
-                .Must(BeValidUri)
-                .WithMessage("Url must be a valid absolute URI.");
-            RuleFor(x => ((ImageBlock)x).Alt)
-                .NotEmpty()
-                .MaximumLength(255);
-        });
-    }
+                if (block.ContentHtml.Length > 20000)
+                {
+                    context.AddFailure("contentHtml", "ContentHtml exceeds the maximum length.");
+                }
 
-    private static bool BeValidUri(string url)
-    {
-        return Uri.TryCreate(url, UriKind.Absolute, out _);
+                return;
+            }
+
+            if (block.Content.ValueKind == JsonValueKind.Undefined)
+            {
+                context.AddFailure("content", "Content must be provided for each block.");
+            }
+        });
     }
 }

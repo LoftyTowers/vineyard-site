@@ -8,11 +8,14 @@ public class ImageValidator : AbstractValidator<Image>
 {
     public ImageValidator()
     {
-        RuleFor(x => x.Url)
+        RuleFor(x => x.StorageKey)
+            .NotEmpty()
+            .MaximumLength(500);
+        RuleFor(x => x.PublicUrl)
             .NotEmpty()
             .MaximumLength(2048)
             .Must(BeValidUri)
-            .WithMessage("Url must be a valid absolute URI.");
+            .WithMessage("PublicUrl must be a valid absolute URI.");
         RuleFor(x => x.AltText).MaximumLength(255).When(x => x.AltText != null);
         RuleFor(x => x.Caption).MaximumLength(500).When(x => x.Caption != null);
     }

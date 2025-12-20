@@ -61,6 +61,11 @@ namespace VineyardApi.Services
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 return Result<string>.Ok(tokenHandler.WriteToken(token));
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Login cancelled for user {Username}", username);
+                return Result<string>.Failure(ErrorCode.Cancelled, "Request cancelled.");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error logging in user {Username}", username);

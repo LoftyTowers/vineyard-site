@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { EditableTextBlockComponent, EditableImageBlockComponent } from '../../shared/components';
 import { AuthService } from '../../services/auth.service';
 import { PageService, PageData } from '../../services/page.service';
+import { Subscription } from 'rxjs';
 
 type AboutBlock =
   | { type: 'h1' | 'h2' | 'h3' | 'p' | 'notice'; content: string }
@@ -30,45 +31,37 @@ type AboutBlock =
   templateUrl: './about.component.html',
   styleUrl: './about.component.scss'
 })
-export class AboutComponent implements OnInit {
+export class AboutComponent implements OnInit, OnDestroy {
   isAdmin = false;
+  private authSub?: Subscription;
   constructor(private pageService: PageService, private auth: AuthService) {}
 
-  aboutContentBlocks: AboutBlock[] = [
-    { type: 'h1', content: 'Our Story' },
-    {
-      type: 'image',
-      content: {
-        src: 'assets/temp-images/ReadyForHarvest.jpg',
-        alt: 'Ready for Harvest',
-        caption: 'Our first harvest, picked by hand in 2024'
-      }
-    },
-    { type: 'h2', content: 'The People Behind the Vines' },
-    {
-      type: 'people',
-      content: [
-        {
-          imageUrl: 'assets/temp-images/ReadyForHarvest.jpg',
-          name: 'Charles',
-          text: 'After decades running the farm, Charles planted the first vines the year he retired. He’s the reason any of this exists – and he still walks the rows most mornings, making sure everything’s looking right.'
-        },
-        // Add more people here
-      ]
-    },
-    {
-      type: 'p',
-      content: 'Together, we are building something small, meaningful, and completely our own.'
-    }
-  ];
+  aboutContentBlocks: AboutBlock[] = [];
 
   ngOnInit(): void {
+    this.authSub = this.auth.authState$.subscribe(() => {
+      this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
+    });
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.pageService.getPage('about').subscribe((data: PageData) => {
       if (Array.isArray(data.blocks)) {
         this.aboutContentBlocks = data.blocks as AboutBlock[];
+        this.normalizeImageBlocks(this.aboutContentBlocks);
       }
     });
   }
-}
 
+  ngOnDestroy(): void {
+    this.authSub?.unsubscribe();
+  }
+
+  private normalizeImageBlocks(blocks: AboutBlock[]): void {
+    for (const block of blocks) {
+      if (block.type === 'image') {
+        if (!block.content.src && (block.content as any).url) {
+          block.content.src = (block.content as any).url;
+        }
+      }
+    }
+  }
+}

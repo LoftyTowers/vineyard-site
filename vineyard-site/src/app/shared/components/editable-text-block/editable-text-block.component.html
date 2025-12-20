@@ -1,2 +1,2 @@
-<div *ngIf="!editable" [innerHTML]="content"></div>
+<div *ngIf="!editable" class="prose prose-neutral prose-p:my-4 max-w-none" [innerHTML]="content"></div>
 <quill-editor *ngIf="editable" [(ngModel)]="content" (ngModelChange)="contentChange.emit($event)"></quill-editor>
