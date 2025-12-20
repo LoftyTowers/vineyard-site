@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SHARED_IMPORTS } from '../../shared/shared-imports';
 import { AuthService } from '../../services/auth.service';
 
@@ -16,7 +16,7 @@ export class LoginComponent {
   error: string | null = null;
   loading = false;
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router, private route: ActivatedRoute) {}
 
   onSubmit(): void {
     this.loading = true;
@@ -24,7 +24,12 @@ export class LoginComponent {
     this.auth.login(this.username, this.password).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/']);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        if (returnUrl && returnUrl.startsWith('/')) {
+          this.router.navigateByUrl(returnUrl);
+        } else {
+          this.router.navigate(['/']);
+        }
       },
       error: () => {
         this.loading = false;
