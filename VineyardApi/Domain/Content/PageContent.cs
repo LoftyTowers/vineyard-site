@@ -1,24 +1,25 @@
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace VineyardApi.Domain.Content;
 
 public sealed class PageContent
 {
-    public List<ContentBlock> Blocks { get; init; } = new();
+    [JsonPropertyName("blocks")]
+    public List<PageBlock> Blocks { get; init; } = new();
 }
 
-public abstract class ContentBlock
+public sealed class PageBlock
 {
-    public string Type { get; init; } = default!;
-}
+    [JsonPropertyName("type")]
+    public string Type { get; init; } = string.Empty;
 
-public sealed class RichTextBlock : ContentBlock
-{
-    public string Html { get; init; } = string.Empty;
-}
+    [JsonPropertyName("contentHtml")]
+    public string? ContentHtml { get; init; }
 
-public sealed class ImageBlock : ContentBlock
-{
-    public string Url { get; init; } = string.Empty;
-    public string Alt { get; init; } = string.Empty;
+    // Holds the block payload (text, image object, people list, etc.)
+    [JsonPropertyName("content")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public JsonElement Content { get; init; }
 }

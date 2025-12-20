@@ -21,7 +21,7 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public void Get_ReturnsOk()
         {
-            var result = _controller.Get(CancellationToken.None);
+            var result = _controller.GetAsync(CancellationToken.None);
 
             result.Should().BeOfType<OkObjectResult>();
         }
@@ -29,7 +29,7 @@ namespace VineyardApi.Tests.Controllers
         [Test]
         public void Get_MapsToStatusCode200()
         {
-            var result = _controller.Get(CancellationToken.None);
+            var result = _controller.GetAsync(CancellationToken.None);
 
             ResultHttpMapper.MapToStatusCode(result).Should().Be(StatusCodes.Status200OK);
         }

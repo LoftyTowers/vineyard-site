@@ -23,7 +23,7 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetTheme(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetThemeAsync(CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -36,16 +36,21 @@ namespace VineyardApi.Controllers
                 var result = await _service.GetThemeAsync(cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while loading theme");
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to load theme");
-                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unknown, "Failed to load theme"));
+                return ResultMapper.ToActionResult(this, Result<Dictionary<string, string>>.Failure(ErrorCode.Unexpected, "Failed to load theme"));
             }
         }
 
         [Authorize]
         [HttpPost("override")]
-        public async Task<IActionResult> SaveOverride([FromBody] ThemeOverride model, CancellationToken cancellationToken)
+        public async Task<IActionResult> SaveOverrideAsync([FromBody] ThemeOverride model, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -66,10 +71,15 @@ namespace VineyardApi.Controllers
                 var result = await _service.SaveOverrideAsync(model, cancellationToken);
                 return ResultMapper.ToActionResult(this, result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while saving theme override for default {ThemeDefaultId}", model.ThemeDefaultId);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to save theme override for default {ThemeDefaultId}", model.ThemeDefaultId);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Failed to save theme override"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Failed to save theme override"));
             }
         }
     }

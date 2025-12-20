@@ -23,7 +23,7 @@ namespace VineyardApi.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request, CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -41,15 +41,23 @@ namespace VineyardApi.Controllers
                 }
 
                 var result = await _service.LoginAsync(request.Username, request.Password, cancellationToken);
-                return ResultMapper.ToActionResult(this, result);
+                if (!result.Success)
+                {
+                    return ResultMapper.ToActionResult(this, result);
+                }
+
+                return Ok(new { token = result.Value });
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Login cancelled for user {Username}", request.Username);
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Cancelled, "Request cancelled"));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to login user {Username}", request.Username);
-                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unknown, "Login failed"));
+                return ResultMapper.ToActionResult(this, Result.Failure(ErrorCode.Unexpected, "Login failed"));
             }
         }
     }
-
-    public record LoginRequest(string Username, string Password);
 }
