@@ -108,9 +108,13 @@ namespace VineyardApi.Controllers
 
         private static string ResolveImageUrl(Image img)
         {
-            if (!string.IsNullOrWhiteSpace(img.PublicUrl) &&
-                !img.PublicUrl.StartsWith("assets/", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrWhiteSpace(img.PublicUrl))
             {
+                if (img.PublicUrl.StartsWith("assets/", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "/" + img.PublicUrl;
+                }
+
                 return img.PublicUrl;
             }
 
@@ -119,7 +123,7 @@ namespace VineyardApi.Controllers
                 return $"/images/{img.StorageKey}";
             }
 
-            return img.PublicUrl ?? string.Empty;
+            return string.Empty;
         }
     }
 }

@@ -17,7 +17,7 @@
         <button class="hover:text-primary" (click)="logout()">Logout</button>
       </ng-container>
       <ng-template #loginLink>
-        <a routerLink="/login" class="hover:text-primary">Login</a>
+        <a [routerLink]="['/login']" [queryParams]="{ returnUrl: currentUrl }" class="hover:text-primary">Login</a>
       </ng-template>
     </div>
   </div>
@@ -30,7 +30,7 @@
         <button class="block py-2 hover:text-primary text-left w-full" (click)="logout()">Logout</button>
       </ng-container>
       <ng-template #mobileLoginLink>
-        <a routerLink="/login" class="block py-2 hover:text-primary">Login</a>
+        <a [routerLink]="['/login']" [queryParams]="{ returnUrl: currentUrl }" class="block py-2 hover:text-primary">Login</a>
       </ng-template>
     </div>
   </div>
