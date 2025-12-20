@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -54,6 +55,11 @@ namespace VineyardApi.Repositories
         {
             return _context.PageVersions
                 .FirstOrDefaultAsync(v => v.Id == versionId, cancellationToken);
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.Database.BeginTransactionAsync(cancellationToken);
         }
 
         public void AddPageOverride(PageOverride model)

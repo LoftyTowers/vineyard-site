@@ -66,6 +66,7 @@ builder.Services.AddScoped<IPageRepository, PageRepository>();
 builder.Services.AddScoped<IThemeRepository, ThemeRepository>();
 builder.Services.AddScoped<IImageRepository, ImageRepository>();
 builder.Services.AddScoped<IImageUsageRepository, ImageUsageRepository>();
+builder.Services.AddScoped<IPeopleRepository, PeopleRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPageService, PageService>();
 builder.Services.AddScoped<IThemeService, ThemeService>();
