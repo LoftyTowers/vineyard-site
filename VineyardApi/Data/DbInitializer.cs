@@ -127,6 +127,7 @@ namespace VineyardApi.Data
                 ("ThemeDefaults", () => context.ThemeDefaults.AnyAsync(cancellationToken), "01_ThemeDefaults.sql"),
                 ("Images", () => context.Images.AnyAsync(cancellationToken), "02_Images.sql"),
                 ("Pages", () => context.Pages.AnyAsync(cancellationToken), "03_Pages.sql"),
+                ("People", () => context.People.AnyAsync(cancellationToken), "09_People.sql"),
                 ("Roles", () => context.Roles.AnyAsync(cancellationToken), "04_Roles.sql"),
                 ("Permissions", () => context.Permissions.AnyAsync(cancellationToken), "05_Permissions.sql"),
                 ("RolePermissions", () => context.RolePermissions.AnyAsync(cancellationToken), "06_RolePermissions.sql"),

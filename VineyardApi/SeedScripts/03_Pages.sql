@@ -23,13 +23,10 @@ WITH seed_pages AS (
       'about',
       '{
         "blocks": [
+          { "type": "image", "content": { "imageId": "3c4f2e3a-7e1d-4c22-9e2c-5a0d4b2b1c8f", "alt": "Ready for Harvest", "caption": "Our first harvest, picked by hand in 2024", "variant": "hero" } },
           { "type": "h1", "content": "Our Story" },
-          { "type": "image", "content": { "imageId": "3c4f2e3a-7e1d-4c22-9e2c-5a0d4b2b1c8f", "alt": "Ready for Harvest", "caption": "Our first harvest, picked by hand in 2024" } },
-          { "type": "h2", "content": "The People Behind the Vines" },
-          { "type": "people", "content": [
-            { "imageUrl": "assets/temp-images/ReadyForHarvest.jpg", "name": "Charles", "text": "After decades running the farm, Charles planted the first vines the year he retired. He''s the reason any of this exists, and he still walks the rows most mornings, making sure everything''s looking right." }
-          ]},
-          { "type": "p", "content": "Together, we are building something small, meaningful, and completely our own." }
+          { "type": "richText", "contentHtml": "<p>Together, we are building something small, meaningful, and completely our own.</p>" },
+          { "type": "people", "source": "table" }
         ]
       }'::jsonb,
       '2025-07-23 00:00:00+00'::timestamptz,
