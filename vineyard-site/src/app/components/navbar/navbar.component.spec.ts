@@ -31,7 +31,7 @@ describe('NavbarComponent', () => {
     fixture = TestBed.createComponent(NavbarComponent);
     component = fixture.componentInstance;
     router = TestBed.inject(Router);
-    spyOn(router, 'navigate').and.callThrough();
+    spyOn(router, 'navigateByUrl').and.callThrough();
     fixture.detectChanges();
   });
 
@@ -65,6 +65,6 @@ describe('NavbarComponent', () => {
     expect(logoutButton).withContext('logout button not found').toBeTruthy();
     logoutButton!.click();
     expect(authServiceStub.logout).toHaveBeenCalled();
-    expect(router.navigate).toHaveBeenCalledWith(['/']);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/');
   });
 });
