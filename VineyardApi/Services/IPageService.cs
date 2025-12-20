@@ -12,5 +12,8 @@ namespace VineyardApi.Services
         Task<Result> AutosaveDraftAsync(string route, PageContent content, CancellationToken cancellationToken = default);
         Task<Result<PageContent>> PublishDraftAsync(string route, CancellationToken cancellationToken = default);
         Task<Result> DiscardDraftAsync(string route, CancellationToken cancellationToken = default);
+        Task<Result<List<PageVersionSummary>>> GetPublishedVersionsAsync(string route, CancellationToken cancellationToken = default);
+        Task<Result<PageVersionContentResponse>> GetPublishedVersionContentAsync(string route, Guid versionId, CancellationToken cancellationToken = default);
+        Task<Result<PageContent>> RollbackToVersionAsync(string route, Guid versionId, CancellationToken cancellationToken = default);
     }
 }

@@ -7,6 +7,18 @@ export interface PageData {
   blocks: any[];
 }
 
+export interface PageVersionSummary {
+  id: string;
+  versionNo: number;
+  publishedUtc?: string;
+  changeNote?: string;
+}
+
+export interface PageVersionContent {
+  contentJson: PageData;
+  versionNo: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PageService {
   constructor(private http: HttpClient, private auth: AuthService) {}
@@ -41,5 +53,20 @@ export class PageService {
   discardDraft(route: string): Observable<void> {
     const suffix = route ? `/${route}` : '';
     return this.http.post<void>(`/api/pages${suffix}/discard`, {});
+  }
+
+  getVersions(route: string): Observable<PageVersionSummary[]> {
+    const suffix = route ? `/${route}` : '';
+    return this.http.get<PageVersionSummary[]>(`/api/pages${suffix}/versions`);
+  }
+
+  getVersionContent(route: string, versionId: string): Observable<PageVersionContent> {
+    const suffix = route ? `/${route}` : '';
+    return this.http.get<PageVersionContent>(`/api/pages${suffix}/versions/${versionId}`);
+  }
+
+  rollbackVersion(route: string, versionId: string): Observable<PageData> {
+    const suffix = route ? `/${route}` : '';
+    return this.http.post<PageData>(`/api/pages${suffix}/versions/${versionId}/rollback`, {});
   }
 }
