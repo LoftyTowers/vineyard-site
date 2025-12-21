@@ -90,10 +90,10 @@ link in the `Images` table using the `/images` endpoint.
 ## Staging/Test Deployment
 
 Use the test configuration to spin up the full stack with prebuilt images. The
-`.env.test` file supplies credentials and connection strings.
+`.env.staging` file supplies credentials and connection strings.
 
 ```bash
-docker compose --env-file .env.test -f docker-compose.yml -f docker-compose.test.yml up -d
+docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d
 # Apply migrations and seed data inside the running containers
 docker compose exec api dotnet ef database update
 cat SeedScripts/initial_seed.sql | docker compose exec -T db psql -U $POSTGRES_USER -d $POSTGRES_DB
@@ -134,3 +134,4 @@ INSERT INTO "UserRoles" ("UserId", "RoleId") VALUES (<user_id>, <role_id>);
 Authenticate by POSTing to `/auth/login` with the username and password to
 receive a JWT token. Include this token in the `Authorization` header when
 visiting `/admin/*` routes in the Angular site.
+

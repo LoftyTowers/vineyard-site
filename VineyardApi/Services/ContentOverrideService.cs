@@ -22,6 +22,11 @@ namespace VineyardApi.Services
                 var items = await _repository.GetLatestPublishedAsync(route, cancellationToken);
                 return Result<Dictionary<string, string>>.Ok(items.ToDictionary(i => i.BlockKey, i => i.HtmlValue));
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while getting published overrides for route {Route}", route);
+                return Result<Dictionary<string, string>>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting published overrides for route {Route}", route);
@@ -52,6 +57,11 @@ namespace VineyardApi.Services
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while saving draft override for page {PageId} and block {BlockKey}", model.PageId, model.BlockKey);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving draft for page {PageId} and block {BlockKey}", model.PageId, model.BlockKey);
@@ -68,6 +78,11 @@ namespace VineyardApi.Services
                 _repository.Add(model);
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while publishing override for page {PageId} and block {BlockKey}", model.PageId, model.BlockKey);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {
@@ -91,6 +106,11 @@ namespace VineyardApi.Services
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while publishing draft override {DraftId}", id);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error publishing draft override {DraftId}", id);
@@ -104,6 +124,11 @@ namespace VineyardApi.Services
             {
                 var history = await _repository.GetHistoryAsync(route, blockKey, cancellationToken);
                 return Result<List<ContentOverride>>.Ok(history);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while getting history for route {Route} block {BlockKey}", route, blockKey);
+                return Result<List<ContentOverride>>.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {
@@ -136,6 +161,11 @@ namespace VineyardApi.Services
                 _repository.Add(draft);
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while reverting override {OverrideId}", id);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {
