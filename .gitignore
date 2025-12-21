@@ -52,7 +52,7 @@ obj/
 .opus/
 .baseline/
 *.zip
-.env.development
-.env.local
-.env.staging
-.env.production
+
+# Environment variables
+.env
+.env.*
