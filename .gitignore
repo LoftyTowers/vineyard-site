@@ -52,3 +52,7 @@ obj/
 .opus/
 .baseline/
 *.zip
+
+# Environment variables
+.env
+.env.*
