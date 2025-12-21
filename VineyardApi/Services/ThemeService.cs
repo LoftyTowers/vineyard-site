@@ -32,6 +32,11 @@ namespace VineyardApi.Services
 
                 return Result<Dictionary<string, string>>.Ok(result);
             }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Theme retrieval cancelled");
+                return Result<Dictionary<string, string>>.Failure(ErrorCode.Cancelled, "Request cancelled");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting theme overrides");
@@ -61,6 +66,11 @@ namespace VineyardApi.Services
 
                 await _repository.SaveChangesAsync(cancellationToken);
                 return Result.Ok();
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Saving theme override cancelled for default {ThemeDefaultId}", model.ThemeDefaultId);
+                return Result.Failure(ErrorCode.Cancelled, "Request cancelled");
             }
             catch (Exception ex)
             {

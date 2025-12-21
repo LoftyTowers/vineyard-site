@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
@@ -17,7 +17,8 @@ describe('LoginComponent', () => {
       imports: [LoginComponent],
       providers: [
         { provide: AuthService, useValue: authSpy },
-        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } }
+        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate'), navigateByUrl: jasmine.createSpy('navigateByUrl') } },
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } }
       ]
     }).compileComponents();
 
@@ -37,6 +38,6 @@ describe('LoginComponent', () => {
     component.password = 'pass';
     component.onSubmit();
     expect(auth.login).toHaveBeenCalledWith('user', 'pass');
-    expect((router.navigate as jasmine.Spy).calls.any()).toBeTrue();
+    expect((router.navigateByUrl as jasmine.Spy).calls.any() || (router.navigate as jasmine.Spy).calls.any()).toBeTrue();
   });
 });

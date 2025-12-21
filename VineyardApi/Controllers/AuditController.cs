@@ -21,7 +21,7 @@ namespace VineyardApi.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetRecent(CancellationToken cancellationToken)
+        public async Task<IActionResult> GetRecentAsync(CancellationToken cancellationToken)
         {
             var correlationId = HttpContext?.TraceIdentifier ?? Guid.NewGuid().ToString();
             using var scope = _logger.BeginScope(new Dictionary<string, object>
@@ -33,6 +33,11 @@ namespace VineyardApi.Controllers
             {
                 var logs = await _service.GetRecentAsync(100, cancellationToken);
                 return ResultMapper.ToActionResult(this, logs);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogWarning(ex, "Request cancelled while fetching audit logs");
+                return ResultMapper.ToActionResult(this, Result<List<Models.AuditLog>>.Failure(ErrorCode.Cancelled, "Request cancelled"));
             }
             catch (Exception ex)
             {

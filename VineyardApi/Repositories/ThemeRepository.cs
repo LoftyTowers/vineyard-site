@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System;
 using VineyardApi.Data;
 using VineyardApi.Models;
 
@@ -32,6 +33,9 @@ namespace VineyardApi.Repositories
             _context.ThemeOverrides.Add(model);
         }
 
-        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => _context.SaveChangesAsync(cancellationToken);
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            return _context.SaveChangesAsync(cancellationToken);
+        }
     }
 }

@@ -25,16 +25,16 @@ namespace VineyardApi.Tests.Services
         }
 
         [Test]
-        public async Task SaveImageAsync_SetsIdAndCreatedAt_AndPersists()
+        public async Task SaveImageAsync_SetsIdAndCreatedUtc_AndPersists()
         {
-            var image = new Image { Url = "test" };
+            var image = new Image { StorageKey = "images/test.jpg", PublicUrl = "https://cdn.example.com/test.jpg" };
             _repo.Setup(r => r.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             var saved = await _service.SaveImageAsync(image);
 
             saved.IsSuccess.Should().BeTrue();
             saved.Value!.Id.Should().NotBeEmpty();
-            saved.Value.CreatedAt.Should().NotBe(default);
+            saved.Value.CreatedUtc.Should().NotBe(default);
             _repo.Verify(r => r.AddImage(image), Times.Once);
             _repo.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }

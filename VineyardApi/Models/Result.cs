@@ -4,13 +4,15 @@ namespace VineyardApi.Models
     {
         None = 0,
         Validation = 1,
-        NotFound = 2,
-        Unauthorized = 3,
-        Forbidden = 4,
-        Conflict = 5,
-        Unknown = 6,
-        Unexpected = Unknown,
-        BadRequest = 7
+        Domain = 2,
+        NotFound = 3,
+        Unauthorized = 4,
+        Forbidden = 5,
+        Conflict = 6,
+        Cancelled = 7,
+        BadRequest = 8,
+        Unknown = 9,
+        Unexpected = Unknown
     }
 
     public record ValidationError(string Field, string Message);

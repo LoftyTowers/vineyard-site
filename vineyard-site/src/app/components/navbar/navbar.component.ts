@@ -4,23 +4,32 @@ import {
   ViewChild,
   AfterViewInit,
 } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
+import { AsyncPipe } from '@angular/common';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, AsyncPipe],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
 })
 export class NavbarComponent implements AfterViewInit {
   isMenuOpen = false;
+  isAuthenticated$!: Observable<string | null>;
+  currentUrl = '/';
 
   @ViewChild('mobileMenu') mobileMenuRef!: ElementRef;
 
-  constructor(private router: Router) {
-    this.router.events.subscribe(() => {
+  constructor(private router: Router, private auth: AuthService) {
+    this.isAuthenticated$ = this.auth.authState$;
+    this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        this.currentUrl = event.urlAfterRedirects || event.url;
+      }
       this.isMenuOpen = false;
     });
   }
@@ -41,5 +50,12 @@ export class NavbarComponent implements AfterViewInit {
     ) {
       this.isMenuOpen = false;
     }
+  }
+
+  logout(): void {
+    const returnUrl = this.currentUrl || '/';
+    this.auth.logout();
+    this.router.navigateByUrl(returnUrl);
+    this.isMenuOpen = false;
   }
 }
