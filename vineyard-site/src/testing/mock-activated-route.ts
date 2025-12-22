@@ -1,8 +1,8 @@
 import { convertToParamMap } from '@angular/router';
 
 export function mockActivatedRoute(
-  params: Record<string, any> = {},
-  data: Record<string, any> = {}
+  params: Record<string, unknown> = {},
+  data: Record<string, unknown> = {}
 ) {
   return {
     snapshot: {

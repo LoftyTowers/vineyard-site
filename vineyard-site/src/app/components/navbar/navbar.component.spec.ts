@@ -1,16 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NavbarComponent } from './navbar.component';
+import { ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 
 describe('NavbarComponent', () => {
   let component: NavbarComponent;
   let fixture: ComponentFixture<NavbarComponent>;
   let authState$: BehaviorSubject<string | null>;
-  let authServiceStub: { authState$: any; logout: jasmine.Spy };
+  let authServiceStub: { authState$: Observable<string | null>; logout: jasmine.Spy };
   let router: Router;
 
   beforeEach(async () => {
@@ -50,10 +51,13 @@ describe('NavbarComponent', () => {
   it('handleClickOutside closes menu when clicking outside', () => {
     component.isMenuOpen = true;
     const div = document.createElement('div');
-    component.mobileMenuRef = { nativeElement: div } as any;
+    component.mobileMenuRef = new ElementRef<HTMLElement>(div);
     const event = new MouseEvent('click', { bubbles: true });
     document.dispatchEvent(event); // ensure listener exists
-    component.handleClickOutside(new MouseEvent('click', { target: document.body } as any));
+    const target = document.body as EventTarget;
+    const clickEvent = new MouseEvent('click');
+    Object.defineProperty(clickEvent, 'target', { value: target });
+    component.handleClickOutside(clickEvent);
     expect(component.isMenuOpen).toBeFalse();
   });
 

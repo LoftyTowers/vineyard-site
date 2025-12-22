@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Router, ActivatedRouteSnapshot } from '@angular/router';
+import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, Data } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { authGuard } from './auth.guard';
@@ -16,10 +16,12 @@ function createToken(role: string | string[]): string {
 describe('authGuard', () => {
   let router: Router;
 
-  function runGuard(data?: any) {
+  function runGuard(data?: Data) {
     const route = new ActivatedRouteSnapshot();
-    (route as any).data = data;
-    return TestBed.runInInjectionContext(() => authGuard(route, {} as any));
+    (route as ActivatedRouteSnapshot & { data: Data }).data = data ?? {};
+    return TestBed.runInInjectionContext(
+      () => authGuard(route, {} as RouterStateSnapshot)
+    );
   }
 
   beforeEach(() => {

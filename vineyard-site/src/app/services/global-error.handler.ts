@@ -22,13 +22,28 @@ export class GlobalErrorHandler implements ErrorHandler {
     }
   }
 
-  private normalizeError(error: unknown) {
-    const rejection: any = (error as any)?.rejection;
-    const baseError: any = rejection ?? error;
+  private normalizeError(error: unknown): { type: string; message: string; stack?: string } {
+    const rejection = (error as { rejection?: unknown })?.rejection;
+    const baseError = rejection ?? error;
+
+    if (baseError instanceof Error) {
+      return {
+        type: baseError.name || 'Error',
+        message: baseError.message,
+        stack: baseError.stack
+      };
+    }
+
+    if (typeof baseError === 'string') {
+      return {
+        type: 'string',
+        message: baseError
+      };
+    }
+
     return {
-      type: baseError?.name ?? typeof baseError,
-      message: baseError?.message ?? baseError?.toString?.() ?? 'Unknown error',
-      stack: baseError?.stack
+      type: typeof baseError,
+      message: `${baseError}`
     };
   }
 }
