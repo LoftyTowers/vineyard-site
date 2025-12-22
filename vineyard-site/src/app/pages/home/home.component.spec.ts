@@ -93,11 +93,11 @@ describe('HomeComponent', () => {
 
     authStub.setAdmin(true);
     fixture.detectChanges();
-    expect(component['homeContentBlocks'].some(b => (b as any).content === 'draft text')).toBeTrue();
+    expect(component['homeContentBlocks'].some(b => (b as { content?: string }).content === 'draft text')).toBeTrue();
 
     authStub.setAdmin(false);
     expect(pageServiceSpy.getPage).toHaveBeenCalled();
-    expect(component['homeContentBlocks'].some(b => (b as any).content === 'live text')).toBeTrue();
+    expect(component['homeContentBlocks'].some(b => (b as { content?: string }).content === 'live text')).toBeTrue();
   });
 
   it('re-enables draft actions after discard and new edits', () => {

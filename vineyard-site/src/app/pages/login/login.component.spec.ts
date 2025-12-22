@@ -33,7 +33,7 @@ describe('LoginComponent', () => {
   });
 
   it('calls auth service on submit', () => {
-    auth.login.and.returnValue(of({ token: 'abc' } as any));
+    auth.login.and.returnValue(of({ token: 'abc' }));
     component.username = 'user';
     component.password = 'pass';
     component.onSubmit();

@@ -15,9 +15,9 @@ export class ErrorInterceptor implements HttpInterceptor {
   constructor(private router: Router) {}
 
   intercept(
-    req: HttpRequest<any>,
+    req: HttpRequest<unknown>,
     next: HttpHandler
-  ): Observable<HttpEvent<any>> {
+  ): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
         console.error('API error', error);

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
 export interface PageData {
-  blocks: any[];
+  blocks: unknown[];
 }
 
 export interface PageVersionSummary {

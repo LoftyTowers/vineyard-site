@@ -41,10 +41,14 @@ export class AuthService {
     const token = this.token;
     if (!token) return [];
     try {
-      const decoded: any = jwtDecode(token);
+      const decoded = jwtDecode<Record<string, unknown>>(token);
       const role = decoded['role'];
       if (!role) return [];
-      return Array.isArray(role) ? role : [role];
+      return Array.isArray(role)
+        ? role.filter((entry): entry is string => typeof entry === 'string')
+        : typeof role === 'string'
+          ? [role]
+          : [];
     } catch {
       return [];
     }

@@ -12,7 +12,7 @@ import { CONFIG } from '../../config';
 export class StatusComponent implements OnInit, OnDestroy {
   status?: HealthStatus;
   loading = false;
-  private intervalId?: any;
+  private intervalId?: ReturnType<typeof setInterval>;
 
   constructor(private health: HealthService) {}
 

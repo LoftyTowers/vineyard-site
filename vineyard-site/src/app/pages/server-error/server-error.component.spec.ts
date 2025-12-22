@@ -3,7 +3,6 @@ import { ActivatedRoute } from '@angular/router';
 import { ServerErrorComponent } from './server-error.component';
 
 describe('ServerErrorComponent', () => {
-  let component: ServerErrorComponent;
   let fixture: ComponentFixture<ServerErrorComponent>;
 
   beforeEach(async () => {
@@ -17,7 +16,6 @@ describe('ServerErrorComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(ServerErrorComponent);
-    component = fixture.componentInstance;
   });
 
   it('shows message from query param', () => {

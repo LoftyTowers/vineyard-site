@@ -19,7 +19,7 @@ describe('PageService', () => {
   });
 
   it('requests page data by route', () => {
-    const mockResponse: PageData = { blocks: [{ type: 'p', content: 'hi' }] } as any;
+    const mockResponse: PageData = { blocks: [{ type: 'p', content: 'hi' }] };
 
     service.getPage('about').subscribe((data) => {
       expect(data).toEqual(mockResponse);
