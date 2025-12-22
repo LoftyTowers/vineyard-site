@@ -11,17 +11,14 @@ jobs:
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: VineyardApi
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-      - run: dotnet restore
-      - run: dotnet build --configuration Release --no-restore
-      - run: dotnet test --configuration Release --no-build
+      - run: dotnet restore Vineyard.sln
+      - run: dotnet build Vineyard.sln --configuration Release --no-restore
+      - run: dotnet test Vineyard.sln --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test_results.trx"
 
   frontend-tests:
     name: Frontend Tests
