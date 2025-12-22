@@ -11,6 +11,7 @@ export type GalleryBlock =
       type: 'image';
       content: {
         src: string;
+        url?: string;
         alt: string;
         caption?: string;
       };
@@ -27,7 +28,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
   isAdmin = false;
   private authSub?: Subscription;
   constructor(private pageService: PageService, private auth: AuthService) {}
-  galleryContentBlocks: any[] = [];
+  galleryContentBlocks: GalleryBlock[] = [];
 
   ngOnInit(): void {
     this.authSub = this.auth.authState$.subscribe(() => {
@@ -36,7 +37,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
     this.isAdmin = this.auth.hasRole('Admin') || this.auth.hasRole('Editor');
     this.pageService.getPage('gallery').subscribe((data: PageData) => {
       if (Array.isArray(data.blocks)) {
-        this.galleryContentBlocks = data.blocks as any[];
+        this.galleryContentBlocks = data.blocks as GalleryBlock[];
         this.normalizeImageBlocks(this.galleryContentBlocks);
       }
     });
@@ -46,7 +47,7 @@ export class GalleryComponent implements OnInit, OnDestroy {
     this.authSub?.unsubscribe();
   }
 
-  private normalizeImageBlocks(blocks: any[]): void {
+  private normalizeImageBlocks(blocks: GalleryBlock[]): void {
     for (const block of blocks) {
       if (block?.type === 'image' && block.content) {
         if (!block.content.src && block.content.url) {

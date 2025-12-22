@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ThemeService } from './theme.service';
 
 class MockThemeService {
@@ -24,7 +24,7 @@ class MockThemeService {
   template: '<div id="sample" style="color: var(--primary-color)"></div>',
   standalone: true
 })
-class TestComponent {
+class TestComponent implements OnInit {
   constructor(private theme: ThemeService) {}
   ngOnInit(): void {
     this.theme.loadTheme();
