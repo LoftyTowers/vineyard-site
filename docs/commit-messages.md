@@ -48,8 +48,3 @@ Use Conventional Commits:
   - `git rebase -i HEAD~3`
   - Change `pick` to `reword`, save, and edit messages
 - If your branch is shared, coordinate before force-pushing.
-
-## Local setup (optional)
-- `npm install`
-- `npm run prepare`
-- Try a bad commit message and confirm it is blocked.
