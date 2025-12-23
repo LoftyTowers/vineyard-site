@@ -1,7 +1,7 @@
 -- Seed default superuser
 MERGE INTO "Users" AS t
 USING (
-  VALUES ('00000000-0000-0000-0000-000000000001'::uuid, 'admin@example.com', '$2b$12$f2GB4ciZjzhcqrEYgwh.IecJYxvd3uqS1RrQfj.V1kpTill.QmbMe', 'admin@example.com', NOW(), TRUE)
+  VALUES ('348f58e8-ecff-47c8-abc9-56e1f2b0aaa4'::uuid, 'admin@vineyard.com', '$2b$12$f2GB4ciZjzhcqrEYgwh.IecJYxvd3uqS1RrQfj.V1kpTill.QmbMe', 'admin@example.com', NOW(), TRUE)
 ) AS s("Id","Username","PasswordHash","Email","CreatedAt","IsActive")
 ON t."Id" = s."Id"
 WHEN NOT MATCHED THEN
