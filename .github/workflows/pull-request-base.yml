@@ -31,7 +31,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BASE_BRANCH: staging
           HEAD_BRANCH: dev
-          PR_TITLE: Promote: dev → staging
+          PR_TITLE: "Promote: dev → staging"
           PR_LABELS: promotion,automation,env:staging
         run: scripts/promotion-pr/generate-promotion-pr-body.sh
 
@@ -48,6 +48,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BASE_BRANCH: main
           HEAD_BRANCH: staging
-          PR_TITLE: Release: staging → main
+          PR_TITLE: "Release: staging → main"
           PR_LABELS: promotion,automation,env:prod,release
         run: scripts/promotion-pr/generate-promotion-pr-body.sh
