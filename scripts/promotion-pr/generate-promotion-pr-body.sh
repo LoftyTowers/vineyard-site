@@ -110,8 +110,10 @@ for label in "${label_list[@]}"; do
   ensure_label "$label"
 done
 
-mapfile -t commit_shas < <(
-  gh api "repos/${repo}/compare/${base_branch}...${head_branch}" --jq '.commits[].sha'
+compare_json="$(gh api "repos/${repo}/compare/${base_branch}...${head_branch}")"
+mapfile -t commit_shas < <(jq -r '.commits[].sha' <<<"$compare_json")
+mapfile -t commit_messages < <(
+  jq -r '.commits[] | "\(.sha[0:7]) \(.commit.message | split("\n")[0])"' <<<"$compare_json"
 )
 
 declare -A pr_numbers=()
@@ -185,6 +187,11 @@ fi
     echo "No changes pending promotion."
   else
     echo "$overview_line"
+    if [[ ${#commit_messages[@]} -gt 0 ]]; then
+      echo
+      echo "Commits:"
+      printf '%s\n' "${commit_messages[@]/#/- }"
+    fi
   fi
   echo
 
@@ -239,18 +246,14 @@ fi
 existing_pr_number="$(gh pr list --base "$base_branch" --head "$head_branch" --state open --json number --jq '.[0].number')"
 
 if [[ -z "${existing_pr_number}" ]]; then
-  gh pr create \
-    --base "$base_branch" \
-    --head "$head_branch" \
-    --title "$pr_title" \
-    --label "$pr_labels" \
-    --body-file "$tmp_body"
-else
-  gh pr edit "$existing_pr_number" \
-    --title "$pr_title" \
-    --body-file "$tmp_body"
-
-  for label in "${label_list[@]}"; do
-    add_label_nonfatal "$existing_pr_number" "$label"
-  done
+  echo "No open PR found for ${head_branch} -> ${base_branch}; create it manually."
+  exit 0
 fi
+
+gh pr edit "$existing_pr_number" \
+  --title "$pr_title" \
+  --body-file "$tmp_body"
+
+for label in "${label_list[@]}"; do
+  add_label_nonfatal "$existing_pr_number" "$label"
+done

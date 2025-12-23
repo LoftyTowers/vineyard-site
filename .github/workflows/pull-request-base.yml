@@ -1,8 +1,9 @@
 name: Pull Request Base
 
 on:
-  push:
-    branches: [dev, staging]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [dev, staging, main]
   workflow_dispatch:
     inputs:
       target:
@@ -18,11 +19,36 @@ permissions:
   pull-requests: write
 
 jobs:
+  update-dev-pr:
+    name: Update Dev PR Description
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.base_ref == 'dev'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate or update PR body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: dev
+          HEAD_BRANCH: ${{ github.head_ref }}
+          PR_TITLE: "${{ github.event.pull_request.title }}"
+        run: |
+          case "${{ github.head_ref }}" in
+            feature/*) PR_LABELS="feature" ;;
+            bug/*) PR_LABELS="bug" ;;
+            tech-debt/*) PR_LABELS="tech-debt" ;;
+            infra/*) PR_LABELS="infra" ;;
+            docs/*) PR_LABELS="docs" ;;
+            breaking/*) PR_LABELS="breaking" ;;
+            *) PR_LABELS="other" ;;
+          esac
+          export PR_LABELS
+          scripts/promotion-pr/generate-promotion-pr-body.sh
+
   promote-dev-to-staging:
     name: Promote Dev to Staging
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'staging' && github.head_ref == 'dev') ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'dev-to-staging')
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +65,7 @@ jobs:
     name: Promote Staging to Main
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/staging') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.head_ref == 'staging') ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'staging-to-main')
     steps:
       - uses: actions/checkout@v4
