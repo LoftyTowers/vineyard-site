@@ -2,6 +2,11 @@
 
 This folder contains a minimal ASP.NET Core 9 API used by the Angular front end.
 
+## Contribution guidelines
+
+- PR template and expectations: `docs/pr-guidelines.md`
+- Commit message rules: `docs/commit-messages.md`
+
 ## Local Development
 
 ### Run the API
