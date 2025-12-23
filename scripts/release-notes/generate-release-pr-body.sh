@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
+base_branch="staging"
+head_branch="dev"
+
+tmp_body="$(mktemp)"
+cleanup() {
+  rm -f "$tmp_body"
+}
+trap cleanup EXIT
+
+mapfile -t commit_shas < <(
+  gh api "repos/${repo}/compare/${base_branch}...${head_branch}" --jq '.commits[].sha'
+)
+
+declare -A pr_numbers=()
+for sha in "${commit_shas[@]}"; do
+  while read -r pr_number; do
+    if [[ -n "${pr_number}" ]]; then
+      pr_numbers["${pr_number}"]=1
+    fi
+  done < <(
+    gh api "repos/${repo}/commits/${sha}/pulls" \
+      -H "Accept: application/vnd.github+json" \
+      --jq '.[].number'
+  )
+done
+
+sorted_prs=()
+for pr in "${!pr_numbers[@]}"; do
+  sorted_prs+=("${pr}")
+done
+IFS=$'\n' sorted_prs=($(sort -n <<<"${sorted_prs[*]}"))
+unset IFS
+
+extract_release_line() {
+  awk '
+    BEGIN {found=0}
+    /^## Release Notes/ {found=1; next}
+    /^## / {if (found) exit}
+    found && $0 ~ /[^[:space:]]/ {print; exit}
+  '
+}
+
+extract_section_paragraph() {
+  local heading="$1"
+  awk -v h="$heading" '
+    BEGIN {found=0; started=0}
+    $0 ~ "^## " h {found=1; next}
+    /^## / {if (found) exit}
+    found {
+      if ($0 ~ /[^[:space:]]/) {
+        started=1
+        print
+      } else if (started) {
+        exit
+      }
+    }
+  '
+}
+
+categorize_pr() {
+  local labels="$1"
+  if [[ "$labels" == *"breaking"* ]]; then
+    echo "Breaking changes"
+  elif [[ "$labels" == *"feature"* ]]; then
+    echo "Features"
+  elif [[ "$labels" == *"bug"* ]]; then
+    echo "Fixes"
+  elif [[ "$labels" == *"tech-debt"* ]]; then
+    echo "Tech debt"
+  elif [[ "$labels" == *"infra"* ]]; then
+    echo "Infrastructure"
+  elif [[ "$labels" == *"docs"* ]]; then
+    echo "Documentation"
+  else
+    echo "Other"
+  fi
+}
+
+declare -A grouped_lines=()
+declare -a release_notes=()
+declare -a migration_notes=()
+declare -a test_notes=()
+
+for pr in "${sorted_prs[@]:-}"; do
+  pr_json="$(gh pr view "$pr" --json title,author,labels,url,body)"
+  title="$(jq -r '.title' <<<"$pr_json")"
+  url="$(jq -r '.url' <<<"$pr_json")"
+  author="$(jq -r '.author.login' <<<"$pr_json")"
+  labels="$(jq -r '.labels[].name' <<<"$pr_json" | paste -sd "," -)"
+  body="$(jq -r '.body' <<<"$pr_json")"
+
+  category="$(categorize_pr "$labels")"
+  grouped_lines["$category"]+=$'- '"#${pr} ${title} (@${author}) - ${url}"$'\n'
+
+  release_line="$(printf '%s\n' "$body" | extract_release_line)"
+  if [[ -n "$release_line" ]]; then
+    release_notes+=("- #${pr}: ${release_line}")
+  else
+    release_notes+=("- #${pr}: ${title}")
+  fi
+
+  migration_line="$(printf '%s\n' "$body" | extract_section_paragraph "Migration")"
+  if [[ -z "$migration_line" ]]; then
+    migration_line="$(printf '%s\n' "$body" | extract_section_paragraph "Database")"
+  fi
+  if [[ -z "$migration_line" ]]; then
+    migration_line="$(printf '%s\n' "$body" | extract_section_paragraph "Deployment")"
+  fi
+  if [[ -n "$migration_line" ]]; then
+    migration_notes+=("- #${pr}: ${migration_line}")
+  fi
+
+  test_line="$(printf '%s\n' "$body" | extract_section_paragraph "Test Evidence")"
+  if [[ -n "$test_line" ]]; then
+    test_notes+=("- #${pr}: ${test_line}")
+  fi
+done
+
+{
+  echo "## Overview"
+  if [[ ${#sorted_prs[@]} -eq 0 ]]; then
+    echo "No changes pending promotion."
+  else
+    echo "Release candidate from \`${head_branch}\` to \`${base_branch}\`."
+  fi
+  echo
+
+  echo "## Included Pull Requests"
+  if [[ ${#sorted_prs[@]} -eq 0 ]]; then
+    echo "- No changes pending promotion."
+  else
+    for category in "Breaking changes" "Features" "Fixes" "Tech debt" "Infrastructure" "Documentation" "Other"; do
+      if [[ -n "${grouped_lines[$category]:-}" ]]; then
+        echo
+        echo "### ${category}"
+        printf '%s' "${grouped_lines[$category]}"
+      fi
+    done
+  fi
+  echo
+
+  echo "## Notable Release Notes"
+  if [[ ${#release_notes[@]} -eq 0 ]]; then
+    echo "- No release notes provided."
+  else
+    printf '%s\n' "${release_notes[@]}"
+  fi
+  echo
+
+  echo "## Migration / Deployment Notes"
+  if [[ ${#migration_notes[@]} -eq 0 ]]; then
+    echo "- None."
+  else
+    printf '%s\n' "${migration_notes[@]}"
+  fi
+  echo
+
+  echo "## Test Notes"
+  if [[ ${#test_notes[@]} -eq 0 ]]; then
+    echo "- None."
+  else
+    printf '%s\n' "${test_notes[@]}"
+  fi
+  echo
+
+  echo "## How to promote / rollback"
+  echo "- Promote: merge this PR into \`${base_branch}\`."
+  echo "- Rollback: revert the merge commit in \`${base_branch}\`."
+} > "$tmp_body"
+
+existing_pr_number="$(gh pr list --base "$base_branch" --head "$head_branch" --state open --json number --jq '.[0].number')"
+
+if [[ -z "${existing_pr_number}" ]]; then
+  gh pr create \
+    --base "$base_branch" \
+    --head "$head_branch" \
+    --title "Release: dev → staging" \
+    --label "release,staging" \
+    --body-file "$tmp_body"
+else
+  gh pr edit "$existing_pr_number" \
+    --title "Release: dev → staging" \
+    --body-file "$tmp_body" \
+    --add-label "release" \
+    --add-label "staging"
+fi
