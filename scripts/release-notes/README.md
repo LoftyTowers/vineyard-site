@@ -13,9 +13,9 @@ This workflow keeps a single PR open from `dev` to `staging` and updates its bod
 Requires `gh` and authentication.
 
 ```bash
-export GITHUB_REPOSITORY=owner/repo
+export REPO=owner/repo
 export GH_TOKEN=your_token
-./scripts/release-notes/generate-release-pr-body.sh
+./scripts/promotion-pr/generate-promotion-pr-body.sh
 ```
 
 ## Labels for grouping
