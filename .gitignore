@@ -56,3 +56,6 @@ obj/
 # Environment variables
 .env
 .env.*
+
+# Local log files
+*.log
