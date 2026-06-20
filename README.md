@@ -1,6 +1,13 @@
-# Vineyard API
+# Vineyard Website and Content Management System
 
-This folder contains a minimal ASP.NET Core 9 API used by the Angular front end.
+A full-stack proof of concept for one vineyard within a wider co-operative, built with Angular, ASP.NET Core 9 and PostgreSQL. The project explores how an individual vineyard can manage its own content and identity while still following a shared visual structure that could later be reused across the group.
+
+## Architecture and Technical Decisions
+
+This project focuses on delivering a complete website and content-management system for a single vineyard. It allows the vineyard to manage its own pages, images, people and published content without requiring code changes for routine updates. Although the current implementation serves one vineyard, it was designed as a proof of concept for a wider co-operative model in which each vineyard could have its own content and identity while remaining visually consistent with the rest of the group.
+
+Angular was selected for its component-based architecture, making it easier to create reusable page layouts and administration tools while keeping the frontend flexible. ASP.NET Core provides a strongly typed and testable API for authentication, content management and business rules. PostgreSQL was chosen for reliable relational storage, with JSONB used where page content needs greater flexibility. JWT authentication keeps the API stateless and protects the administration area. Docker Compose runs the Angular frontend, .NET API and PostgreSQL database as a consistent stack, with separate development, staging and production configurations to reduce environment-specific issues and support a controlled release process.
+
 
 ## Contribution guidelines
 
